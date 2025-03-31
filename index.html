@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credyfast - Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login-container">
+    <h2>Iniciar Sesión</h2>
+    <form id="login-form">
+      <input type="text" id="username" placeholder="Usuario" required>
+      <input type="password" id="password" placeholder="Contraseña" required>
+      <button type="submit">Ingresar</button>
+    </form>
+  </div>
+
+  <div id="dashboard-container" style="display: none;">
+    <h2>Bienvenido, <span id="user-role"></span></h2>
+    <div id="menu">
+      <button id="btn-celulares">Registro de Celulares</button>
+      <button id="btn-clientes">Registro de Clientes</button>
+      <button id="btn-pagos">Registrar Pagos</button>
+      <button id="btn-morosidad">Clientes Morosos</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
