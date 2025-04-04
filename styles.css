@@ -27,7 +27,7 @@ body {
 
 /* Logo grande para login */
 .logo {
-    width: 275px;
+    width: 220px;
     height: auto;
 }
 
@@ -83,6 +83,6 @@ button:hover {
 
 /* Logo más pequeño para dashboard (opcional, si lo usas ahí) */
 .logo-dashboard {
-    width: 100px;
+    width: 90px;
     height: auto;
 }
