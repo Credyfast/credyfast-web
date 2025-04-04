@@ -1,3 +1,4 @@
+/* Estilo general del body */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -5,9 +6,10 @@ body {
     height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: start; /* importante para alinear arriba */
+    align-items: start; /* Alinea desde arriba en lugar de centro total */
 }
 
+/* Contenedor principal que agrupa el logo y el login */
 .main-container {
     display: flex;
     flex-direction: column;
@@ -17,17 +19,21 @@ body {
     max-width: 400px;
 }
 
+/* Contenedor del logo */
 .logo-container {
     text-align: center;
     margin-bottom: 20px;
 }
 
+/* Logo grande para login */
 .logo {
     width: 275px;
     height: auto;
 }
 
-.login-container, .dashboard-container {
+/* Contenedor del login y también útil para dashboard */
+.login-container,
+.dashboard-container {
     background: white;
     padding: 20px;
     border-radius: 10px;
@@ -36,6 +42,7 @@ body {
     width: 100%;
 }
 
+/* Campos de entrada */
 input {
     display: block;
     width: 100%;
@@ -45,6 +52,7 @@ input {
     border-radius: 5px;
 }
 
+/* Botones generales */
 button {
     background-color: #007bff;
     color: white;
@@ -55,17 +63,26 @@ button {
     width: 100%;
 }
 
+/* Efecto hover del botón */
 button:hover {
     background-color: #0056b3;
 }
 
+/* Oculta el dashboard por defecto */
 .dashboard-container {
     display: none;
     flex-direction: column;
     align-items: center;
 }
 
+/* Estilo para mensaje de error */
 #error-message {
     color: red;
     margin-top: 10px;
+}
+
+/* Logo más pequeño para dashboard (opcional, si lo usas ahí) */
+.logo-dashboard {
+    width: 100px;
+    height: auto;
 }
