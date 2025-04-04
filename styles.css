@@ -48,3 +48,13 @@ button:hover {
 #menu {
     margin-top: 20px;
 }
+.logo-container {
+    text-align: center;
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 150px; /* o el tamaño que desees */
+    height: auto;
+}
