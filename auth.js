@@ -8,6 +8,7 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
     // Usuarios de prueba
     const users = {
         "admin": { password: "1234", role: "superadmin" },
+        "castillo": { password: "515253", role: "superadmin" },
         "vendedor": { password: "5678", role: "vendedor" },
         "cobranza": { password: "91011", role: "cobranza" }
     };
