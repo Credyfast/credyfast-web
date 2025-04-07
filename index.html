@@ -1,37 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Credyfast</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Credyfast - Inicio de Sesión</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-
-    <!-- 🔽 NUEVO: contenedor principal para centrar el contenido en columna -->
+    <!-- Contenedor principal -->
     <div class="main-container">
+        
+        <!-- 🔵 Encabezado -->
+        <header class="header">
+            <div class="logo-box">
+                <img src="logo.png" alt="Logo Credyfast" class="logo-header" />
+            </div>
+            <div>
+                <h1 class="welcome-text">Bienvenido a CredyFast</h1>
+            </div>
+            <div class="header-login-button">
+                <a href="#loginForm" class="btn-link">Ingresar</a>
+            </div>
+        </header>
 
-        <!-- 🔼 Logo arriba y centrado -->
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo Credyfast" class="logo">
-        </div>
+        <!-- 🟢 Contenido principal -->
+        <main class="content">
+            <div >
+                <img src="logo.png" alt="Logo Credyfast" class="logo-container" />
+            </div>
+            <!-- Descripción con imagen -->
+            <section class="description">
+                <p>📱 Tu mejor opción para comprar celulares a crédito y solicitar préstamos personales de forma rápida y segura.</p>
+                <img src="celular.png" alt="Celular Credyfast" class="promo-image">
+            </section>
 
-        <!-- 🔽 Formulario más abajo -->
-        <div class="login-container">
-            <h2>Iniciar Sesión</h2>
-            <form id="loginForm">
-                <label for="username">Usuario:</label>
-                <input type="text" id="username" required>
-                
-                <label for="password">Contraseña:</label>
-                <input type="password" id="password" required>
-                
-                <button type="submit">Ingresar</button>
-            </form>
-            <p id="error-message" class="error-message"></p>
-        </div>
-
-    </div> <!-- 🔚 Cierre del contenedor principal -->
+            <!-- Login -->
+            <section class="login-section">
+                <h2>Iniciar Sesión</h2>
+                <form id="loginForm">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" required />
+                    
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" required />
+                    
+                    <button type="submit">Ingresar</button>
+                </form>
+                <p id="error-message" class="error-message"></p>
+            </section>
+        </main>
+        
+        <!-- 🔻 Pie de página -->
+        <footer class="footer">
+            <p>Creado por Mauricio Mejía</p>
+            <p>© Credyfast, marca registrada</p>
+            <p>📞 Ventas: 2791175812 | Cobranza: 2791111621 | Soporte: 5514837461</p>
+        </footer>
+    </div>
 
     <script src="auth.js"></script>
 </body>
