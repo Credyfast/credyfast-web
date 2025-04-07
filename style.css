@@ -56,4 +56,10 @@ body {
   #menu button:hover {
     background-color: #0b79d1;
   }
-  
+
+  /* Contenedor del logo */
+.logo-container {
+    width: 250px;
+    height: auto;
+   /* margin-bottom: 20px;*/
+}
