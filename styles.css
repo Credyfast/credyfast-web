@@ -1,60 +1,109 @@
-/* Estilo general del body */
+/* Estilo general */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    background-color: #f4f4f4;
+    background-color: #f9f9f9;
     height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: start; /* Alinea desde arriba en lugar de centro total */
+    align-items: start;
 }
 
-/* Contenedor principal que agrupa el logo y el login */
+/* Contenedor principal */
 .main-container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+}
+
+/* 🔵 HEADER */
+.header {
+    width: 100%;
+    background-color: #339dff; /* Azul más claro */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 40px; /* Separación de bordes izquierda/derecha */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logo-header {
+    height: 70px;
+    margin-left: 15px;
+    
+}
+
+.header-login-button .btn-link {
+    background-color: white;
+    padding-right: 20px;
+    color: #339dff;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.header-login-button .btn-link:hover {
+    background-color: #e6e6e6;
+}
+
+/* 🟢 CONTENIDO */
+.content {
+    max-width: 600px;
+    padding: 30px;
+    text-align: center;
     margin-top: 40px;
+}
+
+/* Títulos */
+.description h1 {
+    color: #339dff;
+    font-size: 28px;
+}
+
+.description p {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Imagen de promoción */
+.promo-image {
+    width: 100%;
+    max-width: 200px;
+    border-radius: 15px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px; /* MÁS ESPACIO después de la imagen */
+}
+
+/* FORMULARIO LOGIN */
+.login-section {
+    background: white;
+    padding: 25px;
+    margin: 0 auto;
+    margin-bottom: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-}
-
-/* Contenedor del logo */
-.logo-container {
     text-align: center;
-    margin-bottom: 20px;
+    margin-top: 40px; /* más espacio abajo */
 }
 
-/* Logo grande para login */
-.logo {
-    width: 220px;
-    height: auto;
-}
-
-/* Contenedor del login y también útil para dashboard */
-.login-container,
-.dashboard-container {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 100%;
-}
-
-/* Campos de entrada */
 input {
     display: block;
-    width: 100%;
+    width: 95%;
     margin: 10px 0;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
 
-/* Botones generales */
 button {
-    background-color: #007bff;
+    background-color: #339dff;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -63,26 +112,30 @@ button {
     width: 100%;
 }
 
-/* Efecto hover del botón */
 button:hover {
-    background-color: #0056b3;
+    background-color: #1d8de0;
 }
 
-/* Oculta el dashboard por defecto */
-.dashboard-container {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Estilo para mensaje de error */
 #error-message {
     color: red;
     margin-top: 10px;
 }
 
-/* Logo más pequeño para dashboard (opcional, si lo usas ahí) */
-.logo-dashboard {
-    width: 90px;
+/* 🔻 FOOTER */
+.footer {
+    background-color: #f1f1f1;
+    padding: 20px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    width: 100%;
+    margin-top: 40px;
+    border-top: 1px solid #ccc;
+}
+
+/* Contenedor del logo */
+.logo-container {
+    width: 250px;
     height: auto;
+   /* margin-bottom: 20px;*/
 }
