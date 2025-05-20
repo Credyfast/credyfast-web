@@ -8,9 +8,35 @@ body {
     margin: 0;
     background-color: #f4f4f4;
   }
+
+  /* Contenedor principal */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
   
+/* 🔵 HEADER */
+.header {
+  width: 100%;
+  background-color: #8cc2f5; /* Azul más claro */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 40px; /* Separación de bordes izquierda/derecha */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logo-header {
+  height: 90px;
+  margin-left: 15px;
+  
+}
+
   #login-container {
-    background-color: white;
+    background-color: rgb(66, 235, 66);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -47,19 +73,20 @@ body {
     margin: 10px 0;
     padding: 10px;
     width: 100%;
-    background-color: #2196F3;
+    background-color: #36b5ff;
     color: white;
     border: none;
     border-radius: 5px;
   }
   
   #menu button:hover {
-    background-color: #0b79d1;
+    background-color: #193466;
   }
 
   /* Contenedor del logo */
 .logo-container {
-    width: 250px;
+    width: 25px;
     height: auto;
    /* margin-bottom: 20px;*/
 }
+

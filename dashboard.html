@@ -7,25 +7,42 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Contenedor principal -->
+  <div class="main-container">
+        
+      <!-- 🔵 Encabezado -->
+      <header class="header">
+          <div class="logo-box">
+              <img src="logo.png" alt="Logo Credyfast" class="logo-header" />
+          </div>
+          <div>
+              <h1 class="welcome-text">CredyFast</h1>
+          </div>
+      </header>
+    <!-- 🔽 NUEVO: Logo en la parte superior centrado -->
+    <!-- <div class="logo-container">
+      <img src="logo.png" alt="Logo Credyfast" class="logo-dashboard">
+    </div> -->
 
-  <!-- 🔽 NUEVO: Logo en la parte superior centrado -->
-  <div class="logo-container">
-    <img src="logo.png" alt="Logo Credyfast" class="logo-dashboard">
-  </div>
-
-  <div id="dashboard-container">
-    <h2>Bienvenido, <span id="user-role"></span></h2>
-    <div id="menu">
-      <!-- Los botones de acuerdo al rol del usuario -->
-      <button id="btn-celulares">Registro de Celulares</button>
-      <button id="btn-clientes">Registro de Clientes</button>
-      <button id="btn-pagos">Registrar Pagos</button>
-      <button id="btn-morosidad">Clientes Morosos</button>
-      <!-- Botón de Cerrar Sesión -->
-      <button id="logout-btn">Cerrar Sesión</button>
+    <div id="dashboard-container">
+      <h2>Bienvenido, <span id="user-role"></span></h2>
+      <div id="menu">
+        <!-- Los botones de acuerdo al rol del usuario -->
+        <button id="btn-celulares">Registro de Celulares</button>
+        <button id="btn-clientes">Registro de Clientes</button>
+        <button id="btn-pagos">Registrar Pagos</button>
+        <button id="btn-morosidad">Clientes Morosos</button>
+        <!-- Botón de Cerrar Sesión -->
+        <button id="logout-btn">Cerrar Sesión</button>
+      </div>
     </div>
+            <!-- 🔻 Pie de página -->
+            <footer class="footer">
+              <p>Creado por Mauricio Mejia</p>
+              <p>© Credyfast, marca registrada</p>
+              <p>📞 Ventas: 2791175812 | Cobranza: 2791111621 | Soporte: 5514837461</p>
+          </footer>
   </div>
-
   <script src="dashboard.js"></script>
 </body>
 </html>
