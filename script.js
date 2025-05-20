@@ -52,3 +52,35 @@ function setupMenu(role) {
     btnMorosidad.style.display = 'block';
   }
 }
+
+// REGISTRO DE CELULARES
+const celularForm = document.getElementById('celulares-form');
+if (celularForm) {
+  celularForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const celular = {
+      marca: document.getElementById('marca').value,
+      modelo: document.getElementById('modelo').value,
+      precio_compra: document.getElementById('precio_compra').value,
+      precio_venta: document.getElementById('precio_venta').value,
+      color: document.getElementById('color').value,
+      almacenamiento: document.getElementById('almacenamiento').value,
+      ram: document.getElementById('ram').value,
+    };
+
+    try {
+      const res = await fetch('/api/registrarCelular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(celular)
+      });
+
+      const data = await res.json();
+      alert(data.mensaje);
+    } catch (err) {
+      console.error(err);
+      alert('Error al registrar el celular');
+    }
+  });
+}
