@@ -54,33 +54,33 @@ function setupMenu(role) {
 }
 
 // REGISTRO DE CELULARES
-const celularForm = document.getElementById('celulares-form');
-if (celularForm) {
-  celularForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
+document.getElementById('celulares-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-    const celular = {
-      marca: document.getElementById('marca').value,
-      modelo: document.getElementById('modelo').value,
-      precio_compra: document.getElementById('precio_compra').value,
-      precio_venta: document.getElementById('precio_venta').value,
-      color: document.getElementById('color').value,
-      almacenamiento: document.getElementById('almacenamiento').value,
-      ram: document.getElementById('ram').value,
-    };
+  const data = {
+    marca_id: document.getElementById('marca').value,
+    modelo: document.getElementById('modelo').value,
+    modelo_comercial: document.getElementById('modelo_comercial').value,
+    imei: document.getElementById('imei').value,
+    ram: document.getElementById('ram').value,
+    almacenamiento: document.getElementById('almacenamiento').value,
+    color: document.getElementById('color').value,
+    precio_compra_real: document.getElementById('precio_compra').value
+  };
 
-    try {
-      const res = await fetch('/api/registrarCelular', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(celular)
-      });
+  try {
+    const response = await fetch('/api/registrarCelular', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
 
-      const data = await res.json();
-      alert(data.mensaje);
-    } catch (err) {
-      console.error(err);
-      alert('Error al registrar el celular');
-    }
-  });
-}
+    const result = await response.json();
+    alert(result.message || 'Celular registrado correctamente');
+  } catch (error) {
+    console.error(error);
+    alert('Error al registrar el celular');
+  }
+});
