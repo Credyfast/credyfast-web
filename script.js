@@ -54,33 +54,37 @@ function setupMenu(role) {
 }
 
 // REGISTRO DE CELULARES
-document.getElementById('celulares-form').addEventListener('submit', async function (e) {
+document.getElementById("celulares-form").addEventListener("submit", function(e) {
   e.preventDefault();
 
   const data = {
-    marca_id: document.getElementById('marca').value,
-    modelo: document.getElementById('modelo').value,
-    modelo_comercial: document.getElementById('modelo_comercial').value,
-    imei: document.getElementById('imei').value,
-    ram: document.getElementById('ram').value,
-    almacenamiento: document.getElementById('almacenamiento').value,
-    color: document.getElementById('color').value,
-    precio_compra_real: document.getElementById('precio_compra').value
+    marca_id: document.getElementById("marca_id").value,
+    modelo: document.getElementById("modelo").value,
+    modelo_comercial: document.getElementById("modelo_comercial").value,
+    imei: document.getElementById("imei").value,
+    ram: document.getElementById("ram").value,
+    almacenamiento: document.getElementById("almacenamiento").value,
+    color: document.getElementById("color").value,
+    precio_compra_real: document.getElementById("precio_compra_real").value
   };
 
-  try {
-    const response = await fetch('/api/registrarCelular', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-
-    const result = await response.json();
-    alert(result.message || 'Celular registrado correctamente');
-  } catch (error) {
-    console.error(error);
-    alert('Error al registrar el celular');
-  }
+  fetch("https://sheetdb.io/api/v1/4t8911l56sdo8", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ data: data })
+  })
+  .then(response => {
+    if (response.ok) {
+      alert("✅ Celular registrado correctamente.");
+      document.getElementById("celulares-form").reset();
+    } else {
+      alert("⚠️ Error al registrar el celular.");
+    }
+  })
+  .catch(error => {
+    console.error("❌ Error de red:", error);
+    alert("❌ Fallo en la conexión al servidor.");
+  });
 });
