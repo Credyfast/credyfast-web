@@ -61,14 +61,14 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
 
       const data = {
-        marca_id: document.getElementById('marca').value,
+        marca_id: document.getElementById('marca_id').value,
         modelo: document.getElementById('modelo').value,
         modelo_comercial: document.getElementById('modelo_comercial').value,
         imei: document.getElementById('imei').value,
         ram: document.getElementById('ram').value,
         almacenamiento: document.getElementById('almacenamiento').value,
         color: document.getElementById('color').value,
-        precio_compra_real: document.getElementById('precio_compra').value
+        precio_compra_real: document.getElementById('precio_compra_real').value
       };
 
       try {
