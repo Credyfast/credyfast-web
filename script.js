@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
       };
 
       try {
-        const response = await fetch('https://sheetdb.io/api/v1/4t8911l56sdo8', {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbwzQU7Esmj_b1EfWV9j2bDwo9ayDlgLBCqI77Yd6Ug1pjWYavlnHQ8WZGrEtNgyM2QNpQ/exec', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
