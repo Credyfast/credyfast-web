@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/rifa",
+      "destination": "https://script.google.com/macros/s/AKfycbzVMWmex2rZB4y6OEpL1vxsPPXvRv3txhtB1iByH3nC380MnwbjFEYTC2e8ohd6fOwI/exec"
+    }
+  ]
+}
