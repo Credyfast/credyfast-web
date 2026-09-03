@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CredyFast — Sistema de Créditos</title>
+  <meta name="description" content="Sistema de gestión de créditos CredyFast. Sueña en Grande.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/views.css">
+</head>
+<body>
+
+  <!-- ══ PANTALLA DE LOGIN ══════════════════════════════════ -->
+  <div id="login-screen" class="login-overlay hidden">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="assets/logo.png" alt="CredyFast"
+             onerror="this.style.display='none'"
+             style="width:130px;margin:0 auto 10px">
+        <div class="login-brand">
+          <span class="brand-credy">CREDY</span><span class="brand-fast">FAST</span>
+        </div>
+        <p class="login-tagline">SUEÑA EN GRANDE</p>
+      </div>
+
+      <form id="login-form" autocomplete="off" novalidate>
+        <div class="form-group">
+          <label for="login-username">Usuario</label>
+          <input type="text" id="login-username" name="username"
+                 placeholder="Nombre de usuario" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" name="password"
+                 placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <div id="login-error" class="login-error hidden"></div>
+        <button type="submit" id="login-btn" class="btn btn-primary btn-full">
+          <span id="login-btn-text">Iniciar Sesión</span>
+          <span id="login-btn-loader" class="hidden">Verificando…</span>
+        </button>
+      </form>
+
+      <p class="login-footer">CredyFast v4.0 &nbsp;·&nbsp; Creado por Mauricio Mejia</p>
+    </div>
+  </div>
+
+  <!-- ══ APP SHELL (SPA) ════════════════════════════════════ -->
+  <div id="app-shell" class="app-shell hidden">
+
+    <!-- Overlay para mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <span class="brand-credy">CREDY</span><span class="brand-fast">FAST</span>
+        </div>
+        <div class="sidebar-user">
+          <span class="sidebar-username" id="sidebar-username"></span>
+          <span class="sidebar-role-badge" id="sidebar-role"></span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- Inyectado por router.js según rol -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout" id="btn-logout">⏻&nbsp; Cerrar Sesión</button>
+      </div>
+    </aside>
+
+    <!-- ── Área principal ── -->
+    <div class="main-area">
+      <header class="main-header">
+        <div class="header-left">
+          <button class="btn-icon" id="btn-menu-toggle" aria-label="Menú">☰</button>
+          <h1 class="header-title" id="header-title">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <span id="notif-badge" class="notif-badge hidden">0</span>
+          <span class="header-date" id="header-date"></span>
+        </div>
+      </header>
+
+      <main class="view-container" id="view-container">
+        <div class="empty-state" style="padding:60px 0">
+          <div class="loading-spinner" style="margin:0 auto 16px"></div>
+          <p>Iniciando…</p>
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <!-- ══ TOAST CONTAINER ═══════════════════════════════════ -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ══ LOADING OVERLAY ═══════════════════════════════════ -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- ══ SCRIPTS (orden importa: dependencias primero) ════ -->
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/utils.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/modules/dashboard.js"></script>
+  <script src="js/modules/pos.js"></script>
+  <script src="js/modules/clientes.js"></script>
+  <script src="js/modules/creditos.js"></script>
+  <script src="js/modules/cobranza.js"></script>
+  <script src="js/modules/caja.js"></script>
+  <script src="js/modules/productos.js"></script>
+  <script src="js/modules/usuarios.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,722 @@
+/* ============================================================
+   CredyFast — views.css  |  Estilos específicos por vista
+   ============================================================ */
+
+/* ══ LOGIN ════════════════════════════════════════════════ */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--cf-primary-dark) 0%, var(--cf-primary) 50%, #1a4a6e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.login-card {
+  background: var(--cf-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-logo img {
+  width: 120px;
+  margin: 0 auto 10px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  font-size: 1.7rem;
+  letter-spacing: 1px;
+}
+
+.login-brand .brand-credy {
+  color: var(--cf-primary);
+  font-weight: 700;
+}
+
+.login-brand .brand-fast {
+  color: var(--cf-teal);
+  font-weight: 800;
+}
+
+.login-tagline {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-muted);
+  margin-top: 2px;
+}
+
+#login-form .form-group {
+  margin-bottom: 16px;
+}
+
+#login-form label {
+  font-size: 0.82rem;
+}
+
+#login-form input {
+  padding: 11px 13px;
+  font-size: 0.95rem;
+}
+
+#login-form input:focus {
+  border-color: var(--cf-primary);
+  box-shadow: 0 0 0 3px rgba(22, 58, 95, 0.12);
+}
+
+.login-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  color: var(--cf-danger);
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+#login-form .btn-primary {
+  margin-top: 4px;
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--cf-muted);
+  margin-top: 20px;
+}
+
+/* ══ DASHBOARD ════════════════════════════════════════════ */
+.dashboard-view {}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media(max-width:1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media(max-width:700px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.dashboard-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media(max-width:900px) {
+  .dashboard-tables {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══ POS (CAJERO) ══════════════════════════════════════════ */
+.pos-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media(max-width:1000px) {
+  .pos-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pos-search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pos-search-bar input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 2px solid var(--cf-border);
+}
+
+.pos-search-bar input:focus {
+  border-color: var(--cf-teal);
+}
+
+.pos-search-bar .btn {
+  flex-shrink: 0;
+}
+
+.pos-client-card {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.pos-client-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.pos-client-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--cf-text-secondary);
+  margin-bottom: 10px;
+}
+
+.pos-credit-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--cf-surface-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cf-border);
+}
+
+/* Tabla de cuotas POS */
+.schedule-table td:first-child {
+  font-weight: 600;
+}
+
+.cuota-row-atrasada {
+  background: #fff5f5 !important;
+}
+
+.cuota-row-puntual {
+  background: #f0fdf4 !important;
+}
+
+.cuota-row-parcial {
+  background: #fefce8 !important;
+}
+
+/* Panel de cobro */
+.cobro-panel {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: sticky;
+  top: calc(var(--header-height) + 20px);
+}
+
+.cobro-panel-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--cf-primary);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--cf-border);
+}
+
+.monto-sugerido {
+  background: var(--cf-bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.monto-sugerido strong {
+  font-size: 1rem;
+  color: var(--cf-primary);
+}
+
+/* Ticket de resultado */
+.ticket-result {
+  background: var(--cf-surface);
+  border: 2px solid var(--cf-accent);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+
+.ticket-amount {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--cf-accent);
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.ticket-detail {
+  font-size: 0.82rem;
+  color: var(--cf-text-secondary);
+  margin: 4px 0;
+}
+
+/* ══ CLIENTES / CRÉDITOS ══════════════════════════════════ */
+.split-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media(max-width:900px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cf-border);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item:hover {
+  background: var(--cf-bg);
+}
+
+.list-item.selected {
+  background: #eff6ff;
+  border-left: 3px solid var(--cf-primary);
+}
+
+.list-item-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.list-item-sub {
+  font-size: 0.78rem;
+  color: var(--cf-text-secondary);
+  margin-top: 2px;
+}
+
+/* ══ COBRANZA ══════════════════════════════════════════════ */
+.cobranza-card {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cobranza-card-info {
+  flex: 1;
+}
+
+.cobranza-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media(max-width:600px) {
+  .cobranza-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ══ FOTO CAPTURE (Registro Cliente) ══════════════════════ */
+.foto-capture-box {
+  border: 2px dashed var(--cf-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.foto-capture-box:hover {
+  border-color: var(--cf-teal);
+  background: var(--cf-bg);
+}
+
+.foto-capture-box.uploaded {
+  border-color: var(--cf-accent);
+  border-style: solid;
+}
+
+.foto-capture-box .foto-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.foto-capture-box .foto-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cf-text-secondary);
+}
+
+.foto-capture-box .foto-req {
+  color: var(--cf-danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.foto-capture-box .foto-ok {
+  color: var(--cf-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.foto-preview {
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+  display: none;
+}
+
+.foto-preview.visible {
+  display: block;
+}
+
+.foto-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media(max-width:500px) {
+  .foto-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══ MAPA LEAFLET ══════════════════════════════════════════ */
+#leaflet-map {
+  width: 100%;
+  height: 240px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--cf-border);
+  margin-bottom: 10px;
+  z-index: 1;
+}
+
+.map-coords-display {
+  font-size: 0.78rem;
+  color: var(--cf-muted);
+  text-align: center;
+  padding: 4px;
+  background: var(--cf-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  font-family: monospace;
+}
+
+/* ══ NOTIFICACIÓN BADGE ════════════════════════════════════ */
+.notif-badge {
+  background: var(--cf-danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  margin-right: 8px;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+
+  0%,
+  100% {
+    transform: scale(1)
+  }
+
+  50% {
+    transform: scale(1.15)
+  }
+}
+
+.nav-badge {
+  background: var(--cf-danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  margin-left: auto;
+}
+
+/* ══ MENÚ CARDS (roles simplificados) ═════════════════════ */
+.role-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.role-menu-card {
+  background: var(--cf-surface);
+  border: 2px solid var(--cf-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-menu-card:hover {
+  border-color: var(--cf-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.role-menu-card .menu-card-icon {
+  font-size: 2.4rem;
+}
+
+.role-menu-card .menu-card-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cf-text);
+}
+
+.role-menu-card .menu-card-desc {
+  font-size: 0.77rem;
+  color: var(--cf-muted);
+  line-height: 1.4;
+}
+
+/* ══ CAJA MODULE ═══════════════════════════════════════════ */
+.caja-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media(max-width:900px) {
+  .caja-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.saldo-display {
+  text-align: center;
+  padding: 18px;
+  border-bottom: 1px solid var(--cf-border);
+  margin-bottom: 14px;
+}
+
+.saldo-display .saldo-main {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--cf-accent);
+  line-height: 1;
+}
+
+.saldo-display .saldo-label {
+  font-size: 0.75rem;
+  color: var(--cf-muted);
+  margin-bottom: 4px;
+}
+
+.saldo-display .saldo-sub {
+  font-size: 0.8rem;
+  color: var(--cf-text-secondary);
+  margin-top: 4px;
+}
+
+.caja-action-btn {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  border: 1.5px solid var(--cf-border);
+  background: var(--cf-surface);
+  color: var(--cf-text);
+  transition: all var(--transition);
+}
+
+.caja-action-btn:hover {
+  border-color: var(--cf-primary);
+  background: var(--cf-bg);
+}
+
+.caja-action-btn .caja-btn-icon {
+  font-size: 1.4rem;
+}
+
+/* ══ COTIZADOR ═════════════════════════════════════════════ */
+.cotizador-result {
+  background: linear-gradient(135deg, var(--cf-primary) 0%, #1a4a6e 100%);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
+.cotizador-result .cotiz-titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  opacity: 0.75;
+  margin-bottom: 10px;
+}
+
+.cotizador-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cotizador-item .ci-label {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.cotizador-item .ci-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.periodo-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.periodo-btn {
+  padding: 8px 16px;
+  border: 2px solid var(--cf-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--cf-surface);
+  color: var(--cf-text);
+  transition: all var(--transition);
+}
+
+.periodo-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.periodo-btn.active {
+  border-color: var(--cf-primary);
+  background: var(--cf-primary);
+  color: #fff;
+}
+
+/* ══ ENTREGA PANEL ═════════════════════════════════════════ */
+.entrega-card {
+  background: #fffbeb;
+  border: 2px solid var(--cf-warning);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.entrega-card .entrega-title {
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+/* ══ TICKET VISITA ═════════════════════════════════════════ */
+.ticket-visita {
+  display: none;
+  background: #fff;
+  padding: 20px;
+  border: 2px dashed #000;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  max-width: 320px;
+  margin: 16px auto;
+}
+
+/* ══ @PRINT ═══════════════════════════════════════════════ */
+@media print {
+
+  .sidebar,
+  .main-header,
+  .cobro-panel,
+  .pos-search-bar,
+  .btn:not(.no-print-hide) {
+    display: none !important;
+  }
+
+  .main-area {
+    margin-left: 0;
+  }
+
+  .view-container {
+    padding: 0;
+  }
+
+  .ticket-result {
+    border: 1px solid #000;
+  }
+
+  .ticket-visita {
+    display: block !important;
+  }
+}

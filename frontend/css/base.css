@@ -1,0 +1,96 @@
+/* ============================================================
+   CredyFast — base.css  |  Variables, reset, tipografía
+   ============================================================ */
+
+:root {
+  /* ── Paleta CredyFast (extraída del logo) ── */
+  --cf-primary:        #163A5F;
+  --cf-primary-dark:   #0F2942;
+  --cf-primary-light:  #1E4D7B;
+  --cf-teal:           #0F9E8E;
+  --cf-teal-light:     #12B5A3;
+  --cf-gold:           #F0A500;
+
+  /* ── Funcionales ── */
+  --cf-accent:         #22C55E;
+  --cf-accent-dark:    #16A34A;
+  --cf-danger:         #DC2626;
+  --cf-danger-dark:    #B91C1C;
+  --cf-warning:        #F59E0B;
+  --cf-warning-dark:   #D97706;
+  --cf-info:           #3B82F6;
+
+  /* ── Fondos ── */
+  --cf-bg:             #F0F4F8;
+  --cf-surface:        #FFFFFF;
+  --cf-surface-2:      #F8FAFC;
+  --cf-border:         #E2E8F0;
+  --cf-border-dark:    #CBD5E1;
+
+  /* ── Texto ── */
+  --cf-text:           #1E293B;
+  --cf-text-secondary: #475569;
+  --cf-muted:          #94A3B8;
+
+  /* ── Sidebar ── */
+  --cf-sidebar-bg:     #0F2942;
+  --cf-sidebar-hover:  rgba(255,255,255,0.07);
+  --cf-sidebar-active: rgba(255,255,255,0.13);
+  --cf-sidebar-text:   #C8D8E8;
+
+  /* ── Dimensiones ── */
+  --sidebar-width:     220px;
+  --header-height:     56px;
+
+  /* ── Formas ── */
+  --radius-sm:         4px;
+  --radius:            8px;
+  --radius-lg:         12px;
+
+  /* ── Sombras ── */
+  --shadow-sm:         0 1px 3px rgba(0,0,0,0.07);
+  --shadow:            0 2px 8px rgba(0,0,0,0.10);
+  --shadow-lg:         0 4px 20px rgba(0,0,0,0.13);
+
+  --transition:        0.15s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--cf-bg);
+  color: var(--cf-text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+ul, ol { list-style: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; font-size: inherit; }
+input, select, textarea { font-family: inherit; font-size: inherit; outline: none; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cf-border-dark); border-radius: 3px; }
+
+.hidden { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ── Tipografía utilitaria ── */
+.text-sm    { font-size: 0.8rem; }
+.text-lg    { font-size: 1.1rem; }
+.text-xl    { font-size: 1.3rem; }
+.text-muted { color: var(--cf-muted); }
+.text-secondary { color: var(--cf-text-secondary); }
+.text-success { color: var(--cf-accent); }
+.text-danger  { color: var(--cf-danger); }
+.text-warning { color: var(--cf-warning); }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
