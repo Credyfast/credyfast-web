@@ -6,7 +6,7 @@
 const Clientes = (() => {
 
   // ⚙ MODO PRUEBA — cambiar a false para producción (fuerza cámara y fotos obligatorias)
-  const MODO_PRUEBA = true;
+  const MODO_PRUEBA = false;
 
   let _selectedCliente = null;
   let _wizardStep = 1;
