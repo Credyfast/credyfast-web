@@ -15,7 +15,7 @@ const Creditos = (() => {
   function render() {
     const user = State.get('user');
     const esSup = ['SuperUsuario', 'Supervisor'].includes(user?.rol);
-    const esCaj = user?.rol === 'Cajero' || esSup;
+    const esCaj = ['Cajero', 'Vendedor'].includes(user?.rol) || esSup;
 
     return `
     <div>
@@ -96,7 +96,7 @@ const Creditos = (() => {
   function init() {
     const user = State.get('user');
     const esSup = ['SuperUsuario', 'Supervisor'].includes(user?.rol);
-    const esCaj = user?.rol === 'Cajero' || esSup;
+    const esCaj = ['Cajero', 'Vendedor'].includes(user?.rol) || esSup;
 
     _loadList();
     on('cr-filter-estatus', 'change', _loadList);
@@ -130,6 +130,7 @@ const Creditos = (() => {
   function _renderList(creditos) {
     const user = State.get('user');
     const esSup = ['SuperUsuario', 'Supervisor'].includes(user?.rol);
+    const esCaj = ['Cajero', 'Vendedor'].includes(user?.rol) || esSup;
 
     setHTML('cr-list', renderTable([
       { key: 'IDCredito', label: 'ID', class: 'td-mono' },
@@ -145,7 +146,7 @@ const Creditos = (() => {
           if (r['ESTATUS'] === 'PENDIENTE' && esSup) {
             btns.push(`<button class="btn btn-success btn-sm" onclick="Creditos._accion('${r['IDCredito']}','aprobar')">✔ Aprobar</button>`);
             btns.push(`<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="Creditos._accion('${r['IDCredito']}','rechazar')">✖ Rechazar</button>`);
-          } else if (r['ESTATUS'] === 'APROBADO_EN_ESPERA' && (user?.rol === 'Cajero' || esSup)) {
+          } else if (r['ESTATUS'] === 'APROBADO_EN_ESPERA' && esCaj) {
             btns.push(`<button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${r['IDCredito']}','${r['Nombre_cliente'] || ''}')">📦 Confirmar Entrega</button>`);
           }
           return btns.join('') || '—';
