@@ -106,7 +106,7 @@ const Usuarios = (() => {
 
   function _renderTabla(usuarios) {
     setHTML('usr-table', renderTable([
-      { key: 'id',       label: 'ID',           class: 'td-mono', render: r => `<span style="font-size:.75rem">${(r['id']||'').substring(0,8)}…</span>` },
+      { key: 'id',       label: 'ID',           class: 'td-mono', render: r => `<span style="font-size:.82rem;font-weight:600">${r['id'] || '—'}</span>` },
       { key: 'username', label: 'Username',     render: r => `<strong>${r['username'] || '—'}</strong>` },
       { key: 'nombre',   label: 'Nombre',       render: r => r['nombre'] || '—' },
       { key: 'rol',      label: 'Rol',          render: r => _badgeRol(r['rol']) },
