@@ -40,9 +40,6 @@ const Caja = (() => {
               <button class="caja-action-btn" id="btn-caja-retiro">
                 <span class="caja-btn-icon">💸</span><div><div>Retiro</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Retiro de caja</div></div>
               </button>
-              <button class="caja-action-btn" id="btn-caja-cartera">
-                <span class="caja-btn-icon">🧳</span><div><div>Vaciar Cartera Cobrador</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Cobrador entregó dinero</div></div>
-              </button>
               ${esSup ? `
               <button class="caja-action-btn" id="btn-caja-corte">
                 <span class="caja-btn-icon">📊</span><div><div>Corte de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Reporte del día</div></div>
@@ -150,7 +147,6 @@ const Caja = (() => {
     on('btn-caja-pago',      'click', () => Router.navigate('#/pos'));
     on('btn-caja-retiro',    'click', _openRetiro);
     on('btn-caja-contado',   'click', _openContado);
-    on('btn-caja-cartera',   'click', _openCartera);
     on('btn-caja-corte',     'click', _openCorte);
     on('modal-retiro-close',  'click', () => $('modal-retiro').classList.add('hidden'));
     on('modal-contado-close', 'click', () => $('modal-contado').classList.add('hidden'));
@@ -196,9 +192,9 @@ const Caja = (() => {
         return;
       }
       setHTML('caja-cobradores', renderTable([
-        { key: 'cobradorId', label: 'Cobrador' },
+        { key: 'nombre', label: 'Cobrador', render: r => `<strong>${r['nombre'] || r['cobradorId']}</strong>` },
         { key: 'saldo', label: 'Saldo en Campo', class: 'td-right td-amount', render: r => fmt.currency(r['saldo']) },
-        { key: '_acc', label: '', render: r => `<button class="btn btn-primary btn-sm" onclick="Caja._vaciarCobrador('${r['cobradorId']}',${r['saldo']})">Vaciar</button>` },
+        { key: '_acc', label: '', render: r => `<button class="btn btn-primary btn-sm" onclick="Caja._vaciarCobrador('${r['cobradorId']}',${r['saldo']},'${(r['nombre']||r['cobradorId']).replace(/'/g,'')}')">Vaciar</button>` },
       ], res.data, ''));
     } catch(_) {}
   }
@@ -299,12 +295,13 @@ const Caja = (() => {
   }
 
   // ── Vaciar cobrador específico desde tabla ─────────────────
-  function _vaciarCobrador(cobradorId, saldo) {
+  function _vaciarCobrador(cobradorId, saldo, nombre) {
     $('modal-cartera').classList.remove('hidden');
     $('modal-cartera').style.display = 'flex';
+    const displayNombre = nombre || cobradorId;
     setHTML('cartera-body', `
       <div class="alert alert-info" style="margin-bottom:14px">
-        Cobrador: <strong>${cobradorId}</strong><br>
+        Cobrador: <strong>${displayNombre}</strong><br>
         Saldo en campo: <strong>${fmt.currency(saldo)}</strong>
       </div>
       <div class="form-group"><label>Monto recibido ($) *</label><input type="number" id="cartera-monto" class="input-lg" value="${saldo}" min="0.01" step="0.01"></div>
