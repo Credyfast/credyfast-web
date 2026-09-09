@@ -197,6 +197,35 @@ const Clientes = (() => {
 
   function _renderDetail(cl) {
     const fotosOk = cl['INE_Frente_ID'] && cl['INE_Reverso_ID'] && cl['Comprobante_ID'];
+
+    // Formatear fecha de nacimiento a YYYY/MM/DD
+    function _fmtNac(raw) {
+      if (!raw) return '—';
+      const s = String(raw);
+      // Viene como dd/mm/yyyy del backend
+      const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+      // Si ya viene como ISO (2026-09-09T...) recortar
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return `${iso[1]}/${iso[2]}/${iso[3]}`;
+      return s;
+    }
+
+    // Coordenadas
+    const coords = cl['Ubicacion'] ? String(cl['Ubicacion']).trim() : '';
+    const coordsParts = coords ? coords.split(',') : [];
+    const hasCoords = coordsParts.length === 2;
+    const mapsUrl = hasCoords
+      ? `https://www.google.com/maps?q=${coordsParts[0].trim()},${coordsParts[1].trim()}`
+      : '';
+
+    // Botones de documentos
+    function _docBtn(label, fileId) {
+      if (!fileId) return `<span style="opacity:.4;font-size:.78rem">${label}: —</span>`;
+      const url = `https://drive.google.com/uc?id=${fileId}`;
+      return `<a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.75rem">📄 ${label}</a>`;
+    }
+
     setHTML('cl-detail', `
       <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px">${cl['Nombre_completo']}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
@@ -205,23 +234,153 @@ const Clientes = (() => {
         ${cl['Sexo'] ? `<span class="badge badge-muted">${cl['Sexo']}</span>` : ''}
       </div>
       <hr class="divider">
+
       <div class="grid-2" style="gap:10px;font-size:.85rem;margin-bottom:14px">
         <div><div class="text-muted text-sm">CURP</div><div class="fw-600 td-mono" style="word-break:break-all">${cl['CURP'] || '—'}</div></div>
         <div><div class="text-muted text-sm">INE (IDMEX)</div><div>${cl['IDMEX'] || '—'}</div></div>
-        <div><div class="text-muted text-sm">Fecha nacimiento</div><div>${cl['Fecha_de_nacimiento'] || '—'}</div></div>
+        <div><div class="text-muted text-sm">Fecha de nacimiento</div><div>${_fmtNac(cl['Fecha_de_nacimiento'])}</div></div>
         <div><div class="text-muted text-sm">Edad</div><div>${cl['Edad'] || '—'} años</div></div>
         <div style="grid-column:1/-1"><div class="text-muted text-sm">Dirección</div><div>${cl['Direccion'] || '—'}</div></div>
         <div><div class="text-muted text-sm">Ocupación</div><div>${cl['A_que_se_dedica'] || '—'}</div></div>
         <div><div class="text-muted text-sm">Ingreso semanal</div><div>${fmt.currency(cl['Ingreso_semanal'])}</div></div>
-        <div><div class="text-muted text-sm">Registrado</div><div>${fmt.date(cl['Marca_temporal'])}</div></div>
+        <div><div class="text-muted text-sm">Gastos semanales</div><div>${fmt.currency(cl['Gastos_semanales'])}</div></div>
+        <div><div class="text-muted text-sm">Fecha de registro</div><div>${fmt.date(cl['Marca_temporal'])}</div></div>
+        <div>
+          <div class="text-muted text-sm">Ubicación GPS</div>
+          ${hasCoords
+            ? `<div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:.78rem">${coordsParts[0].trim()}, ${coordsParts[1].trim()}</span>
+                <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.72rem;padding:2px 8px">🗺 Ir</a>
+               </div>`
+            : '<span style="opacity:.5;font-size:.78rem">Sin coordenadas</span>'}
+        </div>
       </div>
-      <button class="btn btn-primary btn-sm" id="btn-solicitar-cl">+ Solicitar Crédito</button>
+
+      <hr class="divider">
+      <div class="text-muted text-sm" style="margin-bottom:8px;font-weight:600">📂 Documentos</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        ${_docBtn('INE Frente',   cl['INE_Frente_ID'])}
+        ${_docBtn('INE Reverso',  cl['INE_Reverso_ID'])}
+        ${_docBtn('Comprobante',  cl['Comprobante_ID'])}
+      </div>
+
+      <hr class="divider">
+      <div class="text-muted text-sm" style="margin-bottom:8px;font-weight:600">💳 Créditos</div>
+      <div id="cl-creditos-panel"><div class="table-empty" style="font-size:.82rem">Cargando…</div></div>
+
+      <div style="margin-top:14px">
+        <button class="btn btn-primary btn-sm" id="btn-solicitar-cl">+ Solicitar Crédito</button>
+      </div>
     `);
+
+    // Listener solicitar crédito
     on('btn-solicitar-cl', 'click', () => {
       Router.navigate('#/creditos');
       setTimeout(() => { if (Creditos.initRequestFor) Creditos.initRequestFor(cl); }, 150);
     });
+
+    // Cargar créditos del cliente
+    _loadCreditosCliente(cl['IDCliente']);
   }
+
+  async function _loadCreditosCliente(IDCliente) {
+    const panel = $('cl-creditos-panel');
+    if (!panel) return;
+    try {
+      const res = await API.creditList({ IDCliente });
+      if (!res.ok || !res.data?.length) {
+        panel.innerHTML = '<div class="table-empty" style="font-size:.82rem">Sin créditos registrados.</div>';
+        return;
+      }
+      const creditos = res.data;
+      const estatusBadge = e => {
+        const map = {
+          'PENDIENTE':          'badge-warning',
+          'APROBADO_EN_ESPERA': 'badge-info',
+          'APROVADO':           'badge-success',
+          'FINALIZADO':         'badge-muted',
+          'RECHAZADO':          'badge-danger',
+        };
+        return `<span class="badge ${map[e] || 'badge-muted'}">${e}</span>`;
+      };
+      panel.innerHTML = creditos.map(cr => `
+        <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+            <div>
+              <span class="td-mono" style="font-size:.8rem;font-weight:700">${cr['IDCredito']}</span>
+              <span style="margin:0 6px;opacity:.4">·</span>
+              ${estatusBadge(cr['ESTATUS'])}
+            </div>
+            <div style="font-size:.8rem;color:var(--cf-text-secondary)">
+              ${cr['Periodo']} sem · Cuota: <strong>${fmt.currency(cr['Pago_puntual'])}</strong>
+              · Enganche: <strong>${fmt.currency(cr['Enganche'])}</strong>
+            </div>
+          </div>
+          ${['APROVADO','APROBADO_EN_ESPERA'].includes(cr['ESTATUS'])
+            ? `<div style="margin-top:8px">
+                <button class="btn btn-outline btn-sm" style="font-size:.75rem"
+                  onclick="Clientes._verCalendario('${cr['IDCredito']}')">
+                  📅 Ver Calendario de Pagos
+                </button>
+               </div>`
+            : ''}
+          <div id="cal-${cr['IDCredito']}" style="margin-top:8px"></div>
+        </div>
+      `).join('');
+    } catch(_) {
+      panel.innerHTML = '<div class="table-empty" style="font-size:.82rem;color:var(--cf-danger)">Error al cargar créditos.</div>';
+    }
+  }
+
+  async function _verCalendario(IDCredito) {
+    const calDiv = $(`cal-${IDCredito}`);
+    if (!calDiv) return;
+    if (calDiv.innerHTML.trim()) { calDiv.innerHTML = ''; return; } // toggle
+    calDiv.innerHTML = '<div style="font-size:.78rem;opacity:.6;padding:4px 0">Cargando calendario…</div>';
+    try {
+      const res = await API.pagoSchedule({ IDCredito });
+      if (!res.ok || !res.data?.length) {
+        calDiv.innerHTML = '<div style="font-size:.78rem;opacity:.6">Sin calendario disponible.</div>';
+        return;
+      }
+      const estatusCal = e => {
+        const map = {
+          'PUNTUAL':    '#22c55e', 'NORMAL': '#f59e0b', 'MOROSO': '#ef4444',
+          'POR COBRAR': '#6b7280', 'PARCIAL': '#3b82f6', 'ATRASADO': '#dc2626',
+          'FINALIZADO': '#9ca3af',
+        };
+        return `<span style="font-size:.7rem;font-weight:600;color:${map[e]||'#9ca3af'}">${e}</span>`;
+      };
+      const rows = res.data.slice(0, 60).map(p => `
+        <tr style="font-size:.75rem">
+          <td style="padding:3px 6px;opacity:.7">${p['Semana_num'] === 0 ? 'Eng.' : `S${p['Semana_num']}`}</td>
+          <td style="padding:3px 6px">${p['Fecha_programada'] ? fmt.date(p['Fecha_programada']) : '—'}</td>
+          <td style="padding:3px 6px;text-align:right">${fmt.currency(p['Monto_esperado'])}</td>
+          <td style="padding:3px 6px;text-align:right">${p['Monto_pagado'] > 0 ? fmt.currency(p['Monto_pagado']) : '—'}</td>
+          <td style="padding:3px 6px">${estatusCal(p['Estatus_de_pago'])}</td>
+        </tr>
+      `).join('');
+      calDiv.innerHTML = `
+        <div style="overflow-x:auto;margin-top:4px">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="font-size:.72rem;color:var(--cf-text-secondary);border-bottom:1px solid var(--cf-border)">
+                <th style="padding:3px 6px;text-align:left">#</th>
+                <th style="padding:3px 6px;text-align:left">Fecha</th>
+                <th style="padding:3px 6px;text-align:right">Esperado</th>
+                <th style="padding:3px 6px;text-align:right">Pagado</th>
+                <th style="padding:3px 6px;text-align:left">Estado</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    } catch(_) {
+      calDiv.innerHTML = '<div style="font-size:.78rem;color:var(--cf-danger)">Error al cargar calendario.</div>';
+    }
+  }
+
+
 
   // ── Wizard ─────────────────────────────────────────────────
   function _openWizard() {
@@ -497,5 +656,5 @@ const Clientes = (() => {
     return c === 'H' ? 'HOMBRE' : c === 'M' ? 'MUJER' : '';
   }
 
-  return { render, init };
+  return { render, init, _verCalendario };
 })();
