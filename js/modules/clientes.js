@@ -284,9 +284,9 @@ const Clientes = (() => {
       const mapEl = document.getElementById('leaflet-map');
       if (!mapEl || typeof L === 'undefined') return;
 
-      // Centro default: CDMX
-      const lat0 = parseFloat(_wizardData.lat) || 19.4326;
-      const lng0 = parseFloat(_wizardData.lng) || -99.1332;
+      // Centro default: coordenadas configuradas
+      const lat0 = parseFloat(_wizardData.lat) || 19.503627;
+      const lng0 = parseFloat(_wizardData.lng) || -96.616390;
 
       _leafletMap = L.map('leaflet-map').setView([lat0, lng0], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
