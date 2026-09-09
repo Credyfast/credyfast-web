@@ -30,7 +30,7 @@ const Clientes = (() => {
           <div style="padding:12px;border-bottom:1px solid var(--cf-border)">
             <div class="form-row">
               <div class="form-group" style="margin-bottom:0">
-                <input type="text" id="cl-search-input" placeholder="Nombre, CURP o ID…">
+                <input type="text" id="cl-search-input" placeholder="Buscar por nombre o apellido…">
               </div>
               <button class="btn btn-teal btn-sm" id="cl-search-btn">Buscar</button>
             </div>
