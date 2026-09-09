@@ -305,6 +305,18 @@ const Creditos = (() => {
   function _renderFormSolicitud(idClienteDefault = '') {
     setHTML('modal-cr-body', `
       <div class="form-group">
+        <label>Buscar cliente por nombre</label>
+        <div style="position:relative">
+          <input type="text" id="cr-buscar-nombre" placeholder="Escribe el nombre…" autocomplete="off">
+          <div id="cr-nombre-dropdown" style="
+            display:none;position:absolute;top:100%;left:0;right:0;z-index:300;
+            background:var(--cf-surface);border:1px solid var(--cf-border);
+            border-radius:var(--radius-sm);max-height:180px;overflow-y:auto;
+            box-shadow:0 4px 12px rgba(0,0,0,.15)
+          "></div>
+        </div>
+      </div>
+      <div class="form-group">
         <label>ID Cliente *</label>
         <div style="display:flex;gap:8px">
           <input type="text" id="cr-id-cliente" placeholder="CL00001" value="${idClienteDefault}">
@@ -332,6 +344,53 @@ const Creditos = (() => {
         <div class="form-group"><label>Referencia 2 — Nombre</label><input type="text" id="cr-ref2n"></div>
         <div class="form-group"><label>Teléfono</label><input type="tel" id="cr-ref2t"></div>
       </div>
+
+      <hr class="divider" style="margin:14px 0 10px">
+      <div style="font-size:.8rem;font-weight:700;color:var(--cf-text-secondary);margin-bottom:10px">📋 Información socioeconómica</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Dependientes económicos</label>
+          <select id="cr-dependientes">
+            ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado civil</label>
+          <select id="cr-estado-civil">
+            <option value="">-- Seleccionar --</option>
+            <option>Soltero/a</option>
+            <option>Casado/a</option>
+            <option>Unión libre</option>
+            <option>Divorciado/a</option>
+            <option>Viudo/a</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de vivienda</label>
+          <select id="cr-tipo-vivienda">
+            <option value="">-- Seleccionar --</option>
+            <option>Propia</option>
+            <option>Rentada</option>
+            <option>Familiar</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Antigüedad de domicilio (años)</label>
+          <select id="cr-antiguedad">
+            ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join('')}
+            <option value="+10">+10</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Referencias de domicilio</label>
+        <input type="text" id="cr-ref-domicilio" placeholder="Vecinos, referencias cercanas…">
+      </div>
+
       <div class="form-group">
         <label>Notas</label>
         <textarea id="cr-notas" rows="2" placeholder="Opcional…" style="resize:vertical"></textarea>
@@ -339,12 +398,54 @@ const Creditos = (() => {
       <button class="btn btn-primary btn-full" id="cr-submit-btn">Enviar Solicitud</button>
     `);
     _loadProductos();
-    on('cr-buscar-cl', 'click', _verificarCliente);
+    on('cr-buscar-cl',  'click',   _verificarCliente);
     on('cr-id-cliente', 'keydown', e => { if (e.key === 'Enter') _verificarCliente(); });
-    on('cr-producto', 'change', _onProductoChange);
-    on('cr-submit-btn', 'click', _submitSolicitud);
+    on('cr-producto',   'change',  _onProductoChange);
+    on('cr-submit-btn', 'click',   _submitSolicitud);
     if (idClienteDefault) setTimeout(_verificarCliente, 100);
+
+    // ── Búsqueda por nombre con autocomplete ─────────────────
+    let _searchTimer = null;
+    const nombreInput    = $('cr-buscar-nombre');
+    const dropdown       = $('cr-nombre-dropdown');
+    const idInput        = $('cr-id-cliente');
+
+    if (nombreInput && dropdown) {
+      nombreInput.addEventListener('input', () => {
+        clearTimeout(_searchTimer);
+        const q = nombreInput.value.trim();
+        if (q.length < 2) { dropdown.style.display = 'none'; return; }
+        _searchTimer = setTimeout(async () => {
+          try {
+            const res = await API.clientSearch({ query: q });
+            if (!res.ok || !res.data?.length) {
+              dropdown.innerHTML = '<div style="padding:8px 12px;font-size:.82rem;opacity:.6">Sin resultados</div>';
+              dropdown.style.display = 'block';
+              return;
+            }
+            dropdown.innerHTML = res.data.map(cl => `
+              <div style="padding:8px 12px;cursor:pointer;font-size:.83rem;
+                border-bottom:1px solid var(--cf-border)"
+                onmousedown="event.preventDefault()"
+                onclick="(function(){
+                  document.getElementById('cr-id-cliente').value='${cl['IDCliente']}';
+                  document.getElementById('cr-buscar-nombre').value='${(cl['Nombre_completo']||'').replace(/'/g,'\\&apos;')}';
+                  document.getElementById('cr-nombre-dropdown').style.display='none';
+                  Creditos._verificarClientePublic();
+                })()">
+                <strong>${cl['Nombre_completo'] || cl['IDCliente']}</strong>
+                <span style="opacity:.55;margin-left:6px">${cl['IDCliente']}</span>
+              </div>`).join('');
+            dropdown.style.display = 'block';
+          } catch(_) {}
+        }, 300);
+      });
+      nombreInput.addEventListener('blur', () => {
+        setTimeout(() => { dropdown.style.display = 'none'; }, 200);
+      });
+    }
   }
+
 
   async function _loadProductos() {
     if (_productos.length) { _fillProductSelect(); return; }
@@ -431,10 +532,13 @@ const Creditos = (() => {
     } catch (_) { setHTML('cr-cliente-info', 'Error de búsqueda.'); }
   }
 
+  // Expuesto para llamarse desde el autocomplete inline
+  function _verificarClientePublic() { _verificarCliente(); }
+
   async function _submitSolicitud() {
     const IDCliente = $('cr-id-cliente')?.value.trim();
-    const IDProd = $('cr-producto')?.value;
-    const Celular = $('cr-celular')?.value.trim();
+    const IDProd    = $('cr-producto')?.value;
+    const Celular   = $('cr-celular')?.value.trim();
     if (!IDCliente || !IDProd) { toast('Cliente y producto son obligatorios.', 'warning'); return; }
     if (!_periodoSel) { toast('Selecciona un periodo.', 'warning'); return; }
     if (!Celular) { toast('Celular del cliente es obligatorio.', 'warning'); return; }
@@ -446,10 +550,16 @@ const Creditos = (() => {
     try {
       const res = await API.creditRequest({
         IDCliente, IDProd, Periodo: _periodoSel, Celular,
-        Nombre_referencia_1: ref1n, Numero_referencia_1: ref1t,
-        Nombre_referencia_2: $('cr-ref2n')?.value || '',
-        Numero_referencia_2: $('cr-ref2t')?.value || '',
-        NOTAS: $('cr-notas')?.value || '',
+        Nombre_referencia_1:   ref1n,
+        Numero_referencia_1:   ref1t,
+        Nombre_referencia_2:   $('cr-ref2n')?.value || '',
+        Numero_referencia_2:   $('cr-ref2t')?.value || '',
+        NOTAS:                 $('cr-notas')?.value || '',
+        Dependientes_economicos: $('cr-dependientes')?.value || '0',
+        Tipo_vivienda:           $('cr-tipo-vivienda')?.value || '',
+        Antiguedad_domicilio:    $('cr-antiguedad')?.value || '0',
+        Referencias_domicilio:   $('cr-ref-domicilio')?.value || '',
+        Estado_civil:            $('cr-estado-civil')?.value || '',
       });
       if (res.ok) {
         toast(`✔ Solicitud ${res.id} enviada. Pendiente de aprobación.`, 'success', 5000);
@@ -460,5 +570,5 @@ const Creditos = (() => {
     finally { showLoading(false); }
   }
 
-  return { render, init, initRequestFor, _accion, _confirmarEntrega };
+  return { render, init, initRequestFor, _accion, _confirmarEntrega, _verificarClientePublic };
 })();
