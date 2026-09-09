@@ -303,33 +303,74 @@ const Clientes = (() => {
         };
         return `<span class="badge ${map[e] || 'badge-muted'}">${e}</span>`;
       };
-      panel.innerHTML = creditos.map(cr => `
+      panel.innerHTML = creditos.map(cr => {
+        const estatusBadge = e => {
+          const map = {
+            'PENDIENTE':          'badge-warning',
+            'APROBADO_EN_ESPERA': 'badge-info',
+            'APROVADO':           'badge-success',
+            'FINALIZADO':         'badge-muted',
+            'RECHAZADO':          'badge-danger',
+          };
+          return `<span class="badge ${map[e] || 'badge-muted'}">${e}</span>`;
+        };
+        const conCalendario = ['APROVADO','APROBADO_EN_ESPERA','FINALIZADO'].includes(cr['ESTATUS']);
+        return `
         <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
             <div>
               <span class="td-mono" style="font-size:.8rem;font-weight:700">${cr['IDCredito']}</span>
               <span style="margin:0 6px;opacity:.4">·</span>
               ${estatusBadge(cr['ESTATUS'])}
+              <span id="estado-pago-${cr['IDCredito']}"></span>
             </div>
             <div style="font-size:.8rem;color:var(--cf-text-secondary)">
               ${cr['Periodo']} sem · Cuota: <strong>${fmt.currency(cr['Pago_puntual'])}</strong>
               · Enganche: <strong>${fmt.currency(cr['Enganche'])}</strong>
             </div>
           </div>
-          ${['APROVADO','APROBADO_EN_ESPERA'].includes(cr['ESTATUS'])
+          ${conCalendario
             ? `<div style="margin-top:8px">
                 <button class="btn btn-outline btn-sm" style="font-size:.75rem"
-                  onclick="Clientes._verCalendario('${cr['IDCredito']}')">
+                  onclick="Clientes._verCalendario('${cr['IDCredito']}')"
+                  id="btn-cal-${cr['IDCredito']}">
                   📅 Ver Calendario de Pagos
                 </button>
                </div>`
             : ''}
           <div id="cal-${cr['IDCredito']}" style="margin-top:8px"></div>
         </div>
-      `).join('');
+      `;
+      }).join('');
+
+      // Cargar estado de pago de cada crédito activo en paralelo
+      creditos
+        .filter(cr => ['APROVADO','APROBADO_EN_ESPERA'].includes(cr['ESTATUS']))
+        .forEach(cr => _cargarEstadoPago(cr['IDCredito']));
+
     } catch(_) {
       panel.innerHTML = '<div class="table-empty" style="font-size:.82rem;color:var(--cf-danger)">Error al cargar créditos.</div>';
     }
+  }
+
+  async function _cargarEstadoPago(IDCredito) {
+    try {
+      const res = await API.pagoSchedule({ IDCredito });
+      const el = $(`estado-pago-${IDCredito}`);
+      if (!el) return;
+      if (!res.ok || !res.pagos?.length) return;
+      const atrasadas = res.pagos.filter(p => p['Estatus_de_pago'] === 'ATRASADO').length;
+      const todasPagadas = res.pagos.every(p =>
+        ['PUNTUAL','NORMAL','MOROSO','FINALIZADO'].includes(p['Estatus_de_pago'])
+      );
+      if (todasPagadas) {
+        el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:#9ca3af;margin-left:4px">● Finalizado</span>';
+      } else if (atrasadas > 0) {
+        el.innerHTML = `<span style="font-size:.72rem;font-weight:600;color:#ef4444;margin-left:4px">● ${atrasadas} sem. atrasada${atrasadas>1?'s':''}</span>`;
+      } else {
+        el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:#22c55e;margin-left:4px">● Al corriente</span>';
+      }
+    } catch(_) {}
   }
 
   async function _verCalendario(IDCredito) {
@@ -339,7 +380,8 @@ const Clientes = (() => {
     calDiv.innerHTML = '<div style="font-size:.78rem;opacity:.6;padding:4px 0">Cargando calendario…</div>';
     try {
       const res = await API.pagoSchedule({ IDCredito });
-      if (!res.ok || !res.data?.length) {
+      // El backend retorna { ok, credito, pagos } — NO data
+      if (!res.ok || !res.pagos?.length) {
         calDiv.innerHTML = '<div style="font-size:.78rem;opacity:.6">Sin calendario disponible.</div>';
         return;
       }
@@ -351,12 +393,12 @@ const Clientes = (() => {
         };
         return `<span style="font-size:.7rem;font-weight:600;color:${map[e]||'#9ca3af'}">${e}</span>`;
       };
-      const rows = res.data.slice(0, 60).map(p => `
+      const rows = res.pagos.slice(0, 60).map(p => `
         <tr style="font-size:.75rem">
-          <td style="padding:3px 6px;opacity:.7">${p['Semana_num'] === 0 ? 'Eng.' : `S${p['Semana_num']}`}</td>
+          <td style="padding:3px 6px;opacity:.7">${parseInt(p['Semana_num']) === 0 ? 'Eng.' : `S${p['Semana_num']}`}</td>
           <td style="padding:3px 6px">${p['Fecha_programada'] ? fmt.date(p['Fecha_programada']) : '—'}</td>
           <td style="padding:3px 6px;text-align:right">${fmt.currency(p['Monto_esperado'])}</td>
-          <td style="padding:3px 6px;text-align:right">${p['Monto_pagado'] > 0 ? fmt.currency(p['Monto_pagado']) : '—'}</td>
+          <td style="padding:3px 6px;text-align:right">${parseFloat(p['Monto_pagado']) > 0 ? fmt.currency(p['Monto_pagado']) : '—'}</td>
           <td style="padding:3px 6px">${estatusCal(p['Estatus_de_pago'])}</td>
         </tr>
       `).join('');
