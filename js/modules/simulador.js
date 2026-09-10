@@ -55,7 +55,7 @@ const Simulador = (() => {
     const sel = $('sim-producto'); 
     if (!sel) return;
     sel.innerHTML = '<option value="">-- Selecciona producto --</option>' +
-      _productos.map(p => `<option value="${p['IDProd']}">${p['MARCA']} ${p['MODELO']} ${p['COLOR'] || ''} — $${p['COSTO_MOSTRADO']}</option>`).join('');
+      _productos.map(p => `<option value="${p['IDProd']}">${p['IDProd']} - ${p['MOD_COMERCIAL']}</option>`).join('');
   }
 
   function _onProductoChange() {
@@ -111,6 +111,10 @@ const Simulador = (() => {
     cotiz.innerHTML = `
       <div class="cotizador-result">
         <div class="cotiz-titulo">💰 Simulación — ${_periodoSel} semanas</div>
+        <div style="font-size:0.8rem;color:var(--cf-text-secondary);margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--cf-border)">
+          <strong>${_prodSel['MARCA']} ${_prodSel['MODELO']}</strong> (${_prodSel['MOD_COMERCIAL'] || '—'})<br>
+          <span style="opacity:0.8">NS: ${_prodSel['NS'] || '—'} | RAM: ${_prodSel['RAM'] || 0}GB | Alm: ${_prodSel['ALMACENAMIENTO'] || 0}GB | Color: ${_prodSel['COLOR'] || '—'}</span>
+        </div>
         <div class="cotizador-grid">
           <div class="cotizador-item"><div class="ci-label">Enganche</div><div class="ci-val">${fmt.currency(enganche)}</div></div>
           <div class="cotizador-item"><div class="ci-label">Pago puntual</div><div class="ci-val">${fmt.currency(puntual)}</div></div>
