@@ -334,7 +334,7 @@ const POS = (() => {
     ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
     setHTML('pos-client-meta', metaItems);
 
-    const pagosCompletos = _pagosData.filter(p => ['PUNTUAL', 'NORMAL', 'MOROSO'].includes(p['Estatus_de_pago'])).length;
+    const pagosCompletos = _pagosData.filter(p => ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(p['Estatus_de_pago'])).length;
     const totalPagos = _pagosData.length;
 
     setHTML('pos-credit-status', `
