@@ -71,6 +71,34 @@ const POS = (() => {
             <button class="btn btn-ghost btn-full btn-sm" id="cobro-reset-btn">
               ✕ Cancelar / Nueva búsqueda
             </button>
+
+            <div style="border-top:1px solid var(--cf-border);margin-top:14px;padding-top:12px">
+              <div style="font-size:.72rem;color:var(--cf-text-secondary);text-transform:uppercase;font-weight:600;margin-bottom:8px">Opciones adicionales</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-outline btn-sm" id="cobro-btn-capital" style="flex:1;font-size:.75rem">💰 Abonar a Capital</button>
+                <button class="btn btn-outline btn-sm" id="cobro-btn-liquidar" style="flex:1;font-size:.75rem">🔒 Liquidar</button>
+              </div>
+
+              <!-- Panel: Abonar a Capital -->
+              <div id="cobro-capital-panel" class="hidden" style="margin-top:10px;background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:12px">
+                <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Abono a Capital</div>
+                <div id="cobro-capital-info" style="font-size:.78rem;color:var(--cf-text-secondary);margin-bottom:8px"></div>
+                <div id="cobro-capital-alerta" class="hidden" style="font-size:.78rem;color:var(--cf-danger);margin-bottom:8px;padding:8px;background:rgba(239,68,68,.08);border-radius:4px"></div>
+                <div id="cobro-capital-form" class="hidden">
+                  <div class="form-group" style="margin-bottom:8px">
+                    <label style="font-size:.78rem">Monto a abonar a capital ($)</label>
+                    <input type="number" id="cobro-capital-monto" min="0.01" step="0.01" placeholder="0.00" style="font-size:.9rem">
+                  </div>
+                  <button class="btn btn-primary btn-full btn-sm" id="cobro-capital-confirmar">✔ Confirmar Abono a Capital</button>
+                </div>
+              </div>
+
+              <!-- Panel: Liquidar -->
+              <div id="cobro-liquidar-panel" class="hidden" style="margin-top:10px;background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:12px">
+                <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Cálculo de Liquidación</div>
+                <div id="cobro-liquidar-detalle" style="font-size:.8rem"></div>
+              </div>
+            </div>
           </div>
 
           <div id="cobro-result" class="hidden">
@@ -102,6 +130,8 @@ const POS = (() => {
     on('cobro-reset-btn', 'click', _reset);
     on('cobro-nuevo-btn', 'click', _reset);
     on('cobro-monto-input', 'keydown', e => { if (e.key === 'Enter') _cobrar(); });
+    on('cobro-btn-capital',  'click', _toggleCapitalPanel);
+    on('cobro-btn-liquidar', 'click', _toggleLiquidarPanel);
   }
 
   // ── Búsqueda ───────────────────────────────────────────────
@@ -434,6 +464,127 @@ const POS = (() => {
       toast('✔ Pago registrado correctamente.', 'success');
     } catch (_) { toast('Error de conexión al registrar pago.', 'error'); }
     finally { btn.disabled = false; btn.textContent = '✔ Registrar Pago'; showLoading(false); }
+  }
+
+  // ── Abonar a Capital ───────────────────────────────────────
+  function _toggleCapitalPanel() {
+    if (!_creditoData) return;
+    const panel = $('cobro-capital-panel');
+    const liqPanel = $('cobro-liquidar-panel');
+    if (liqPanel) liqPanel.classList.add('hidden');
+    if (panel.classList.contains('hidden')) {
+      panel.classList.remove('hidden');
+      _iniciarCapitalPanel();
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+
+  async function _iniciarCapitalPanel() {
+    const IDCredito = _creditoData['IDCredito'];
+    const periodo = parseInt(_creditoData['Periodo']) || 1;
+    const contado = parseFloat(_creditoData['Precio_de_contado']) || 0;
+    const cuotaCapital = Math.round(contado / periodo * 100) / 100;
+
+    const infoEl  = $('cobro-capital-info');
+    const alertEl = $('cobro-capital-alerta');
+    const formEl  = $('cobro-capital-form');
+
+    setHTML('cobro-capital-info', `Cuota sin interés: <strong>${fmt.currency(cuotaCapital)}</strong> / semana`);
+    alertEl.classList.add('hidden');
+    formEl.classList.add('hidden');
+
+    // Verificar si tiene atrasos localmente
+    const atrasados = _pagosData.filter(p => p['Estatus_de_pago'] === 'ATRASADO');
+    if (atrasados.length > 0) {
+      setHTML('cobro-capital-alerta',
+        `⚠ El cliente tiene <strong>${atrasados.length}</strong> semana(s) atrasada(s). Debe ponerse al corriente antes de abonar a capital.`);
+      alertEl.classList.remove('hidden');
+    } else {
+      formEl.classList.remove('hidden');
+      const montoInput = $('cobro-capital-monto');
+      if (montoInput) { montoInput.value = ''; setTimeout(() => montoInput.focus(), 50); }
+      // Asignar confirmación solo una vez
+      const confirmBtn = $('cobro-capital-confirmar');
+      if (confirmBtn) {
+        confirmBtn.onclick = async () => {
+          const monto = parseFloat($('cobro-capital-monto')?.value);
+          if (!monto || monto <= 0) { toast('Ingresa un monto válido.', 'warning'); return; }
+          confirmBtn.disabled = true;
+          showLoading(true);
+          try {
+            const res = await API.pagoCapital({ IDCredito, montoCapital: monto });
+            if (res.ok) {
+              toast(`✔ ${res.message}`, 'success', 5000);
+              $('cobro-capital-panel').classList.add('hidden');
+              // Recargar calendario
+              await _loadSchedule(IDCredito, _clienteData);
+            } else { toast(res.message, 'error'); }
+          } catch (_) { toast('Error de conexión.', 'error'); }
+          finally { confirmBtn.disabled = false; showLoading(false); }
+        };
+      }
+    }
+  }
+
+  // ── Liquidar ───────────────────────────────────────────────
+  function _toggleLiquidarPanel() {
+    if (!_creditoData) return;
+    const panel = $('cobro-liquidar-panel');
+    const capPanel = $('cobro-capital-panel');
+    if (capPanel) capPanel.classList.add('hidden');
+    if (panel.classList.contains('hidden')) {
+      panel.classList.remove('hidden');
+      _cargarLiquidacion();
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+
+  async function _cargarLiquidacion() {
+    const IDCredito = _creditoData['IDCredito'];
+    setHTML('cobro-liquidar-detalle', '<div style="opacity:.6;font-size:.78rem">Calculando…</div>');
+    try {
+      const res = await API.pagoLiquidar({ IDCredito });
+      if (!res.ok) { setHTML('cobro-liquidar-detalle', `<span style="color:var(--cf-danger)">${res.message}</span>`); return; }
+      setHTML('cobro-liquidar-detalle', `
+        <table style="width:100%;font-size:.78rem;border-collapse:collapse">
+          <tr><td style="padding:3px 0;color:var(--cf-text-secondary)">Cuota sin interés</td>
+              <td style="text-align:right">${fmt.currency(res.cuotaSinInteres)} / sem</td></tr>
+          <tr><td style="padding:3px 0;color:var(--cf-danger)">Semanas atrasadas (${res.semanasAtrasadas})</td>
+              <td style="text-align:right;color:var(--cf-danger)">${fmt.currency(res.totalAtrasados)}</td></tr>
+          <tr><td style="padding:3px 0;color:var(--cf-text-secondary)">Semanas restantes (${res.semanasRestantes} × sin interés)</td>
+              <td style="text-align:right">${fmt.currency(res.totalRestantes)}</td></tr>
+          <tr style="border-top:1px solid var(--cf-border)">
+              <td style="padding:4px 0;font-weight:600">Subtotal</td>
+              <td style="text-align:right;font-weight:600">${fmt.currency(res.subtotal)}</td></tr>
+          <tr><td style="padding:2px 0;font-size:.72rem;color:var(--cf-text-secondary)">Recargo (5%)</td>
+              <td style="text-align:right;font-size:.72rem">${fmt.currency(res.recargo)}</td></tr>
+          <tr style="border-top:2px solid var(--cf-border)">
+              <td style="padding:6px 0;font-weight:800;font-size:.92rem">TOTAL A LIQUIDAR</td>
+              <td style="text-align:right;font-weight:800;font-size:.92rem;color:var(--cf-accent)">${fmt.currency(res.total)}</td></tr>
+        </table>
+        <button class="btn btn-danger btn-full btn-sm" style="margin-top:10px" id="cobro-liquidar-confirmar">🔒 Confirmar Liquidación Total</button>
+      `);
+      on('cobro-liquidar-confirmar', 'click', async () => {
+        const btn = $('cobro-liquidar-confirmar');
+        btn.disabled = true;
+        showLoading(true);
+        try {
+          const resReg = await API.pagoRegistrar({
+            IDCredito,
+            montoRecibido: res.total,
+            canal: 'CAJA',
+          });
+          if (resReg.ok) {
+            toast('✔ Liquidación registrada correctamente.', 'success', 5000);
+            $('cobro-liquidar-panel').classList.add('hidden');
+            _showTicket(resReg, res.total);
+          } else { toast(resReg.message, 'error'); }
+        } catch (_) { toast('Error de conexión.', 'error'); }
+        finally { btn.disabled = false; showLoading(false); }
+      });
+    } catch (_) { setHTML('cobro-liquidar-detalle', '<span style="color:var(--cf-danger)">Error al calcular.</span>'); }
   }
 
   function _showTicket(res) {
