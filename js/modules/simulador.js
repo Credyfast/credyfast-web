@@ -97,7 +97,7 @@ const Simulador = (() => {
     
     const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
     const contado = parseFloat(_prodSel['Precio_de_contado']) || Math.round(costo * 1.5);
-    const pctMap = { 13: 0.07, 26: 0.06, 39: 0.05, 52: 0.04 };
+    const pctMap = { 13: 0.1, 26: 0.06, 39: 0.05, 52: 0.04 };
     
     const enganche = Math.round(costo * 0.20);
     const puntual = Math.round(contado * (pctMap[_periodoSel] || 0.06));
