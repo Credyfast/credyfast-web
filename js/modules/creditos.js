@@ -219,14 +219,24 @@ const Creditos = (() => {
     setHTML('cr-review-body', '<div class="table-empty">Cargando información del cliente…</div>');
     
     try {
-      // Obtener detalles del cliente para poder ver fotos y datos extra
-      const resClient = await API.clientGet({ id: cr['IDCliente'] });
+      // Obtener detalles del cliente y su historial de créditos
+      const [resClient, resCredits] = await Promise.all([
+        API.clientGet({ id: cr['IDCliente'] }),
+        API.creditList({ IDCliente: cr['IDCliente'] })
+      ]);
+
       let clientHtml = '';
       if (resClient.ok && resClient.data) {
         const cl = resClient.data;
         const docBtn = (label, id) => id 
           ? `<a href="https://drive.google.com/uc?id=${id}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">📄 ${label}</a>`
           : `<span class="btn btn-outline btn-sm" disabled style="opacity:.5">📄 ${label} (No subido)</span>`;
+
+        let activos = 0, concluidos = 0;
+        if (resCredits.ok && resCredits.data) {
+          activos = resCredits.data.filter(c => ['APROVADO', 'APROBADO_EN_ESPERA'].includes(c['ESTATUS'])).length;
+          concluidos = resCredits.data.filter(c => c['ESTATUS'] === 'FINALIZADO').length;
+        }
 
         clientHtml = `
           <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
@@ -238,6 +248,17 @@ const Creditos = (() => {
               <div><div class="text-muted text-sm">Ocupación</div><div>${cl['A_que_se_dedica'] || '—'}</div></div>
               <div><div class="text-muted text-sm">Ingreso semanal</div><div>${fmt.currency(cl['Ingreso_semanal'])}</div></div>
               <div><div class="text-muted text-sm">Gastos semanales</div><div>${fmt.currency(cl['Gastos_semanales'])}</div></div>
+              
+              <div style="grid-column:1/-1;height:1px;background:var(--cf-border);margin:4px 0"></div>
+              
+              <div>
+                <div class="text-muted text-sm">Créditos activos</div>
+                <div class="fw-600" style="color:var(--cf-success)">${activos}</div>
+              </div>
+              <div>
+                <div class="text-muted text-sm">Créditos concluidos</div>
+                <div class="fw-600" style="color:var(--cf-text-secondary)">${concluidos}</div>
+              </div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               ${docBtn('INE Frente', cl['INE_Frente_ID'])}
