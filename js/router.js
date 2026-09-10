@@ -17,6 +17,7 @@ const Router = (() => {
     '#/caja':      { module: () => Caja,      title: 'Caja',                   minRole: 'Cajero'     },
     '#/clientes':  { module: () => Clientes,  title: 'Clientes',               minRole: 'Vendedor'   },
     '#/creditos':  { module: () => Creditos,  title: 'Créditos',               minRole: 'Vendedor'   },
+    '#/simulador': { module: () => Simulador, title: 'Simulador de Crédito',   minRole: 'Vendedor'   },
     '#/cobranza':  { module: () => Cobranza,  title: 'Cobranza en Campo',      minRole: 'Cobranza'   },
     '#/productos': { module: () => Productos, title: 'Productos',              minRole: 'Supervisor' },
     '#/usuarios':  { module: () => Usuarios,  title: 'Usuarios del Sistema',   minRole: 'Supervisor' },
@@ -30,6 +31,7 @@ const Router = (() => {
     { hash: '#/caja',      icon: '🏦', label: 'Caja',           minRole: 'Cajero',     showBadge: false },
     { hash: '#/clientes',  icon: '👥', label: 'Clientes',       minRole: 'Vendedor',   showBadge: false },
     { hash: '#/creditos',  icon: '📋', label: 'Créditos',       minRole: 'Vendedor',   showBadge: true  }, // Badge pendientes
+    { hash: '#/simulador', icon: '🧮', label: 'Cotizador',      minRole: 'Vendedor',   showBadge: false },
     { hash: '#/cobranza',  icon: '🏠', label: 'Cobranza',       minRole: 'Cobranza',   showBadge: false },
     { hash: '#/productos', icon: '📦', label: 'Productos',      minRole: 'Supervisor', showBadge: false },
     { hash: '#/usuarios',  icon: '👤', label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
