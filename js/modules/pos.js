@@ -367,7 +367,7 @@ const POS = (() => {
     }
     const rows = _pagosData.map(p => {
       const estatus = p['Estatus_de_pago'];
-      const rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO'].includes(estatus) ? 'cuota-row-puntual' :
+      const rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(estatus) ? 'cuota-row-puntual' :
         estatus === 'PARCIAL' ? 'cuota-row-parcial' :
           estatus === 'ATRASADO' ? 'cuota-row-atrasada' : '';
       const tds = headers.map(h => `<td class="${h.class || ''}">${h.render ? h.render(p) : (p[h.key] ?? '—')}</td>`).join('');
