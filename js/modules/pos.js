@@ -571,10 +571,9 @@ const POS = (() => {
         btn.disabled = true;
         showLoading(true);
         try {
-          const resReg = await API.pagoRegistrar({
+          const resReg = await API.pagoLiquidarRegistrar({
             IDCredito,
-            montoRecibido: res.total,
-            canal: 'CAJA',
+            montoTotal: res.total,
           });
           if (resReg.ok) {
             toast('✔ Liquidación registrada correctamente.', 'success', 5000);
