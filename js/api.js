@@ -88,6 +88,8 @@ const API = (() => {
     pagoRegistrar:    (p) => call('pago_registrar',     p),
     pagoSchedule:     (p) => call('pago_schedule',      p),
     pagoBuscarCliente:(p) => call('pago_buscar_cliente',p),
+    pagoCapital:      (p) => call('pago_capital',       p),
+    pagoLiquidar:     (p) => call('pago_liquidar',      p),
 
     // ── Caja ──────────────────────────────────────────────────
     cajaSaldo:         ()  => call('caja_saldo'),
