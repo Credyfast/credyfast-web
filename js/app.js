@@ -153,7 +153,31 @@ const App = (() => {
     setHTML('sidebar-username', user.username || user.Nombre_Completo || '—');
     setHTML('sidebar-role', user.rol || '');
 
+    // Resetear estado de arqueo para la nueva sesión
+    if (typeof ArqueoModal !== 'undefined') ArqueoModal.resetSesion();
+
     Router.buildNav(user);
+
+    // ── Botón ARQUEO en sidebar (solo Cajero) ────────────────
+    if (user.rol === 'Cajero') {
+      const sidebarFooter = document.querySelector('.sidebar-footer');
+      if (sidebarFooter && !$('btn-arqueo-sidebar')) {
+        const btnArqueo = document.createElement('button');
+        btnArqueo.id = 'btn-arqueo-sidebar';
+        btnArqueo.className = 'btn-arqueo';
+        btnArqueo.innerHTML = '🏦&nbsp; Arqueo de Caja';
+        btnArqueo.addEventListener('click', () => {
+          ArqueoModal.open('espontaneo', (result) => {
+            // Si el arqueo fue correcto el botón ya cambió; si elige cerrar sesión desde él:
+            if (result === 'CORRECTO') {
+              // Sugerir cerrar sesión visualmente (ya lo muestra el botón cambiado)
+              toast('✅ Arqueo correcto. Puedes cerrar sesión cuando quieras.', 'success', 4000);
+            }
+          });
+        });
+        sidebarFooter.insertBefore(btnArqueo, sidebarFooter.firstChild);
+      }
+    }
 
     // Navegar a ruta default o hash actual
     const currentHash = window.location.hash;
@@ -168,6 +192,16 @@ const App = (() => {
     const ROLE_LEVEL = { SuperUsuario: 5, Supervisor: 4, Vendedor: 3, Cajero: 2, Cobranza: 1 };
     if ((ROLE_LEVEL[user.rol] || 0) >= ROLE_LEVEL.Supervisor) {
       _startNotifPoll();
+    }
+
+    // ── Arqueo de apertura (solo Cajero) ─────────────────────
+    if (user.rol === 'Cajero' && typeof ArqueoModal !== 'undefined') {
+      setTimeout(() => {
+        ArqueoModal.open('login', () => {
+          // El cajero puede entrar independientemente del resultado
+          // (el modal ya maneja reintentos y notificaciones)
+        });
+      }, 400);
     }
   }
 
@@ -186,10 +220,25 @@ const App = (() => {
 
   // ── Logout ───────────────────────────────────────────────
   function _logout() {
+    const user = State.get('user');
+    // Arqueo de cierre solo para Cajero
+    if (user && user.rol === 'Cajero' && typeof ArqueoModal !== 'undefined') {
+      ArqueoModal.open('logout', () => {
+        _doLogout();
+      });
+    } else {
+      _doLogout();
+    }
+  }
+
+  function _doLogout() {
     clearInterval(_pollTimer);
     _pollTimer = null;
     State.clearSession();
     localStorage.removeItem('credyfast_session');
+    // Remover botón arqueo si existe
+    const btnArqueo = $('btn-arqueo-sidebar');
+    if (btnArqueo) btnArqueo.remove();
     window.location.hash = '';
     _showLogin();
   }
