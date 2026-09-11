@@ -108,6 +108,10 @@ const API = (() => {
     cobranzaRuta:   ()  => call('cobranza_ruta'),
     cobranzaVisita: (p) => call('cobranza_visita', p),
 
+    // ── Arqueo ────────────────────────────────────────────
+    arqueoRealizar:  (p) => call('arqueo_realizar',  p),
+    arqueoHistorial: ()  => call('arqueo_historial'),
+
     // ── Archivos ──────────────────────────────────────────────
     fileUpload: (p) => call('file_upload', p),
   };
