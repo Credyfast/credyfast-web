@@ -111,8 +111,11 @@ const POS = (() => {
               <div class="ticket-detail" id="ticket-finalizado" style="color:var(--cf-accent);font-weight:800"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
-              <button class="btn btn-outline btn-full" id="cobro-imprimir-btn" disabled>🖨 Generando PDF...</button>
-              <button class="btn btn-ghost btn-full" id="cobro-nuevo-btn">Nuevo cobro</button>
+              <button class="btn btn-outline btn-full" onclick="window.print()">🖨 Imprimir (Térmica)</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btn-ghost btn-full" id="cobro-pdf-btn" disabled>Generando PDF...</button>
+              <button class="btn btn-primary btn-full" id="cobro-nuevo-btn">Nuevo cobro</button>
             </div>
           </div>
         </div>
@@ -602,35 +605,34 @@ const POS = (() => {
     setHTML('ticket-saldo', '');
     setHTML('ticket-finalizado', res.creditoFinalizado ? '🎉 ¡CRÉDITO COMPLETADO! Producto VENDIDO' : '');
 
-    // Resetear botón de imprimir
-    const btnImp = $('cobro-imprimir-btn');
-    if (btnImp) {
-      btnImp.disabled = true;
-      btnImp.textContent = '🖨 Generando PDF...';
-      btnImp.onclick = null;
+    // Resetear botón de PDF
+    const btnPdf = $('cobro-pdf-btn');
+    if (btnPdf) {
+      btnPdf.disabled = true;
+      btnPdf.textContent = 'Generando PDF...';
+      btnPdf.onclick = null;
     }
 
-    // Generar PDF en Drive
+    // Generar PDF en Drive (Respaldo)
     try {
-      // res ya incluye IDCredito y todo lo que _registrar/_liquidar devuelve
       const tktRes = await API.ticketGenerate(res);
       if (tktRes.ok && tktRes.printUrl) {
-        if (btnImp) {
-          btnImp.disabled = false;
-          btnImp.textContent = '🖨 Imprimir Ticket';
-          btnImp.onclick = () => window.open(tktRes.printUrl, '_blank');
+        if (btnPdf) {
+          btnPdf.disabled = false;
+          btnPdf.textContent = '📄 Ver PDF de Respaldo';
+          btnPdf.onclick = () => window.open(tktRes.printUrl, '_blank');
         }
       } else {
-        if (btnImp) {
-          btnImp.disabled = false;
-          btnImp.textContent = '⚠ Error al generar PDF';
+        if (btnPdf) {
+          btnPdf.disabled = false;
+          btnPdf.textContent = '⚠ Error en Respaldo PDF';
         }
-        toast('No se pudo generar el ticket en PDF', 'error');
+        // Ya no mostramos error invasivo con toast, solo se indica en el botón
       }
     } catch (_) {
-      if (btnImp) {
-        btnImp.disabled = false;
-        btnImp.textContent = '⚠ Sin conexión para PDF';
+      if (btnPdf) {
+        btnPdf.disabled = false;
+        btnPdf.textContent = '⚠ Sin conexión para PDF';
       }
     }
   }
