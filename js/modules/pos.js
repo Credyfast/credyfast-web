@@ -111,7 +111,7 @@ const POS = (() => {
               <div class="ticket-detail" id="ticket-finalizado" style="color:var(--cf-accent);font-weight:800"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
-              <button class="btn btn-outline btn-full" onclick="window.print()">🖨 Imprimir</button>
+              <button class="btn btn-outline btn-full" id="cobro-imprimir-btn" disabled>🖨 Generando PDF...</button>
               <button class="btn btn-ghost btn-full" id="cobro-nuevo-btn">Nuevo cobro</button>
             </div>
           </div>
@@ -586,7 +586,7 @@ const POS = (() => {
     } catch (_) { setHTML('cobro-liquidar-detalle', '<span style="color:var(--cf-danger)">Error al calcular.</span>'); }
   }
 
-  function _showTicket(res) {
+  async function _showTicket(res) {
     $('cobro-form-area').classList.add('hidden');
     $('cobro-result').classList.remove('hidden');
 
@@ -601,6 +601,38 @@ const POS = (() => {
       `⚠ Pago PARCIAL — Pendiente: ${fmt.currency(res.montoRestante)}`);
     setHTML('ticket-saldo', '');
     setHTML('ticket-finalizado', res.creditoFinalizado ? '🎉 ¡CRÉDITO COMPLETADO! Producto VENDIDO' : '');
+
+    // Resetear botón de imprimir
+    const btnImp = $('cobro-imprimir-btn');
+    if (btnImp) {
+      btnImp.disabled = true;
+      btnImp.textContent = '🖨 Generando PDF...';
+      btnImp.onclick = null;
+    }
+
+    // Generar PDF en Drive
+    try {
+      // res ya incluye IDCredito y todo lo que _registrar/_liquidar devuelve
+      const tktRes = await API.ticketGenerate(res);
+      if (tktRes.ok && tktRes.printUrl) {
+        if (btnImp) {
+          btnImp.disabled = false;
+          btnImp.textContent = '🖨 Imprimir Ticket';
+          btnImp.onclick = () => window.open(tktRes.printUrl, '_blank');
+        }
+      } else {
+        if (btnImp) {
+          btnImp.disabled = false;
+          btnImp.textContent = '⚠ Error al generar PDF';
+        }
+        toast('No se pudo generar el ticket en PDF', 'error');
+      }
+    } catch (_) {
+      if (btnImp) {
+        btnImp.disabled = false;
+        btnImp.textContent = '⚠ Sin conexión para PDF';
+      }
+    }
   }
 
   function _reset() {
