@@ -111,7 +111,7 @@ const POS = (() => {
               <div class="ticket-detail" id="ticket-finalizado" style="color:var(--cf-accent);font-weight:800"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
-              <button class="btn btn-outline btn-full" onclick="window.print()">🖨 Imprimir (Térmica)</button>
+              <button class="btn btn-outline btn-full" id="cobro-termica-btn" disabled>🖨 Preparando Ticket...</button>
             </div>
             <div style="display:flex;gap:8px;margin-top:8px">
               <button class="btn btn-ghost btn-full" id="cobro-pdf-btn" disabled>Generando PDF...</button>
@@ -605,7 +605,13 @@ const POS = (() => {
     setHTML('ticket-saldo', '');
     setHTML('ticket-finalizado', res.creditoFinalizado ? '🎉 ¡CRÉDITO COMPLETADO! Producto VENDIDO' : '');
 
-    // Resetear botón de PDF
+    // Resetear botón térmico y PDF
+    const btnTermica = $('cobro-termica-btn');
+    if (btnTermica) {
+      btnTermica.disabled = true;
+      btnTermica.textContent = '🖨 Preparando Ticket...';
+      btnTermica.onclick = null;
+    }
     const btnPdf = $('cobro-pdf-btn');
     if (btnPdf) {
       btnPdf.disabled = true;
@@ -613,27 +619,36 @@ const POS = (() => {
       btnPdf.onclick = null;
     }
 
-    // Generar PDF en Drive (Respaldo)
+    // Generar Ticket (Respaldo Drive + HTML Térmico)
     try {
       const tktRes = await API.ticketGenerate(res);
-      if (tktRes.ok && tktRes.printUrl) {
-        if (btnPdf) {
+      if (tktRes.ok) {
+        // Botón Térmico
+        if (btnTermica && tktRes.rawHtml) {
+          btnTermica.disabled = false;
+          btnTermica.textContent = '🖨 Imprimir (Térmica)';
+          btnTermica.onclick = () => {
+            const printWin = window.open('', '_blank', 'width=400,height=600');
+            printWin.document.write(tktRes.rawHtml);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+          };
+        }
+
+        // Botón PDF
+        if (btnPdf && tktRes.printUrl) {
           btnPdf.disabled = false;
           btnPdf.textContent = '📄 Ver PDF de Respaldo';
           btnPdf.onclick = () => window.open(tktRes.printUrl, '_blank');
         }
       } else {
-        if (btnPdf) {
-          btnPdf.disabled = false;
-          btnPdf.textContent = '⚠ Error en Respaldo PDF';
-        }
-        // Ya no mostramos error invasivo con toast, solo se indica en el botón
+        if (btnTermica) { btnTermica.disabled = false; btnTermica.textContent = '⚠ Error'; }
+        if (btnPdf) { btnPdf.disabled = false; btnPdf.textContent = '⚠ Error en Respaldo'; }
       }
     } catch (_) {
-      if (btnPdf) {
-        btnPdf.disabled = false;
-        btnPdf.textContent = '⚠ Sin conexión para PDF';
-      }
+      if (btnTermica) { btnTermica.disabled = false; btnTermica.textContent = '⚠ Sin conexión'; }
+      if (btnPdf) { btnPdf.disabled = false; btnPdf.textContent = '⚠ Sin conexión'; }
     }
   }
 
