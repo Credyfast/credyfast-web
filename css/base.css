@@ -3,54 +3,63 @@
    ============================================================ */
 
 :root {
-  /* ── Paleta CredyFast (extraída del logo) ── */
-  --cf-primary:        #163A5F;
-  --cf-primary-dark:   #0F2942;
-  --cf-primary-light:  #1E4D7B;
-  --cf-teal:           #0F9E8E;
-  --cf-teal-light:     #12B5A3;
-  --cf-gold:           #F0A500;
+  /* ── Paleta CredyFast — extraída del logo ── */
+
+  /* Logo teal (fondo CREDY) */
+  --cf-primary:        #3DA58A;
+  --cf-primary-dark:   #2C8570;
+  --cf-primary-light:  #5BBFA0;
+
+  /* Logo ámbar/dorado (el rayo) */
+  --cf-gold:           #D4922A;
+  --cf-gold-light:     #E8A83C;
+  --cf-gold-dark:      #B97A1F;
+
+  /* Logo amarillo (círculo $) */
+  --cf-yellow:         #F5D633;
 
   /* ── Funcionales ── */
-  --cf-accent:         #22C55E;
-  --cf-accent-dark:    #16A34A;
-  --cf-danger:         #DC2626;
-  --cf-danger-dark:    #B91C1C;
-  --cf-warning:        #F59E0B;
-  --cf-warning-dark:   #D97706;
-  --cf-info:           #3B82F6;
+  --cf-teal:           #3DA58A;      /* acento principal = teal del logo  */
+  --cf-teal-light:     #5BBFA0;
+  --cf-accent:         #3DA58A;      /* botones primarios                */
+  --cf-accent-dark:    #2C8570;
+  --cf-danger:         #E05252;
+  --cf-danger-dark:    #C13A3A;
+  --cf-warning:        #D4922A;      /* = dorado del logo                */
+  --cf-warning-dark:   #B97A1F;
+  --cf-info:           #4A9FD4;
 
   /* ── Fondos ── */
-  --cf-bg:             #F0F4F8;
+  --cf-bg:             #F2F5F7;      /* gris muy claro, limpio            */
   --cf-surface:        #FFFFFF;
-  --cf-surface-2:      #F8FAFC;
-  --cf-border:         #E2E8F0;
-  --cf-border-dark:    #CBD5E1;
+  --cf-surface-2:      #F8FAFB;
+  --cf-border:         #DDE3E9;
+  --cf-border-dark:    #C4CDD6;
 
   /* ── Texto ── */
-  --cf-text:           #1E293B;
-  --cf-text-secondary: #475569;
-  --cf-muted:          #94A3B8;
+  --cf-text:           #1C2833;      /* casi negro, no puro               */
+  --cf-text-secondary: #4A5E6D;
+  --cf-muted:          #8FA3B1;
 
-  /* ── Sidebar ── */
-  --cf-sidebar-bg:     #0F2942;
-  --cf-sidebar-hover:  rgba(255,255,255,0.07);
-  --cf-sidebar-active: rgba(255,255,255,0.13);
-  --cf-sidebar-text:   #C8D8E8;
+  /* ── Sidebar — oscuro con teal del logo ── */
+  --cf-sidebar-bg:     #1A2E28;      /* verde muy oscuro (teal oscuro)    */
+  --cf-sidebar-hover:  rgba(91,191,160,0.10);
+  --cf-sidebar-active: rgba(91,191,160,0.20);
+  --cf-sidebar-text:   #B8D4CC;      /* teal apagado para texto normal    */
 
   /* ── Dimensiones ── */
-  --sidebar-width:     220px;
+  --sidebar-width:     230px;
   --header-height:     56px;
 
   /* ── Formas ── */
-  --radius-sm:         4px;
-  --radius:            8px;
-  --radius-lg:         12px;
+  --radius-sm:         5px;
+  --radius:            9px;
+  --radius-lg:         14px;
 
   /* ── Sombras ── */
-  --shadow-sm:         0 1px 3px rgba(0,0,0,0.07);
-  --shadow:            0 2px 8px rgba(0,0,0,0.10);
-  --shadow-lg:         0 4px 20px rgba(0,0,0,0.13);
+  --shadow-sm:         0 1px 3px rgba(0,0,0,0.08);
+  --shadow:            0 2px 10px rgba(0,0,0,0.10);
+  --shadow-lg:         0 6px 24px rgba(0,0,0,0.14);
 
   --transition:        0.15s ease;
 }
