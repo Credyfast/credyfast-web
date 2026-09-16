@@ -13,7 +13,7 @@
 .sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
-  background: var(--cf-sidebar-bg);
+  background: linear-gradient(180deg, #1A2E28 0%, #142320 100%);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -22,30 +22,29 @@
   top: 0;
   z-index: 100;
   transition: transform var(--transition);
+  border-right: 1px solid rgba(91,191,160,0.12);
 }
 
 .sidebar-header {
-  padding: 18px 16px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(91,191,160,0.12);
 }
 
 .sidebar-brand {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 10px;
+  padding: 4px 0;
 }
-.brand-credy {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  letter-spacing: 1px;
-}
-.brand-fast {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--cf-teal-light);
-  letter-spacing: 1px;
+.sidebar-logo {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  filter: brightness(0) invert(1);  /* blanco para fondo oscuro */
+  opacity: 0.92;
 }
 
 .sidebar-user {
@@ -64,12 +63,13 @@
 .sidebar-role-badge {
   display: inline-block;
   font-size: 0.68rem;
-  font-weight: 600;
-  padding: 2px 7px;
+  font-weight: 700;
+  padding: 2px 8px;
   border-radius: 20px;
-  background: var(--cf-teal);
+  background: linear-gradient(90deg, var(--cf-teal) 0%, var(--cf-gold) 100%);
   color: #fff;
   width: fit-content;
+  letter-spacing: 0.03em;
 }
 
 /* ── Nav ── */
