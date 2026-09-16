@@ -18,8 +18,15 @@ const Productos = (() => {
 
       <!-- Filtro rápido -->
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <input type="text" id="prod-filter" placeholder="Filtrar por marca, modelo, color…"
+        <input type="text" id="prod-filter" placeholder="Filtrar por marca, modelo, NS…"
           style="flex:1;min-width:180px;padding:7px 12px;border:1.5px solid var(--cf-border);border-radius:var(--radius-sm)">
+        <select id="prod-filter-estatus" style="padding:7px 12px;border:1.5px solid var(--cf-border);border-radius:var(--radius-sm);background:var(--cf-bg)">
+          <option value="">Todos los estados</option>
+          <option value="DISPONIBLE">DISPONIBLE</option>
+          <option value="OCUPADO">OCUPADO</option>
+          <option value="VENDIDO">VENDIDO</option>
+          <option value="BAJA">BAJA</option>
+        </select>
         <button class="btn btn-ghost btn-sm" id="prod-clear-filter">✕ Limpiar</button>
       </div>
 
@@ -119,9 +126,11 @@ const Productos = (() => {
     on('btn-nuevo-producto',  'click', () => _abrirModal(null));
     on('modal-prod-close',    'click', _cerrarModal);
     on('prod-submit-btn',     'click', _guardar);
-    on('prod-filter',         'input', _filtrar);
+    on('prod-filter',         'input',  _filtrar);
+    on('prod-filter-estatus', 'change', _filtrar);
     on('prod-clear-filter',   'click', () => {
       $('prod-filter').value = '';
+      $('prod-filter-estatus').value = '';
       _renderTabla(_lista);
     });
   }
@@ -132,20 +141,26 @@ const Productos = (() => {
     try {
       const res = await API.productList();
       if (!res.ok) { toast(res.message, 'error'); return; }
-      _lista = res.data || [];
+      _lista = (res.data || []).slice().reverse();
       _renderTabla(_lista);
     } catch(_) { toast('Error de conexión.', 'error'); }
     finally { showLoading(false); }
   }
 
   function _filtrar() {
-    const q = ($('prod-filter')?.value || '').toLowerCase();
-    if (!q) { _renderTabla(_lista); return; }
-    const filtrado = _lista.filter(p =>
-      ['MARCA','MODELO','MOD_COMERCIAL','COLOR','PROVEEDOR','NS'].some(col =>
-        String(p[col] || '').toLowerCase().includes(q)
-      )
-    );
+    const q       = ($('prod-filter')?.value || '').toLowerCase();
+    const estatus = $('prod-filter-estatus')?.value || '';
+    let filtrado = _lista;
+    if (q) {
+      filtrado = filtrado.filter(p =>
+        ['MARCA','MODELO','MOD_COMERCIAL','COLOR','PROVEEDOR','NS'].some(col =>
+          String(p[col] || '').toLowerCase().includes(q)
+        )
+      );
+    }
+    if (estatus) {
+      filtrado = filtrado.filter(p => (p['Estatus'] || '') === estatus);
+    }
     _renderTabla(filtrado);
   }
 
@@ -160,6 +175,7 @@ const Productos = (() => {
       { key: 'MODELO',         label: 'Modelo',        render: r => r['MODELO'] || '—' },
       { key: 'MOD_COMERCIAL',  label: 'Mod. Comercial',render: r => r['MOD_COMERCIAL'] || '—' },
       { key: 'COLOR',          label: 'Color',         render: r => r['COLOR'] || '—' },
+      { key: 'NS',            label: 'N° Serie',      class: 'td-mono', render: r => r['NS'] || '—' },
       { key: 'RAM',            label: 'RAM',           class: 'td-right',
         render: r => parseInt(r['RAM']) > 0 ? `${r['RAM']} GB` : '—' },
       { key: 'ALMACENAMIENTO', label: 'Almac.',        class: 'td-right',
@@ -168,6 +184,7 @@ const Productos = (() => {
         render: r => fmt.currency(r['COSTO_REAL']) },
       { key: 'COSTO_MOSTRADO', label: 'Costo Mostrado',class: 'td-right td-amount',
         render: r => `<strong>${fmt.currency(r['COSTO_MOSTRADO'])}</strong>` },
+      { key: 'Estatus',        label: 'Estado',        render: r => badgeEstado(r['Estatus']) },
       { key: 'PROVEEDOR',      label: 'Proveedor',     render: r => r['PROVEEDOR'] || '—' },
       { key: 'Marca_temporal', label: 'Registrado',    render: r => fmt.dateTime(r['Marca_temporal']) },
       { key: '_acc',           label: '',
