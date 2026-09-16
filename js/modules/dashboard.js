@@ -67,12 +67,16 @@ const Dashboard = (() => {
     showLoading(true);
     try {
       const res = await API.dashboardData();
-      if (!res.ok) { toast('Error cargando dashboard.', 'error'); return; }
+      if (!res.ok) {
+        toast('Error dashboard: ' + (res.message || res.error || 'Desconocido'), 'error');
+        setHTML('dash-stats', `<div style="color:var(--cf-danger);padding:16px">Error: ${res.message || res.error}</div>`);
+        return;
+      }
       const d = res.data || res;
       _renderStats(d);
       _renderPagos(d.pagos || []);
       _renderCreditos(d.creditos || []);
-    } catch(_) { toast('Error de conexión.', 'error'); }
+    } catch(err) { toast('Error de conexión: ' + err.message, 'error'); }
     finally { showLoading(false); }
   }
 
