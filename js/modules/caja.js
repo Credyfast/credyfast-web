@@ -12,6 +12,7 @@ const Caja = (() => {
   function render() {
     const user  = State.get('user');
     const esSup = ['SuperUsuario','Supervisor'].includes(user?.rol);
+    const puedeArqueo = ['SuperUsuario', 'Supervisor', 'Cajero'].includes(user?.rol);
 
     return `
     <div>
@@ -40,6 +41,12 @@ const Caja = (() => {
               <button class="caja-action-btn" id="btn-caja-retiro">
                 <span class="caja-btn-icon">💸</span><div><div>Retiro</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Retiro de caja</div></div>
               </button>
+
+              ${puedeArqueo ? `
+              <button class="caja-action-btn" id="btn-caja-arqueo">
+                <span class="caja-btn-icon">⚖️</span><div><div>Arqueo de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Conteo físico</div></div>
+              </button>` : ''}
+
               ${esSup ? `
               <button class="caja-action-btn" id="btn-caja-corte">
                 <span class="caja-btn-icon">📊</span><div><div>Corte de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Reporte del día</div></div>
@@ -148,6 +155,15 @@ const Caja = (() => {
     on('btn-caja-retiro',    'click', _openRetiro);
     on('btn-caja-contado',   'click', _openContado);
     on('btn-caja-corte',     'click', _openCorte);
+
+    if ($('btn-caja-arqueo')) {
+      on('btn-caja-arqueo', 'click', () => {
+        ArqueoModal.open('espontaneo', (res) => {
+          if (res) { _loadSaldo(); _loadMovimientos(); _loadCobradores(); }
+        });
+      });
+    }
+
     on('modal-retiro-close',  'click', () => $('modal-retiro').classList.add('hidden'));
     on('modal-contado-close', 'click', () => $('modal-contado').classList.add('hidden'));
     on('modal-cartera-close', 'click', () => $('modal-cartera').classList.add('hidden'));
