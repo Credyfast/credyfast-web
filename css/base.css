@@ -42,7 +42,7 @@
   --cf-muted:          #8FA3B1;
 
   /* ── Sidebar — oscuro con teal del logo ── */
-  --cf-sidebar-bg:     #1A2E28;      /* verde muy oscuro (teal oscuro)    */
+  --cf-sidebar-bg:     #4c786b;      /* verde muy oscuro (teal oscuro)    */
   --cf-sidebar-hover:  rgba(91,191,160,0.10);
   --cf-sidebar-active: rgba(91,191,160,0.20);
   --cf-sidebar-text:   #B8D4CC;      /* teal apagado para texto normal    */
