@@ -40,10 +40,12 @@ const Router = (() => {
 
 
   function _hasAccess(userRol, item) {
-    // Si el item tiene lista explícita de roles, usarla
-    if (item.allowedRoles) return item.allowedRoles.includes(userRol);
-    // Si tiene minRole, usar jerarquía
-    return (ROLE_LEVEL[userRol] || 0) >= (ROLE_LEVEL[item.minRole] || 99);
+    // Acepta string (minRole directo) o un objeto { minRole, allowedRoles }
+    if (typeof item === 'string') {
+      return (ROLE_LEVEL[userRol] || 0) >= (ROLE_LEVEL[item] || 99);
+    }
+    if (item && item.allowedRoles) return item.allowedRoles.includes(userRol);
+    return (ROLE_LEVEL[userRol] || 0) >= (ROLE_LEVEL[item && item.minRole] || 99);
   }
 
   // ── Construir nav según rol ────────────────────────────────
