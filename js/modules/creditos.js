@@ -157,12 +157,22 @@ const Creditos = (() => {
       { key: 'Enganche', label: 'Enganche', class: 'td-right td-amount', render: r => fmt.currency(r['Enganche']) },
       { key: 'Fecha_de_inicio', label: 'Inicio', render: r => fmt.date(r['Fecha_de_inicio']) },
       {
+        key: 'NOTAS', label: 'Notas / Motivo', render: r => {
+          if (r['ESTATUS'] !== 'RECHAZADO' || !r['NOTAS']) return '—';
+          const notas = String(r['NOTAS']);
+          // Extraer solo la parte después de "RECHAZADO:"
+          const motivo = notas.includes('RECHAZADO:') ? notas.split('RECHAZADO:').pop().trim() : notas;
+          return `<span style="color:var(--cf-danger);font-size:.82rem;font-weight:500" title="${motivo}">` +
+                 `⚠ ${motivo.length > 50 ? motivo.substring(0,50) + '…' : motivo}</span>`;
+        }
+      },
+      {
         key: '_acc', label: 'Acción', render: r => {
           const btns = [];
           if (r['ESTATUS'] === 'PENDIENTE' && esSup) {
-            btns.push(`<button class="btn btn-info btn-sm" onclick="Creditos._revisarInfo('${r['IDCredito']}')">🔍 Revisar Info</button>`);
+            btns.push(`<button class="btn btn-info btn-sm" onclick="Creditos._revisarInfo('${r['IDCredito']}')">&#x1F50D; Revisar Info</button>`);
           } else if (r['ESTATUS'] === 'APROBADO_EN_ESPERA' && esCaj) {
-            btns.push(`<button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${r['IDCredito']}','${r['Nombre_cliente'] || ''}')">📦 Confirmar Entrega</button>`);
+            btns.push(`<button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${r['IDCredito']}','${r['Nombre_cliente'] || ''}')">&#x1F4E6; Confirmar Entrega</button>`);
           }
           return btns.join('') || '—';
         }
