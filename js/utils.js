@@ -127,3 +127,22 @@ function badgeEstado(estado) {
   const cls = clsMap[estado] || 'badge-muted';
   return `<span class="badge ${cls}">${estado || '—'}</span>`;
 }
+
+// ── Auto-mayúsculas global ─────────────────────────────────
+// Convierte a MAYÚSCULAS todos los inputs de texto al escribir,
+// excepto password, email, search y campos marcados con data-no-upper.
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!el) return;
+  const tag  = el.tagName;
+  const type = (el.type || '').toLowerCase();
+  const skip = ['password', 'email', 'search', 'number', 'date', 'time', 'color', 'file', 'range', 'checkbox', 'radio'];
+  if (el.dataset && el.dataset.noUpper !== undefined) return;
+  if ((tag === 'INPUT' && !skip.includes(type)) || tag === 'TEXTAREA') {
+    const start = el.selectionStart;
+    const end   = el.selectionEnd;
+    el.value = el.value.toUpperCase();
+    // Restaurar posición del cursor
+    try { el.setSelectionRange(start, end); } catch(_) {}
+  }
+});
