@@ -24,28 +24,33 @@ const Router = (() => {
   };
 
   // ── Menú de navegación por rol ─────────────────────────────
-  // Todos los roles ven su subconjunto; el nav se filtra por minRole
+  // minRole: nivel mínimo para ver el item (jerárquico)
+  // allowedRoles: lista exacta de roles permitidos (sobreescribe minRole si está presente)
   const NAV_ITEMS = [
-    { hash: '#/dashboard', icon: '📊', label: 'Dashboard',      minRole: 'Cajero',     showBadge: false },
-    { hash: '#/pos',       icon: '💳', label: 'Registrar Pago', minRole: 'Cajero',     showBadge: false },
-    { hash: '#/caja',      icon: '🏦', label: 'Caja',           minRole: 'Cajero',     showBadge: false },
+    { hash: '#/dashboard', icon: '📊', label: 'Dashboard',      allowedRoles: ['SuperUsuario','Supervisor','Cajero','Cobranza'], showBadge: false },
+    { hash: '#/pos',       icon: '💳', label: 'Registrar Pago', allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
+    { hash: '#/caja',      icon: '🏦', label: 'Caja',           allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
     { hash: '#/clientes',  icon: '👥', label: 'Clientes',       minRole: 'Vendedor',   showBadge: false },
-    { hash: '#/creditos',  icon: '📋', label: 'Créditos',       minRole: 'Vendedor',   showBadge: true  }, // Badge pendientes
-    { hash: '#/simulador', icon: '🧮', label: 'Cotizador',      minRole: 'Vendedor',   showBadge: false },
-    { hash: '#/cobranza',  icon: '🏠', label: 'Cobranza',       minRole: 'Cobranza',   showBadge: false },
+    { hash: '#/creditos',  icon: '📋', label: 'Créditos',       minRole: 'Vendedor',   showBadge: true  },
+    { hash: '#/simulador', icon: '🧮', label: 'Cotizador',      allowedRoles: ['SuperUsuario','Supervisor','Vendedor'],          showBadge: false },
+    { hash: '#/cobranza',  icon: '🏠', label: 'Cobranza',       allowedRoles: ['SuperUsuario','Supervisor','Cobranza'],          showBadge: false },
     { hash: '#/productos', icon: '📦', label: 'Productos',      minRole: 'Supervisor', showBadge: false },
     { hash: '#/usuarios',  icon: '👤', label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
   ];
 
-  function _hasAccess(userRol, minRole) {
-    return (ROLE_LEVEL[userRol] || 0) >= (ROLE_LEVEL[minRole] || 99);
+
+  function _hasAccess(userRol, item) {
+    // Si el item tiene lista explícita de roles, usarla
+    if (item.allowedRoles) return item.allowedRoles.includes(userRol);
+    // Si tiene minRole, usar jerarquía
+    return (ROLE_LEVEL[userRol] || 0) >= (ROLE_LEVEL[item.minRole] || 99);
   }
 
   // ── Construir nav según rol ────────────────────────────────
   function buildNav(user) {
     const nav = $('sidebar-nav');
     if (!nav) return;
-    const items = NAV_ITEMS.filter(n => _hasAccess(user.rol, n.minRole));
+    const items = NAV_ITEMS.filter(n => _hasAccess(user.rol, n));
     nav.innerHTML = items.map(n => `
       <div class="nav-item" data-hash="${n.hash}" id="nav-${n.hash.replace('#/','')}" role="button" tabindex="0">
         <span class="nav-icon">${n.icon}</span>
