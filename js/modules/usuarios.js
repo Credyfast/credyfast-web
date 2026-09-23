@@ -31,7 +31,7 @@ const Usuarios = (() => {
         display:flex;align-items:center;justify-content:center;padding:16px">
         <div class="card" style="width:100%;max-width:460px">
           <div class="card-header">
-            <h3>Nuevo Usuario</h3>
+            <h3 id="modal-usr-title">Nuevo Usuario</h3>
             <button class="btn btn-ghost btn-sm" id="modal-usr-close">✕</button>
           </div>
           <div class="card-body">
@@ -57,15 +57,15 @@ const Usuarios = (() => {
             </div>
 
             <div class="form-group">
-              <label>Contraseña Inicial *</label>
+              <label>Contraseña <span id="usr-pwd-label">Inicial *</span></label>
               <input type="password" id="usr-password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
               <div class="form-error" id="usr-pwd-hint" style="color:var(--cf-muted)">
                 El usuario deberá cambiarla en su primer acceso.
               </div>
             </div>
 
-            <div class="form-group">
-              <label>Confirmar Contraseña *</label>
+            <div class="form-group" id="usr-pwd2-group">
+              <label>Confirmar Contraseña <span id="usr-pwd2-label">*</span></label>
               <input type="password" id="usr-password2" placeholder="Repetir contraseña" autocomplete="new-password">
             </div>
 
@@ -87,9 +87,9 @@ const Usuarios = (() => {
 
   function init() {
     _cargar();
-    on('btn-nuevo-usuario', 'click',  _abrirModal);
+    on('btn-nuevo-usuario', 'click',  () => _abrirModal(null));
     on('modal-usr-close',   'click',  _cerrarModal);
-    on('usr-submit-btn',    'click',  _crear);
+    on('usr-submit-btn',    'click',  _guardar);
   }
 
   // ── Cargar usuarios ───────────────────────────────────────
@@ -115,10 +115,17 @@ const Usuarios = (() => {
           : '<span class="badge badge-muted">Inactivo</span>'
       },
       { key: 'acceso',   label: 'Último Acceso', render: r => fmt.dateTime(r['acceso']) },
-      { key: '_acc',     label: '',             render: r => `<button class="btn btn-sm ${r['activo'] ? 'btn-danger' : 'btn-success'}"
-          onclick="Usuarios._toggle('${r['id']}', ${r['activo']})">
-          ${r['activo'] ? 'Desactivar' : 'Activar'}
-        </button>`
+      { key: '_acc',     label: 'Acciones',     render: r => `
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm"
+            onclick='Usuarios._editar(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+            ✏ Editar
+          </button>
+          <button class="btn btn-sm ${r['activo'] ? 'btn-danger' : 'btn-success'}"
+            onclick="Usuarios._toggle('${r['id']}', ${r['activo']})">
+            ${r['activo'] ? 'Desactivar' : 'Activar'}
+          </button>
+        </div>`
       },
     ], usuarios, 'No hay usuarios registrados.'));
   }
@@ -135,24 +142,51 @@ const Usuarios = (() => {
   }
 
   // ── Modal ─────────────────────────────────────────────────
-  function _abrirModal() {
+  function _abrirModal(usuario) {
     const modal = $('modal-usuario');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
-    ['usr-nombre','usr-username','usr-password','usr-password2','usr-notas']
-      .forEach(id => { const el=$(id); if(el) el.value=''; });
-    $('usr-rol').value = '';
+    modal._usuario = usuario || null;
+    const esEdicion = !!usuario;
+
+    setHTML('modal-usr-title', esEdicion ? `Editar: ${usuario.username}` : 'Nuevo Usuario');
     $('usr-error').classList.add('hidden');
+
+    $('usr-nombre').value    = esEdicion ? (usuario.nombre   || '') : '';
+    $('usr-username').value  = esEdicion ? (usuario.username || '') : '';
+    $('usr-rol').value       = esEdicion ? (usuario.rol      || '') : '';
+    $('usr-notas').value     = esEdicion ? (usuario.notas    || '') : '';
+    $('usr-password').value  = '';
+    $('usr-password2').value = '';
+
+    $('usr-username').disabled = esEdicion;
+
+    const hint = $('usr-pwd-hint');
+    const lbl  = $('usr-pwd-label');
+    const lbl2 = $('usr-pwd2-label');
+    if (hint) hint.textContent = esEdicion ? 'Dejar en blanco para no cambiar la contraseña.' : 'El usuario deberá cambiarla en su primer acceso.';
+    if (lbl)  lbl.textContent  = esEdicion ? '(opcional)' : 'Inicial *';
+    if (lbl2) lbl2.textContent = esEdicion ? '(opcional)' : '*';
+
+    $('usr-submit-btn').textContent = esEdicion ? 'Guardar Cambios' : 'Crear Usuario';
     setTimeout(() => $('usr-nombre')?.focus(), 50);
   }
 
+  function _editar(usuario) { _abrirModal(usuario); }
+
   function _cerrarModal() {
-    $('modal-usuario').classList.add('hidden');
+    const modal = $('modal-usuario');
+    modal.classList.add('hidden');
+    modal._usuario = null;
+    const usrEl = $('usr-username');
+    if (usrEl) usrEl.disabled = false;
   }
 
-  // ── Crear usuario ─────────────────────────────────────────
-  async function _crear() {
-    const errBox = $('usr-error');
+  // ── Guardar (crear o editar) ───────────────────────────────
+  async function _guardar() {
+    const modal    = $('modal-usuario');
+    const editando = modal?._usuario;
+    const errBox   = $('usr-error');
     errBox.classList.add('hidden');
 
     const nombre   = $('usr-nombre')?.value.trim();
@@ -160,48 +194,58 @@ const Usuarios = (() => {
     const rol      = $('usr-rol')?.value;
     const pwd      = $('usr-password')?.value;
     const pwd2     = $('usr-password2')?.value;
+    const notas    = $('usr-notas')?.value.trim() || '';
 
-    if (!nombre)   { _error('El nombre es obligatorio.');    return; }
-    if (!username) { _error('El username es obligatorio.');  return; }
-    if (!rol)      { _error('Selecciona un rol.');           return; }
-    if (!pwd || pwd.length < 8) { _error('La contraseña debe tener mínimo 8 caracteres.'); return; }
-    if (pwd !== pwd2) { _error('Las contraseñas no coinciden.'); return; }
+    if (!nombre) { _error('El nombre es obligatorio.'); return; }
+    if (!rol)    { _error('Selecciona un rol.'); return; }
 
-    // Hashear contraseña con SHA-256 (mismo algoritmo que el login)
-    let passwordHash;
-    try {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-      passwordHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-    } catch(_) { _error('Error al procesar la contraseña.'); return; }
+    if (!editando) {
+      if (!username) { _error('El username es obligatorio.'); return; }
+      if (!pwd || pwd.length < 8) { _error('La contraseña debe tener mínimo 8 caracteres.'); return; }
+      if (pwd !== pwd2) { _error('Las contraseñas no coinciden.'); return; }
+    } else {
+      if (pwd && pwd.length < 8) { _error('La contraseña debe tener mínimo 8 caracteres.'); return; }
+      if (pwd && pwd !== pwd2)   { _error('Las contraseñas no coinciden.'); return; }
+    }
+
+    let passwordHash = null;
+    if (pwd) {
+      try {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+        passwordHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+      } catch(_) { _error('Error al procesar la contraseña.'); return; }
+    }
 
     const btn = $('usr-submit-btn');
     btn.disabled = true;
-    btn.textContent = 'Creando…';
+    btn.textContent = editando ? 'Guardando…' : 'Creando…';
     showLoading(true);
 
     try {
-      const res = await API.userCreate({
-        username,
-        passwordHash,
-        nombre,
-        rol,
-        notas: $('usr-notas')?.value.trim() || '',
-      });
+      let res;
+      if (editando) {
+        const p = { id: editando.id, nombre, rol, notas };
+        if (passwordHash) p.passwordHash = passwordHash;
+        res = await API.userUpdate(p);
+      } else {
+        res = await API.userCreate({ username, passwordHash, nombre, rol, notas });
+      }
 
       if (res.ok) {
-        toast(`Usuario "${username}" creado correctamente.`, 'success');
+        toast(editando ? 'Usuario actualizado.' : `Usuario "${username}" creado.`, 'success');
         _cerrarModal();
         _cargar();
       } else {
-        _error(res.message || 'Error al crear el usuario.');
+        _error(res.message || 'Error al guardar.');
       }
     } catch(_) { _error('Error de conexión.'); }
     finally {
       btn.disabled = false;
-      btn.textContent = 'Crear Usuario';
+      btn.textContent = editando ? 'Guardar Cambios' : 'Crear Usuario';
       showLoading(false);
     }
   }
+
 
   // ── Toggle activo/inactivo ────────────────────────────────
   async function _toggle(idUsuario, estaActivo) {
@@ -225,5 +269,5 @@ const Usuarios = (() => {
     if (errBox) { errBox.textContent = msg; errBox.classList.remove('hidden'); }
   }
 
-  return { render, init, _toggle };
+  return { render, init, _toggle, _editar };
 })();
