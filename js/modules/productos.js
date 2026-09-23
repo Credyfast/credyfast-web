@@ -70,6 +70,20 @@ const Productos = (() => {
               </div>
             </div>
 
+            <!-- TIPO -->
+            <div class="form-group">
+              <label>TIPO DE PRODUCTO *</label>
+              <select id="prod-tipo" style="width:100%;padding:8px 12px;border:1.5px solid var(--cf-border);border-radius:var(--radius-sm);background:var(--cf-surface);font-size:inherit">
+                <option value="">-- Selecciona una categoría --</option>
+                <option value="CELULARES">Celulares</option>
+                <option value="COMPUTADORAS">Computadoras</option>
+                <option value="ELECTRONICOS">Electrónicos</option>
+                <option value="MUEBLES">Muebles</option>
+                <option value="HERRAMIENTAS">Herramientas</option>
+                <option value="VEHICULOS">Vehículos</option>
+              </select>
+            </div>
+
             <!-- NS -->
             <div class="form-group">
               <label>N° de Serie (NS)</label>
@@ -171,6 +185,7 @@ const Productos = (() => {
 
     setHTML('prod-table', renderTable([
       { key: 'IDProd',         label: 'ID',            class: 'td-mono' },
+      { key: 'Tipo',           label: 'Tipo',          render: r => r['Tipo'] || '—' },
       { key: 'MARCA',          label: 'Marca',         render: r => `<strong>${r['MARCA'] || '—'}</strong>` },
       { key: 'MODELO',         label: 'Modelo',        render: r => r['MODELO'] || '—' },
       { key: 'MOD_COMERCIAL',  label: 'Mod. Comercial',render: r => r['MOD_COMERCIAL'] || '—' },
@@ -225,6 +240,10 @@ const Productos = (() => {
       el.value = producto ? (producto[key] ?? (key === 'RAM' || key === 'ALMACENAMIENTO' ? 0 : '')) : (key === 'RAM' || key === 'ALMACENAMIENTO' ? 0 : '');
     });
 
+    // Restaurar el select de Tipo
+    const tipoSel = $('prod-tipo');
+    if (tipoSel) tipoSel.value = producto ? (producto['Tipo'] || '') : '';
+
     // Guardar referencia al producto que se edita
     modal._producto = producto || null;
     setTimeout(() => $('prod-marca')?.focus(), 50);
@@ -250,6 +269,7 @@ const Productos = (() => {
     }
 
     const payload = {
+      'Tipo':           $('prod-tipo')?.value             || '',
       'MARCA':          marca,
       'MODELO':         modelo,
       'MOD_COMERCIAL':  $('prod-mod-comercial')?.value.trim() || '',
