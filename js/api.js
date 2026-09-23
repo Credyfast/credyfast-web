@@ -62,6 +62,7 @@ const API = (() => {
     // ── Usuarios ──────────────────────────────────────────────
     userList:   ()  => call('user_list'),
     userCreate: (p) => call('user_create', p),
+    userUpdate: (p) => call('user_update', p),
     userToggle: (p) => call('user_toggle', p),
 
     // ── Productos ─────────────────────────────────────────────
