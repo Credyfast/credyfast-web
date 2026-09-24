@@ -530,22 +530,37 @@ const POS = (() => {
             if (res.ok) {
               toast(`✔ ${res.message}`, 'success', 5000);
               $('cobro-capital-panel').classList.add('hidden');
-              // Generar ticket de abono a capital
-              // Se pasa un callback que actualiza el calendario en segundo plano
-              // sin ocultar el panel de ticket
-              _showTicket(res, async () => {
-                // Recargar datos del calendario en segundo plano (sin cambiar la vista)
+              // Calcular semanas restantes usando datos locales
+              const semanasYaCompletas = (res.resultados || []).filter(r => r.estatus === 'CAPITAL').length;
+              const semanasRestantesAntes = _pagosData.filter(p =>
+                ['POR COBRAR', 'ATRASADO', 'PARCIAL', 'CAPITAL PARCIAL'].includes(p['Estatus_de_pago'])
+              ).length;
+              const semanasRestantesAhora = Math.max(0, semanasRestantesAntes - semanasYaCompletas);
+
+              const ticketData = {
+                IDCredito,
+                tipoOperacion:    'CAPITAL',
+                montoRecibido:    monto,
+                montoRestante:    0,
+                semanaActual:     res.resultados?.[0]?.semana ?? null,
+                semanasRestantes: semanasRestantesAhora,
+                totalSemanas:     parseInt(_creditoData?.['Periodo'] || 0),
+                pagoCompleto:     true,
+                creditoFinalizado: semanasRestantesAhora === 0,
+                resultados:       res.resultados || [],
+              };
+
+              // Generar ticket; recargar calendario en segundo plano via callback
+              _showTicket(ticketData, async () => {
                 const sched = await API.pagoSchedule({ IDCredito });
                 if (sched.ok) {
                   _pagosData = sched.pagos || [];
                   _renderSchedule();
-                  // Actualizar contador de progreso
                   const pagosCompletos = _pagosData.filter(p => ['PUNTUAL','NORMAL','MOROSO','CAPITAL'].includes(p['Estatus_de_pago'])).length;
                   const totalPagos = _pagosData.length;
                   setHTML('pos-saldo-badge', `${pagosCompletos} de ${totalPagos} pagadas`);
                 }
               });
-              // Nota: el calendario se recarga en segundo plano vía callback
             } else { toast(res.message, 'error'); }
           } catch (_) { toast('Error de conexión.', 'error'); }
           finally { confirmBtn.disabled = false; showLoading(false); }
