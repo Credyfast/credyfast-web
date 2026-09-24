@@ -1,0 +1,112 @@
+CONTRATO DE COMPRAVENTA A CRÉDITO CON INTERESES, GARANTÍAS Y OBLIGACIONES ACCESORIAS
+QUE CELEBRAN, por una parte, CREDIBILIDAD, RAPIDEZ Y SOLUCIONES CASME GROUP, S.A.S., a quien en lo sucesivo se le denominará “CASME”, representada en este acto por JESUS DAVID CASTILLO BARRADAS, y por la otra [[NOMBRE_COMPLETO_CLIENTE]], a quien en lo sucesivo se le denominará “EL CLIENTE”, conjuntamente “LAS PARTES”, de conformidad con las siguientes declaraciones, cláusulas y anexos.
+DATOS DE CASME
+Razón social: CREDIBILIDAD, RAPIDEZ Y SOLUCIONES CASME GROUP, S.A.S. RFC: CRS260323IZ8 Domicilio: Calle Los Pecebres No. 10, C.P. 91480, Actopan, Veracruz, México. Sucursal: Calle Morelos No. 19, Local 13, Colonia Centro, C.P. 91480, Actopan, Veracruz, México. Teléfono: 2791175812 Correo: credyfastactopan@gmail.com
+DATOS DE EL CLIENTE
+Nombre: [[NOMBRE_COMPLETO_CLIENTE]]
+Teléfono: [[TELEFONO_CLIENTE]]
+CURP: [[CURP_CLIENTE]]
+INE: [[INE_CLIENTE]]
+DATOS DEL BIEN Y DEL CRÉDITO
+Tipo de producto: [[TIPO_PRODUCTO]]
+Marca: [[MARCA]]
+Modelo comercial: [[MODELO_COMERCIAL]]
+NS / identificador del bien: [[NS]]
+El detalle de fechas, número e importe de cada pago se establece en el Anexo B, generado por el sistema de gestión de CASME.
+
+DECLARACIONES
+I. CASME declara contar con facultades para celebrar el presente contrato y realizar la compraventa y/o financiamiento del bien identificado en este instrumento.
+II. EL CLIENTE declara que los datos e identificaciones proporcionados son auténticos y que tiene capacidad para obligarse en los términos del presente contrato.
+III. EL CLIENTE manifiesta haber revisado y aceptado las características, condiciones y estado del bien, así como el precio, enganche, monto financiado, intereses, número e importe de pagos establecidos en este contrato y sus anexos.
+IV. LAS PARTES reconocen que el presente contrato, sus anexos y, en su caso, el pagaré y garantía correspondiente, forman parte de una misma operación.
+
+CLÁUSULAS
+PRIMERA. OBJETO.
+CASME vende a crédito a EL CLIENTE, quien adquiere, el bien identificado en el presente contrato y en el Anexo A, obligándose a cubrir el enganche, el monto financiado, los intereses y demás cantidades que correspondan conforme a este instrumento y al Anexo B.
+La propiedad y demás efectos jurídicos sobre el bien se sujetarán a las condiciones establecidas en este contrato y a la legislación aplicable.
+SEGUNDA. PRECIO, ENGANCHE Y MONTO FINANCIADO.
+EL CLIENTE reconoce como precio y condiciones económicas de la operación las cantidades señaladas en la carátula de datos económicos de este contrato.
+El enganche deberá cubrirse en los términos acordados. El saldo restante constituye el monto financiado, sobre el cual se aplicarán los intereses ordinarios pactados.
+TERCERA. INTERÉS ORDINARIO Y PAGOS.
+EL CLIENTE se obliga a pagar el interés ordinario indicado en este contrato, mismo que se encuentra integrado en la obligación económica pactada y se reflejará en el calendario de pagos del Anexo B.
+EL CLIENTE podrá realizar pagos anticipados, los cuales se aplicarán conforme al saldo y obligaciones pendientes. El pago anticipado no genera por sí mismo un descuento o reducción especial distinta de lo expresamente establecido por CASME.
+CUARTA. FORMA Y CALENDARIO DE PAGO.
+EL CLIENTE deberá realizar puntualmente cada uno de los pagos establecidos en el Anexo B.
+El calendario generado por SIGOC forma parte integral del presente contrato y contiene las fechas, número de pago e importe correspondiente a cada parcialidad.
+La falta de recepción de un aviso de pago no libera a EL CLIENTE de cumplir con las fechas pactadas.
+QUINTA. MORA.
+El retraso en cualquier pago generará un interés moratorio del 10% semanal sobre el importe vencido, acumulable por cada semana de atraso mientras subsista el incumplimiento, sin perjuicio de las demás consecuencias previstas en este contrato y de los límites establecidos por la legislación aplicable.
+SEXTA. INCUMPLIMIENTO Y VENCIMIENTO ANTICIPADO.
+Constituyen incumplimiento, entre otros:
+a) La falta de pago de las cantidades pactadas.
+b) El atraso de cuatro pagos o cuatro semanas, según corresponda al calendario contratado.
+c) Proporcionar información o documentación falsa.
+d) Incumplir cualquier obligación esencial del presente contrato.
+e) En los casos en que exista garantía, disponer, vender, ceder, gravar, ocultar o afectar el bien en contravención de las condiciones pactadas.
+Cuando EL CLIENTE acumule cuatro pagos o semanas de atraso, CASME podrá declarar el vencimiento anticipado, haciendo exigible el saldo pendiente de la operación, además de los intereses moratorios y demás cantidades que legalmente correspondan.
+SÉPTIMA. OBLIGACIÓN DE PAGO DEL SALDO.
+Declarado el vencimiento anticipado, EL CLIENTE deberá cubrir el saldo pendiente y las cantidades accesorias exigibles conforme al presente contrato.
+El incumplimiento no extingue las obligaciones de EL CLIENTE respecto de las cantidades pendientes de pago.
+OCTAVA. ENTREGA, CUSTODIA Y RESPONSABILIDAD SOBRE EL BIEN.
+Una vez entregado el bien, EL CLIENTE será responsable de su conservación, uso, custodia y adecuada utilización.
+La pérdida, robo, destrucción, daño o cualquier circunstancia que impida la recuperación o aprovechamiento del bien no extinguirá por sí misma la obligación de pago, por lo que EL CLIENTE continuará obligado a cubrir el saldo pendiente, salvo que legalmente corresponda una consecuencia distinta.
+NOVENA. GARANTÍA.
+Cuando resulte aplicable, el bien o la operación podrá quedar sujeto a la garantía indicada en el Anexo D, en los términos establecidos en dicho documento.
+La existencia de una garantía no sustituye ni extingue la obligación principal de pago.
+En operaciones que por su naturaleza requieran una garantía específica, sus condiciones, identificación y alcance se establecerán en el documento correspondiente.
+DÉCIMA. PAGARÉ.
+Como obligación accesoria de la operación, EL CLIENTE suscribirá a favor de CREDIBILIDAD, RAPIDEZ Y SOLUCIONES CASME GROUP, S.A.S., un pagaré por el monto financiado, identificado como Anexo C.
+El pagaré documentará la obligación correspondiente al monto financiado y podrá contener las condiciones de vencimiento, intereses moratorios y gastos de cobro pactados, de conformidad con su propio texto y la legislación aplicable.
+La firma del pagaré no sustituye ni extingue las obligaciones derivadas del presente contrato.
+DÉCIMA PRIMERA. PROHIBICIONES SOBRE EL BIEN.
+Cuando resulte aplicable por la naturaleza del bien o por la garantía pactada, EL CLIENTE no podrá vender, ceder, transferir, empeñar, gravar, ocultar, disponer o afectar jurídicamente el bien en perjuicio de CASME mientras existan obligaciones pendientes, salvo autorización expresa de CASME.
+DÉCIMA SEGUNDA. COBRANZA Y GASTOS.
+En caso de incumplimiento, CASME podrá realizar directamente las gestiones de cobranza necesarias para obtener el pago de las cantidades vencidas y exigibles.
+Cuando legalmente corresponda, EL CLIENTE podrá cubrir hasta un 10% adicional por concepto de gastos de cobranza, además de las cantidades principales, intereses y demás conceptos exigibles, siempre dentro de los límites establecidos por la legislación aplicable.
+Cuando sea necesario acudir a procedimientos legales, los gastos y costas que procedan se sujetarán a lo que determine la autoridad competente.
+DÉCIMA TERCERA. COMUNICACIONES.
+EL CLIENTE autoriza que los avisos relacionados con pagos, vencimientos, recordatorios, gestiones de cobranza y asuntos derivados de la relación contractual puedan comunicarse mediante WhatsApp al número proporcionado en este contrato, además de cualquier otro medio legalmente procedente.
+EL CLIENTE se obliga a informar oportunamente cualquier cambio en su número telefónico o datos de contacto.
+La falta de actualización de dichos datos no suspenderá las obligaciones de pago.
+DÉCIMA CUARTA. DATOS PERSONALES.
+EL CLIENTE proporciona voluntariamente sus datos de identificación y contacto para la celebración, administración, seguimiento y cumplimiento de la presente operación contractual.
+CASME se obliga a dar a dichos datos el tratamiento que corresponda conforme a la legislación aplicable y a utilizarlos para los fines relacionados con la relación contractual.
+DÉCIMA QUINTA. GARANTÍA DEL FABRICANTE Y CONDICIONES DEL BIEN.
+Cuando el bien cuente con garantía del fabricante o proveedor, ésta se sujetará a sus propios términos, condiciones, exclusiones y vigencia.
+CASME no será responsable por fallas, defectos o situaciones expresamente excluidas por la garantía del fabricante o proveedor.
+EL CLIENTE manifiesta recibir el bien identificado en el Anexo A, con las características ahí descritas.
+DÉCIMA SEXTA. RESCISIÓN.
+El incumplimiento de las obligaciones esenciales de EL CLIENTE facultará a CASME para ejercer las acciones y derechos que correspondan, incluyendo, cuando legalmente proceda, la rescisión del contrato, exigencia del saldo pendiente, recuperación del bien cuando exista fundamento para ello y demás acciones legales.
+La rescisión o terminación de la relación contractual no impedirá exigir las cantidades que hayan quedado legalmente pendientes de pago.
+DÉCIMA SÉPTIMA. INTEGRIDAD CONTRACTUAL.
+El presente contrato, junto con sus anexos, constituye el acuerdo celebrado entre LAS PARTES respecto de la operación.
+Los anexos forman parte integral del contrato y tendrán la misma fuerza obligatoria en lo que corresponda.
+Cualquier modificación deberá constar por escrito y ser aceptada por las partes cuando legalmente sea necesario.
+DÉCIMA OCTAVA. NOTIFICACIONES Y DOMICILIOS.
+Para efectos contractuales, CASME señala como domicilio el ubicado en Calle Los Pecebres No. 10, C.P. 91480, Actopan, Veracruz, México, y como domicilio de su sucursal el ubicado en Calle Morelos No. 19, Local 13, Colonia Centro, C.P. 91480, Actopan, Veracruz, México.
+EL CLIENTE señala como medios de contacto los proporcionados en este contrato y se obliga a mantenerlos actualizados.
+DÉCIMA NOVENA. JURISDICCIÓN.
+Para la interpretación, cumplimiento y, en su caso, resolución de las controversias derivadas del presente contrato, LAS PARTES se someten a las leyes aplicables y a la jurisdicción de los tribunales competentes de Xalapa, Veracruz, México, en la medida permitida por la legislación aplicable, renunciando al fuero que pudiera corresponderles por razón de sus domicilios presentes o futuros.
+VIGÉSIMA. ACEPTACIÓN.
+LAS PARTES manifiestan haber leído el presente contrato y sus anexos, comprender su contenido y aceptar las obligaciones y condiciones establecidas en ellos.
+La firma de EL CLIENTE acredita su aceptación de la operación, de las condiciones económicas y de las obligaciones aquí establecidas.
+
+ANEXOS
+ANEXO A — IDENTIFICACIÓN DEL BIEN
+Contiene la identificación y descripción del producto: tipo, marca, modelo comercial y NS / identificador del bien, así como las características que correspondan.
+ANEXO B — CALENDARIO DE PAGOS
+Generado automáticamente por SIGOC, contiene número de pago, fecha, importe y demás información necesaria para el seguimiento de la obligación.
+ANEXO C — PAGARÉ
+Documento suscrito por EL CLIENTE a favor de CREDIBILIDAD, RAPIDEZ Y SOLUCIONES CASME GROUP, S.A.S., por el monto financiado.
+ANEXO D — GARANTÍA
+Se incorporará únicamente cuando resulte aplicable a la operación y contendrá las condiciones e identificación de la garantía correspondiente.
+
+FIRMA Y CONFORMIDAD
+Leído el presente contrato y sus anexos, LAS PARTES lo firman de conformidad.
+CASME
+CREDIBILIDAD, RAPIDEZ Y SOLUCIONES CASME GROUP, S.A.S.
+Representante: 
+Firma: __________________________________
+EL CLIENTE
+Nombre: [[NOMBRE_COMPLETO_CLIENTE]]
+Firma: __________________________________
