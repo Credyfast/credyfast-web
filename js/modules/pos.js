@@ -542,8 +542,7 @@ const POS = (() => {
                 pagoCompleto:     true,
                 creditoFinalizado: false,
               });
-              // Recargar calendario
-              await _loadSchedule(IDCredito, _clienteData);
+              // Nota: el calendario se recarga cuando el usuario vuelva a buscar al cliente
             } else { toast(res.message, 'error'); }
           } catch (_) { toast('Error de conexión.', 'error'); }
           finally { confirmBtn.disabled = false; showLoading(false); }
