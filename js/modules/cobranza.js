@@ -105,9 +105,10 @@ const Cobranza = (() => {
               <div class="ticket-detail" id="campo-ticket-semana"></div>
               <div class="ticket-detail" id="campo-ticket-estado"></div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:10px">
-              <button class="btn btn-outline btn-full" onclick="window.print()">🖨 Imprimir</button>
-              <button class="btn btn-ghost btn-full" id="campo-nuevo-btn">Nuevo cobro</button>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+              <button class="btn btn-outline btn-full" id="campo-termica-btn" disabled>🖨 Preparando Ticket...</button>
+              <button class="btn btn-outline btn-full hidden" id="campo-pdf-btn">📄 Ver PDF de Respaldo</button>
+              <button class="btn btn-ghost btn-full" id="campo-nuevo-btn">Cerrar / Continuar ruta</button>
             </div>
           </div>
 
@@ -136,7 +137,14 @@ const Cobranza = (() => {
     on('visita-id-credito', 'keydown', e => { if (e.key==='Enter') _verificarCreditoVisita(); });
     on('btn-guardar-visita', 'click', _guardarVisita);
     on('btn-nueva-visita', 'click', _resetVisita);
-    on('campo-nuevo-btn', 'click', () => { $('cobro-campo-result').classList.add('hidden'); $('campo-cobrar-btn').classList.remove('hidden'); });
+    on('campo-nuevo-btn', 'click', () => {
+      $('modal-cobro-campo').classList.add('hidden');
+      $('cobro-campo-result').classList.add('hidden');
+      $('campo-cobrar-btn').classList.remove('hidden');
+      if ($('campo-monto-input')) $('campo-monto-input').value = '';
+      if ($('campo-notas-input')) $('campo-notas-input').value = '';
+      _cobroTarget = null;
+    });
 
     _loadAll();
   }
@@ -315,6 +323,48 @@ const Cobranza = (() => {
         toast('✔ Cobro registrado en campo.', 'success');
         _loadSaldoCobrador();
         _loadRuta();
+
+        // ── Generar Ticket oficial (Drive PDF + Térmica) ──
+        const btnTermica = $('campo-termica-btn');
+        const btnPdf     = $('campo-pdf-btn');
+        if (btnTermica) {
+          btnTermica.disabled = true;
+          btnTermica.textContent = '🖨 Preparando Ticket...';
+          btnTermica.onclick = null;
+        }
+        if (btnPdf) {
+          btnPdf.classList.add('hidden');
+          btnPdf.onclick = null;
+        }
+
+        try {
+          const tktRes = await API.ticketGenerate(res);
+          if (tktRes.ok) {
+            // Botón Térmico
+            if (btnTermica && tktRes.rawHtml) {
+              btnTermica.disabled = false;
+              btnTermica.textContent = '🖨 Imprimir (Térmica)';
+              btnTermica.onclick = () => {
+                const printWin = window.open('', '_blank', 'width=400,height=600');
+                printWin.document.write(tktRes.rawHtml);
+                printWin.document.close();
+                printWin.focus();
+                setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+              };
+            }
+            // Botón PDF Respaldo
+            if (btnPdf && tktRes.printUrl) {
+              btnPdf.classList.remove('hidden');
+              btnPdf.textContent = '📄 Ver PDF de Respaldo';
+              btnPdf.onclick = () => window.open(tktRes.printUrl, '_blank');
+            }
+          } else {
+            if (btnTermica) { btnTermica.disabled = false; btnTermica.textContent = '⚠ Error al generar ticket'; }
+          }
+        } catch (_) {
+          if (btnTermica) { btnTermica.disabled = false; btnTermica.textContent = '⚠ Sin conexión al generar ticket'; }
+        }
+
       } else { toast(res.message, 'error'); }
     } catch(_) { toast('Error de conexión.', 'error'); }
     finally { showLoading(false); }
