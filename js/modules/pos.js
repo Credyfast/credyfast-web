@@ -8,6 +8,7 @@ const POS = (() => {
   let _creditoData = null;
   let _clienteData = null;
   let _pagosData = [];
+   let _lastTicketPrintUrl = null;
 
   function render() {
     return `/* ============================================================
