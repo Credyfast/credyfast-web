@@ -529,6 +529,19 @@ const POS = (() => {
             if (res.ok) {
               toast(`✔ ${res.message}`, 'success', 5000);
               $('cobro-capital-panel').classList.add('hidden');
+              // Generar ticket de abono a capital
+              _showTicket({
+                ...res,
+                IDCredito,
+                tipoOperacion:    'CAPITAL',
+                montoRecibido:    monto,
+                montoRestante:    0,
+                semanaActual:     res.resultados?.[0]?.semana ?? null,
+                totalSemanas:     _creditoData?.['Periodo'] ? parseInt(_creditoData['Periodo']) : null,
+                semanasRestantes: null,
+                pagoCompleto:     true,
+                creditoFinalizado: false,
+              });
               // Recargar calendario
               await _loadSchedule(IDCredito, _clienteData);
             } else { toast(res.message, 'error'); }
@@ -590,7 +603,7 @@ const POS = (() => {
           if (resReg.ok) {
             toast('✔ Liquidación registrada correctamente.', 'success', 5000);
             $('cobro-liquidar-panel').classList.add('hidden');
-            _showTicket(resReg, res.total);
+            _showTicket({ ...resReg, montoRecibido: resReg.montoRecibido ?? res.total });
           } else { toast(resReg.message, 'error'); }
         } catch (_) { toast('Error de conexión.', 'error'); }
         finally { btn.disabled = false; showLoading(false); }
