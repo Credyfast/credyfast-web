@@ -417,20 +417,20 @@ const Creditos = (() => {
         text = text.replace(/\[\[CURP_CLIENTE\]\]/g, cl.CURP || '');
         text = text.replace(/\[\[INE_CLIENTE\]\]/g, cl.IDMEX || ''); 
         text = text.replace(/\[\[TIPO_PRODUCTO\]\]/g, prod.Tipo || '');
-        text = text.replace(/\[\[MARCA\]\]/g, prod.Marca || '');
-        text = text.replace(/\[\[MODELO_COMERCIAL\]\]/g, prod.Modelo || '');
+        text = text.replace(/\[\[MARCA\]\]/g, prod.MARCA || '');
+        text = text.replace(/\[\[MODELO_COMERCIAL\]\]/g, prod.MOD_COMERCIAL || prod.MODELO || '');
         text = text.replace(/\[\[NS\]\]/g, prod.NS || '');
 
         let calHtml = `
-          <h2 style="text-align:center">ANEXO B — CALENDARIO DE PAGOS</h2>
-          <p><strong>Crédito:</strong> ${IDCredito} <br> <strong>Cliente:</strong> ${cl.Nombre_completo || cr.Nombre_cliente}</p>
-          <table style="width:100%; border-collapse:collapse; margin-top:20px;" border="1" cellpadding="8">
+          <h2 style="text-align:center; font-size:14pt; margin-bottom:10px;">ANEXO B — CALENDARIO DE PAGOS</h2>
+          <p style="font-size:10pt; margin-top:0;"><strong>Crédito:</strong> ${IDCredito} <br> <strong>Cliente:</strong> ${cl.Nombre_completo || cr.Nombre_cliente}</p>
+          <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:9pt;" border="1" cellpadding="2">
             <thead>
               <tr style="background:#eee">
-                <th>Pago</th>
-                <th>Fecha programada</th>
-                <th>Monto esperado</th>
-                <th>Estatus</th>
+                <th style="padding:2px">Pago</th>
+                <th style="padding:2px">Fecha programada</th>
+                <th style="padding:2px">Monto esperado</th>
+                <th style="padding:2px">Estatus</th>
               </tr>
             </thead>
             <tbody>
@@ -438,10 +438,10 @@ const Creditos = (() => {
         pagos.forEach(p => {
            calHtml += `
              <tr>
-               <td style="text-align:center">${p.Semana_num === '0' || p.Semana_num === 0 ? 'Enganche' : p.Semana_num}</td>
-               <td style="text-align:center">${fmt.date(p.Fecha_programada)}</td>
-               <td style="text-align:right">${fmt.currency(p.Monto_esperado)}</td>
-               <td style="text-align:center">${p.Estatus_de_pago}</td>
+               <td style="text-align:center; padding:2px">${p.Semana_num === '0' || p.Semana_num === 0 ? 'Enganche' : p.Semana_num}</td>
+               <td style="text-align:center; padding:2px">${fmt.date(p.Fecha_programada)}</td>
+               <td style="text-align:right; padding:2px">${fmt.currency(p.Monto_esperado)}</td>
+               <td style="text-align:center; padding:2px">${p.Estatus_de_pago}</td>
              </tr>
            `;
         });
