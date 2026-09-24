@@ -80,7 +80,7 @@ const App = (() => {
 
       // Si el backend responde ok o acción desconocida (pero sin SESION_INVALIDA), el token es válido
       if (res.error !== 'SESION_INVALIDA' && res.error !== 'TOKEN_INVALIDO') {
-        _onLogin(sess.user);
+        _onLogin(sess.user, true); // isRestore = true → no mostrar arqueo de apertura
       } else {
         // Token expirado: limpiar y mostrar login sin bucle
         localStorage.removeItem('credyfast_session');
@@ -125,7 +125,7 @@ const App = (() => {
           State.set('token', res.token);
           State.set('user', res.user);
           localStorage.setItem('credyfast_session', JSON.stringify({ token: res.token, user: res.user }));
-          _onLogin(res.user);
+          _onLogin(res.user, false); // isRestore = false → login real, sí mostrar arqueo
         } else {
           errEl.textContent = res.message || 'Usuario o contraseña incorrectos.';
           errEl.classList.remove('hidden');
@@ -145,7 +145,7 @@ const App = (() => {
   }
 
   // ── Post-login ───────────────────────────────────────────
-  function _onLogin(user) {
+  function _onLogin(user, isRestore = false) {
     $('login-screen').classList.add('hidden');
     $('app-shell').classList.remove('hidden');
     $('app-shell').style.display = '';
@@ -153,8 +153,8 @@ const App = (() => {
     setHTML('sidebar-username', user.username || user.Nombre_Completo || '—');
     setHTML('sidebar-role', user.rol || '');
 
-    // Resetear estado de arqueo para la nueva sesión
-    if (typeof ArqueoModal !== 'undefined') ArqueoModal.resetSesion();
+    // Resetear estado de arqueo solo en login real (no en restauración de pestaña)
+    if (!isRestore && typeof ArqueoModal !== 'undefined') ArqueoModal.resetSesion();
 
     Router.buildNav(user);
 
@@ -194,12 +194,11 @@ const App = (() => {
       _startNotifPoll();
     }
 
-    // ── Arqueo de apertura (solo Cajero) ─────────────────────
-    if (user.rol === 'Cajero' && typeof ArqueoModal !== 'undefined') {
+    // ── Arqueo de apertura (solo Cajero, solo en login real) ─────────────────────
+    if (!isRestore && user.rol === 'Cajero' && typeof ArqueoModal !== 'undefined') {
       setTimeout(() => {
         ArqueoModal.open('login', () => {
           // El cajero puede entrar independientemente del resultado
-          // (el modal ya maneja reintentos y notificaciones)
         });
       }, 400);
     }
