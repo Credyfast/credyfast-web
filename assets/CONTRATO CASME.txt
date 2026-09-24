@@ -106,7 +106,12 @@ Leído el presente contrato y sus anexos, LAS PARTES lo firman de conformidad.
 CASME
 CREDIBILIDAD, RAPIDEZ Y SOLUCIONES CASME GROUP, S.A.S.
 Representante: 
+
+
 Firma: __________________________________
+
 EL CLIENTE
 Nombre: [[NOMBRE_COMPLETO_CLIENTE]]
+
+
 Firma: __________________________________
