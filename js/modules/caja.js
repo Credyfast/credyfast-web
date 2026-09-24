@@ -28,9 +28,9 @@ const Caja = (() => {
           <div class="card" style="margin-bottom:14px">
             ${!esSup && user?.rol === 'Cajero' ? `
             <div class="saldo-display" style="background:var(--cf-surface);border-bottom:1px solid var(--cf-border)">
-              <div class="saldo-label" style="font-size:.82rem;opacity:.7">Modo Cajero</div>
-              <div class="saldo-main" style="font-size:1.1rem;letter-spacing:0">Saldo no visible</div>
-              <div class="saldo-sub" style="color:var(--cf-muted);font-size:.78rem">El saldo total solo lo ven Supervisor y SuperUsuario</div>
+              <div class="saldo-label" style="font-size:.82rem;opacity:.7">Revisa bien los billetes</div>
+              <div class="saldo-main" style="font-size:1.1rem;letter-spacing:0">Modo Cajero</div>
+              <div class="saldo-sub" style="color:var(--cf-muted);font-size:.78rem">Si detectas billetes falsos, escribe "FALSO" con plumon permanente en todo el billete</div>
             </div>` : `
             <div class="saldo-display">
               <div class="saldo-label">Saldo en Caja</div>
