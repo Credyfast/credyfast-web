@@ -364,6 +364,10 @@ const POS = (() => {
       { key: 'Monto_esperado', label: 'Esperado', class: 'td-right td-amount', render: r => fmt.currency(r['Monto_esperado']) },
       { key: 'Monto_pagado', label: 'Pagado', class: 'td-right td-amount', render: r => fmt.currency(r['Monto_pagado']) },
       { key: 'Estatus_de_pago', label: 'Estado', render: r => badgeEstado(r['Estatus_de_pago']) },
+      { key: 'Ticket_URL', label: 'Ticket', class: 'td-center', render: r => r['Ticket_URL']
+        ? `<a href="${r['Ticket_URL']}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.7rem;padding:2px 8px;text-decoration:none">🖨 Ver ticket</a>`
+        : '—'
+      },
     ];
     if (!_pagosData.length) {
       setHTML('pos-schedule-table', '<div class="table-empty">Sin cuotas registradas.</div>');
