@@ -357,19 +357,120 @@ const Creditos = (() => {
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
     setHTML('entrega-body', `
-      <div class="alert alert-warning" style="margin-bottom:14px">
-        Confirmar entrega del producto a <strong>${nombre || IDCredito}</strong>.<br>
-        Se generará el calendario de pagos en este momento.
+      <div class="alert alert-info" style="margin-bottom:14px">
+        Entrega del producto a <strong>${nombre || IDCredito}</strong>.
       </div>
-      <div class="form-group">
+      
+      <div style="margin-bottom: 16px;">
+        <h4>Paso 1: Generar e Imprimir Contrato</h4>
+        <p class="text-muted text-sm">El contrato incluye el calendario de pagos. Debes imprimirlo antes de continuar.</p>
+        <button class="btn btn-primary btn-full" id="btn-imprimir-contrato" style="margin-top: 8px;">
+          📄 Imprimir Contrato
+        </button>
+      </div>
+
+      <div style="border-top: 1px solid var(--cf-border); margin: 16px 0;"></div>
+
+      <div class="form-group" style="opacity: 0.5;" id="paso-2-area">
+        <h4>Paso 2: Foto de entrega</h4>
         <label>Foto de entrega del producto * (cliente recibiendo)</label>
-        <input type="file" id="foto-entrega-input" accept="image/*" capture="environment">
+        <input type="file" id="foto-entrega-input" accept="image/*" capture="environment" disabled>
         <div id="foto-entrega-status" class="text-sm text-muted" style="margin-top:4px"></div>
+        <button class="btn btn-warning btn-full" id="btn-confirm-entrega" disabled style="margin-top:12px">
+          📦 Confirmar Entrega
+        </button>
       </div>
-      <button class="btn btn-warning btn-full" id="btn-confirm-entrega" disabled>
-        📦 Confirmar Entrega y Generar Calendario
-      </button>
     `);
+
+    // Logic for printing the contract
+    on('btn-imprimir-contrato', 'click', async () => {
+      const btn = $('btn-imprimir-contrato');
+      btn.disabled = true; btn.textContent = '⏳ Generando...';
+      try {
+        const resTxt = await fetch('assets/CONTRATO CASME.txt');
+        let text = await resTxt.text();
+
+        const resSched = await API.pagoSchedule({ IDCredito });
+        if (!resSched.ok) throw new Error('No se pudo cargar el crédito');
+        const cr = resSched.credito;
+        const pagos = resSched.pagos;
+
+        const resCl = await API.clientGet({ id: cr['IDCliente'] });
+        const cl = resCl.ok ? resCl.data : {};
+
+        const resProd = await API.productList();
+        const prod = (resProd.ok ? resProd.data : []).find(p => p.IDProd === cr.IDProd) || {};
+
+        text = text.replace(/\[\[NOMBRE_COMPLETO_CLIENTE\]\]/g, cl.Nombre_completo || cr.Nombre_cliente || '');
+        text = text.replace(/\[\[TELEFONO_CLIENTE\]\]/g, cr.Celular || '');
+        text = text.replace(/\[\[CURP_CLIENTE\]\]/g, cl.CURP || '');
+        text = text.replace(/\[\[INE_CLIENTE\]\]/g, cl.IDMEX || ''); 
+        text = text.replace(/\[\[TIPO_PRODUCTO\]\]/g, prod.Tipo || '');
+        text = text.replace(/\[\[MARCA\]\]/g, prod.Marca || '');
+        text = text.replace(/\[\[MODELO_COMERCIAL\]\]/g, prod.Modelo || '');
+        text = text.replace(/\[\[NS\]\]/g, prod.NS || '');
+
+        let calHtml = `
+          <h2 style="text-align:center">ANEXO B — CALENDARIO DE PAGOS</h2>
+          <p><strong>Crédito:</strong> ${IDCredito} <br> <strong>Cliente:</strong> ${cl.Nombre_completo || cr.Nombre_cliente}</p>
+          <table style="width:100%; border-collapse:collapse; margin-top:20px;" border="1" cellpadding="8">
+            <thead>
+              <tr style="background:#eee">
+                <th>Pago</th>
+                <th>Fecha programada</th>
+                <th>Monto esperado</th>
+                <th>Estatus</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        pagos.forEach(p => {
+           calHtml += `
+             <tr>
+               <td style="text-align:center">${p.Semana_num === '0' || p.Semana_num === 0 ? 'Enganche' : p.Semana_num}</td>
+               <td style="text-align:center">${fmt.date(p.Fecha_programada)}</td>
+               <td style="text-align:right">${fmt.currency(p.Monto_esperado)}</td>
+               <td style="text-align:center">${p.Estatus_de_pago}</td>
+             </tr>
+           `;
+        });
+        calHtml += `</tbody></table>`;
+
+        const printWin = window.open('', '_blank');
+        printWin.document.write(`
+          <html><head><title>Contrato ${IDCredito}</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; padding: 40px; margin: 0; }
+            .contrato-texto { white-space: pre-wrap; text-align: justify; }
+            @media print {
+              .page-break { page-break-before: always; }
+              body { padding: 0; }
+            }
+          </style>
+          </head><body>
+            <div class="contrato-texto">${text}</div>
+            <div class="page-break"></div>
+            ${calHtml}
+            <div style="margin-top: 40px;">
+              <p>Firma de conformidad:</p><br><br>
+              <p>_____________________________________<br>${cl.Nombre_completo || cr.Nombre_cliente}</p>
+            </div>
+          </body></html>
+        `);
+        printWin.document.close();
+        printWin.focus();
+        setTimeout(() => { printWin.print(); }, 500);
+
+        $('paso-2-area').style.opacity = '1';
+        $('foto-entrega-input').disabled = false;
+        
+      } catch (e) {
+        toast('Error al generar contrato.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '📄 Volver a Imprimir Contrato';
+      }
+    });
+
     let fotoEntregaId = '';
     const fileInput = $('foto-entrega-input');
     if (fileInput) {
