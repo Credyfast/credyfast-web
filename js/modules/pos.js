@@ -533,18 +533,7 @@ const POS = (() => {
               // Generar ticket de abono a capital
               // Se pasa un callback que actualiza el calendario en segundo plano
               // sin ocultar el panel de ticket
-              _showTicket({
-                ...res,
-                IDCredito,
-                tipoOperacion:    'CAPITAL',
-                montoRecibido:    monto,
-                montoRestante:    0,
-                semanaActual:     res.resultados?.[0]?.semana ?? null,
-                totalSemanas:     _creditoData?.['Periodo'] ? parseInt(_creditoData['Periodo']) : null,
-                semanasRestantes: null,
-                pagoCompleto:     true,
-                creditoFinalizado: false,
-              }, async () => {
+              _showTicket(res, async () => {
                 // Recargar datos del calendario en segundo plano (sin cambiar la vista)
                 const sched = await API.pagoSchedule({ IDCredito });
                 if (sched.ok) {
