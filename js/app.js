@@ -43,6 +43,7 @@ const App = (() => {
 
     // ── Logout ───────────────────────────────────────────────
     on('btn-logout', 'click', _logout);
+    on('btn-logout-header', 'click', _logout);
 
     // ── Verificar sesión persistida ──────────────────────────
     const saved = localStorage.getItem('credyfast_session');
