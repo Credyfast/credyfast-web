@@ -207,7 +207,12 @@ const Caja = (() => {
         { key: 'Monto',          label: 'Monto',  class: 'td-right td-amount', render: r => fmt.currency(r['Monto']) },
         { key: 'Canal',          label: 'Canal',  render: r => `<span class="badge badge-muted">${r['Canal']||'—'}</span>` },
         { key: 'Comentarios',    label: 'Detalle' },
+        { key: 'Ticket_URL',     label: 'Ticket', render: r => r['Ticket_URL']
+            ? `<a href="${r['Ticket_URL']}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.75rem">🖨 Ver Ticket</a>`
+            : '—'
+        },
       ], res.data || [], 'Sin movimientos hoy.'));
+
     } catch(_) {}
   }
 
