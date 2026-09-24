@@ -386,6 +386,17 @@ const Creditos = (() => {
     on('btn-imprimir-contrato', 'click', async () => {
       const btn = $('btn-imprimir-contrato');
       btn.disabled = true; btn.textContent = '⏳ Generando...';
+      
+      // Abrir ventana de manera síncrona para evitar el bloqueador de pop-ups
+      const printWin = window.open('', '_blank');
+      if (!printWin) {
+        toast('El navegador bloqueó el pop-up. Habilita las ventanas emergentes.', 'error');
+        btn.disabled = false; btn.textContent = '📄 Imprimir Contrato';
+        return;
+      }
+      printWin.document.write('<html><head><title>Generando...</title></head><body style="font-family:sans-serif;padding:40px"><h2>⏳ Generando contrato, por favor espera...</h2></body></html>');
+      printWin.document.close();
+
       try {
         const resTxt = await fetch('assets/CONTRATO CASME.txt');
         let text = await resTxt.text();
@@ -436,7 +447,7 @@ const Creditos = (() => {
         });
         calHtml += `</tbody></table>`;
 
-        const printWin = window.open('', '_blank');
+        printWin.document.open();
         printWin.document.write(`
           <html><head><title>Contrato ${IDCredito}</title>
           <style>
@@ -466,6 +477,7 @@ const Creditos = (() => {
         
       } catch (e) {
         console.error('Error al generar contrato:', e);
+        if (printWin && !printWin.closed) printWin.close();
         toast('Error al generar contrato: ' + e.message, 'error');
       } finally {
         btn.disabled = false; btn.textContent = '📄 Volver a Imprimir Contrato';
