@@ -454,6 +454,7 @@ const POS = (() => {
     catch (err) { toast(err.message, 'warning'); return; }
 
     const btn = $('cobro-btn');
+    // Bloquear inmediatamente — solo re-habilitar en error, nunca en éxito
     btn.disabled = true; btn.textContent = 'Procesando…';
     showLoading(true);
     try {
@@ -462,12 +463,20 @@ const POS = (() => {
         montoRecibido: monto,
         canal: 'CAJA',
       });
-      if (!res.ok) { toast(res.message || 'Error al registrar pago.', 'error'); return; }
+      if (!res.ok) {
+        toast(res.message || 'Error al registrar pago.', 'error');
+        btn.disabled = false; btn.textContent = '✔ Registrar Pago'; // Solo re-habilitar en error
+        return;
+      }
       _showTicket(res, monto);
       toast('✔ Pago registrado correctamente.', 'success');
-    } catch (_) { toast('Error de conexión al registrar pago.', 'error'); }
-    finally { btn.disabled = false; btn.textContent = '✔ Registrar Pago'; showLoading(false); }
+      // Botón permanece deshabilitado: el cobro-form-area se oculta
+    } catch (_) {
+      toast('Error de conexión al registrar pago.', 'error');
+      btn.disabled = false; btn.textContent = '✔ Registrar Pago';
+    } finally { showLoading(false); }
   }
+
 
   // ── Abonar a Capital ───────────────────────────────────────
   function _toggleCapitalPanel() {
@@ -623,6 +632,9 @@ const POS = (() => {
     try {
       const tktRes = await API.ticketGenerate(res);
       if (tktRes.ok) {
+        // Guardar printUrl para posible reimpresión
+        _lastTicketPrintUrl = tktRes.printUrl || null;
+
         // Botón Térmico
         if (btnTermica && tktRes.rawHtml) {
           btnTermica.disabled = false;
