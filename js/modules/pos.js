@@ -531,6 +531,8 @@ const POS = (() => {
               toast(`✔ ${res.message}`, 'success', 5000);
               $('cobro-capital-panel').classList.add('hidden');
               // Generar ticket de abono a capital
+              // Se pasa un callback que actualiza el calendario en segundo plano
+              // sin ocultar el panel de ticket
               _showTicket({
                 ...res,
                 IDCredito,
@@ -542,8 +544,19 @@ const POS = (() => {
                 semanasRestantes: null,
                 pagoCompleto:     true,
                 creditoFinalizado: false,
+              }, async () => {
+                // Recargar datos del calendario en segundo plano (sin cambiar la vista)
+                const sched = await API.pagoSchedule({ IDCredito });
+                if (sched.ok) {
+                  _pagosData = sched.pagos || [];
+                  _renderSchedule();
+                  // Actualizar contador de progreso
+                  const pagosCompletos = _pagosData.filter(p => ['PUNTUAL','NORMAL','MOROSO','CAPITAL'].includes(p['Estatus_de_pago'])).length;
+                  const totalPagos = _pagosData.length;
+                  setHTML('pos-saldo-badge', `${pagosCompletos} de ${totalPagos} pagadas`);
+                }
               });
-              // Nota: el calendario se recarga cuando el usuario vuelva a buscar al cliente
+              // Nota: el calendario se recarga en segundo plano vía callback
             } else { toast(res.message, 'error'); }
           } catch (_) { toast('Error de conexión.', 'error'); }
           finally { confirmBtn.disabled = false; showLoading(false); }
@@ -611,7 +624,7 @@ const POS = (() => {
     } catch (_) { setHTML('cobro-liquidar-detalle', '<span style="color:var(--cf-danger)">Error al calcular.</span>'); }
   }
 
-  async function _showTicket(res) {
+  async function _showTicket(res, afterTicketFn) {
     $('cobro-form-area').classList.add('hidden');
     $('cobro-result').classList.remove('hidden');
 
@@ -674,6 +687,11 @@ const POS = (() => {
     } catch (_) {
       if (btnTermica) { btnTermica.disabled = false; btnTermica.textContent = '⚠ Sin conexión'; }
       if (btnPdf) { btnPdf.disabled = false; btnPdf.textContent = '⚠ Sin conexión'; }
+    }
+
+    // Ejecutar callback post-ticket (ej: recargar calendario en segundo plano)
+    if (typeof afterTicketFn === 'function') {
+      try { await afterTicketFn(); } catch (_) {}
     }
   }
 
