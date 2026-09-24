@@ -330,12 +330,13 @@ const Clientes = (() => {
             </div>
           </div>
           ${conCalendario
-            ? `<div style="margin-top:8px">
+            ? `<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <button class="btn btn-outline btn-sm" style="font-size:.75rem"
                   onclick="Clientes._verCalendario('${cr['IDCredito']}')"
                   id="btn-cal-${cr['IDCredito']}">
                   📅 Ver Calendario de Pagos
                 </button>
+                <span id="btn-ticket-cr-${cr['IDCredito']}"></span>
                </div>`
             : ''}
           <div id="cal-${cr['IDCredito']}" style="margin-top:8px"></div>
@@ -345,7 +346,7 @@ const Clientes = (() => {
 
       // Cargar estado de pago de cada crédito activo en paralelo
       creditos
-        .filter(cr => ['APROVADO','APROBADO_EN_ESPERA'].includes(cr['ESTATUS']))
+        .filter(cr => ['APROVADO','APROBADO_EN_ESPERA','FINALIZADO'].includes(cr['ESTATUS']))
         .forEach(cr => _cargarEstadoPago(cr['IDCredito']));
 
     } catch(_) {
@@ -357,18 +358,27 @@ const Clientes = (() => {
     try {
       const res = await API.pagoSchedule({ IDCredito });
       const el = $(`estado-pago-${IDCredito}`);
-      if (!el) return;
       if (!res.ok || !res.pagos?.length) return;
-      const atrasadas = res.pagos.filter(p => p['Estatus_de_pago'] === 'ATRASADO').length;
-      const todasPagadas = res.pagos.every(p =>
-        ['PUNTUAL','NORMAL','MOROSO','FINALIZADO'].includes(p['Estatus_de_pago'])
-      );
-      if (todasPagadas) {
-        el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:#9ca3af;margin-left:4px">● Finalizado</span>';
-      } else if (atrasadas > 0) {
-        el.innerHTML = `<span style="font-size:.72rem;font-weight:600;color:#ef4444;margin-left:4px">● ${atrasadas} sem. atrasada${atrasadas>1?'s':''}</span>`;
-      } else {
-        el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:#22c55e;margin-left:4px">● Al corriente</span>';
+
+      if (el) {
+        const atrasadas = res.pagos.filter(p => p['Estatus_de_pago'] === 'ATRASADO').length;
+        const todasPagadas = res.pagos.every(p =>
+          ['PUNTUAL','NORMAL','MOROSO','CAPITAL','FINALIZADO'].includes(p['Estatus_de_pago'])
+        );
+        if (todasPagadas) {
+          el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:#9ca3af;margin-left:4px">● Finalizado</span>';
+        } else if (atrasadas > 0) {
+          el.innerHTML = `<span style="font-size:.72rem;font-weight:600;color:#ef4444;margin-left:4px">● ${atrasadas} sem. atrasada${atrasadas>1?'s':''}</span>`;
+        } else {
+          el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:#22c55e;margin-left:4px">● Al corriente</span>';
+        }
+      }
+
+      // Mostrar botón de último ticket si hay alguno disponible
+      const ultimoTicket = res.credito?.Ultimo_Ticket_URL || res.pagos.filter(p => p['Ticket_URL']).pop()?.['Ticket_URL'];
+      const ticketSpan = $(`btn-ticket-cr-${IDCredito}`);
+      if (ticketSpan && ultimoTicket) {
+        ticketSpan.innerHTML = `<a href="${ultimoTicket}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.75rem;text-decoration:none">🖨 Ver Último Ticket</a>`;
       }
     } catch(_) {}
   }
@@ -389,7 +399,7 @@ const Clientes = (() => {
         const map = {
           'PUNTUAL':    '#22c55e', 'NORMAL': '#f59e0b', 'MOROSO': '#ef4444',
           'POR COBRAR': '#6b7280', 'PARCIAL': '#3b82f6', 'ATRASADO': '#dc2626',
-          'FINALIZADO': '#9ca3af',
+          'FINALIZADO': '#9ca3af', 'CAPITAL': '#059669',
         };
         return `<span style="font-size:.7rem;font-weight:600;color:${map[e]||'#9ca3af'}">${e}</span>`;
       };
@@ -400,6 +410,11 @@ const Clientes = (() => {
           <td style="padding:3px 6px;text-align:right">${fmt.currency(p['Monto_esperado'])}</td>
           <td style="padding:3px 6px;text-align:right">${parseFloat(p['Monto_pagado']) > 0 ? fmt.currency(p['Monto_pagado']) : '—'}</td>
           <td style="padding:3px 6px">${estatusCal(p['Estatus_de_pago'])}</td>
+          <td style="padding:3px 6px;text-align:center">
+            ${p['Ticket_URL']
+              ? `<a href="${p['Ticket_URL']}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.7rem;padding:2px 8px;text-decoration:none">🖨 Ver ticket</a>`
+              : '—'}
+          </td>
         </tr>
       `).join('');
       calDiv.innerHTML = `
@@ -412,6 +427,7 @@ const Clientes = (() => {
                 <th style="padding:3px 6px;text-align:right">Esperado</th>
                 <th style="padding:3px 6px;text-align:right">Pagado</th>
                 <th style="padding:3px 6px;text-align:left">Estado</th>
+                <th style="padding:3px 6px;text-align:center">Ticket</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
