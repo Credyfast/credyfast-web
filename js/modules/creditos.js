@@ -465,7 +465,8 @@ const Creditos = (() => {
         $('foto-entrega-input').disabled = false;
         
       } catch (e) {
-        toast('Error al generar contrato.', 'error');
+        console.error('Error al generar contrato:', e);
+        toast('Error al generar contrato: ' + e.message, 'error');
       } finally {
         btn.disabled = false; btn.textContent = '📄 Volver a Imprimir Contrato';
       }
