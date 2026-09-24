@@ -26,11 +26,17 @@ const Caja = (() => {
         <!-- Panel izquierdo: saldo + acciones -->
         <div>
           <div class="card" style="margin-bottom:14px">
+            ${!esSup && user?.rol === 'Cajero' ? `
+            <div class="saldo-display" style="background:var(--cf-surface);border-bottom:1px solid var(--cf-border)">
+              <div class="saldo-label" style="font-size:.82rem;opacity:.7">Modo Cajero</div>
+              <div class="saldo-main" style="font-size:1.1rem;letter-spacing:0">Saldo no visible</div>
+              <div class="saldo-sub" style="color:var(--cf-muted);font-size:.78rem">El saldo total solo lo ven Supervisor y SuperUsuario</div>
+            </div>` : `
             <div class="saldo-display">
               <div class="saldo-label">Saldo en Caja</div>
               <div class="saldo-main" id="saldo-main">—</div>
               <div class="saldo-sub" id="saldo-sub"></div>
-            </div>
+            </div>`}
             <div style="padding:14px">
               <button class="caja-action-btn" id="btn-caja-pago">
                 <span class="caja-btn-icon">💳</span><div><div>Registrar Pago</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Ir al POS</div></div>
@@ -172,15 +178,21 @@ const Caja = (() => {
 
   // ── Saldo ──────────────────────────────────────────────────
   async function _loadSaldo() {
+    const user  = State.get('user');
+    const esCaj = user?.rol === 'Cajero';
     try {
       const res = await API.cajaSaldo();
       if (!res.ok) return;
       _saldoData = res;
-      setHTML('saldo-main', fmt.currency(res.saldoCaja));
-      setHTML('saldo-sub',
-        `Campo: ${fmt.currency(res.saldoDomicilio)} · Total: ${fmt.currency(res.saldoTotal)}`);
+      // Cajero no ve el saldo total en pantalla
+      if (!esCaj) {
+        setHTML('saldo-main', fmt.currency(res.saldoCaja));
+        setHTML('saldo-sub',
+          `Campo: ${fmt.currency(res.saldoDomicilio)} · Total: ${fmt.currency(res.saldoTotal)}`);
+      }
     } catch(_) {}
   }
+
 
   // ── Movimientos ───────────────────────────────────────────
   async function _loadMovimientos() {
