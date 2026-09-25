@@ -34,7 +34,12 @@ const Dashboard = (() => {
       <div class="stat-card" style="--stat-accent:var(--cf-teal)">
         <div class="stat-label">Saldo en Caja</div>
         <div class="stat-value" id="stat-caja">—</div>
-        <div class="stat-sub">Saldo actual</div>
+        <div class="stat-sub">Efectivo físico</div>
+      </div>
+      <div class="stat-card" style="--stat-accent:#0284c7">
+        <div class="stat-label">Saldo en Cuenta</div>
+        <div class="stat-value" id="stat-cuenta">—</div>
+        <div class="stat-sub">Transf. y depósitos</div>
       </div>
       <div class="stat-card" style="--stat-accent:var(--cf-accent)">
         <div class="stat-label">Créditos Activos</div>
@@ -81,10 +86,11 @@ const Dashboard = (() => {
   }
 
   function _renderStats(d) {
-    setHTML('stat-caja',      fmt.currency(d.caja?.saldo ?? d.saldoCaja ?? 0));
-    setHTML('stat-activos',   d.creditosActivos ?? '—');
-    setHTML('stat-morosos',   d.creditosMorosos ?? '—');
-    setHTML('stat-ingresos',  fmt.currency(d.ingresosDia ?? 0));
+    setHTML('stat-caja',       fmt.currency(d.saldoCaja ?? d.caja?.saldo ?? 0));
+    setHTML('stat-cuenta',     fmt.currency(d.saldoCuenta ?? 0));
+    setHTML('stat-activos',    d.creditosActivos ?? '—');
+    setHTML('stat-morosos',    d.creditosMorosos ?? '—');
+    setHTML('stat-ingresos',   fmt.currency(d.ingresosDia ?? 0));
     setHTML('stat-pendientes', d.pendientesAprobacion ?? '—');
   }
 
