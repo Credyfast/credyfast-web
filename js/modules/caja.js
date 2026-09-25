@@ -33,7 +33,7 @@ const Caja = (() => {
               <div class="saldo-sub" style="color:var(--cf-muted);font-size:.78rem">Si detectas billetes falsos, escribe "FALSO" con plumon permanente en todo el billete</div>
             </div>` : `
             <div class="saldo-display">
-              <div class="saldo-label">Saldo en Caja</div>
+              <div class="saldo-label">Saldo en Caja (Efectivo)</div>
               <div class="saldo-main" id="saldo-main">—</div>
               <div class="saldo-sub" id="saldo-sub"></div>
             </div>`}
@@ -113,21 +113,44 @@ const Caja = (() => {
       <!-- Modal: Venta de Contado -->
       <div id="modal-contado" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px">
         <div class="card" style="width:100%;max-width:440px">
-          <div class="card-header"><h3>Venta de Contado</h3><button class="btn btn-ghost btn-sm" id="modal-contado-close">✕</button></div>
-          <div class="card-body">
+          <div class="card-header">
+            <h3>Venta de Contado</h3>
+            <button class="btn btn-ghost btn-sm" id="modal-contado-close">✕</button>
+          </div>
+          <div class="card-body" id="contado-form-body">
             <div class="form-group">
               <label>Producto *</label>
-              <select id="contado-producto"><option value="">-- Selecciona --</option></select>
+              <select id="contado-producto"><option value="">-- Selecciona un producto --</option></select>
             </div>
             <div id="contado-precio-info" class="hidden" style="background:var(--cf-bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:.87rem"></div>
             <div class="form-group">
               <label>Tipo de pago *</label>
               <div class="toggle-group">
-                <button class="toggle-btn active" id="contado-efectivo" data-tipo="Efectivo" type="button">Efectivo</button>
-                <button class="toggle-btn" id="contado-transfer" data-tipo="Transferencia_o_deposito" type="button">Transferencia</button>
+                <button class="toggle-btn active" id="contado-efectivo" data-tipo="Efectivo" type="button">💵 Efectivo (Caja)</button>
+                <button class="toggle-btn" id="contado-transfer" data-tipo="Transferencia_o_deposito" type="button">🏦 Transferencia / Depósito</button>
+              </div>
+              <div id="contado-tipo-aviso" style="font-size:0.78rem;color:var(--cf-muted);margin-top:6px">
+                💵 Efectivo: Dinero físico entregado en mostrador. Se suma al Saldo en Caja.
               </div>
             </div>
             <button class="btn btn-success btn-full" id="btn-contado-confirm">🛒 Confirmar Venta</button>
+          </div>
+          <!-- Contenedor resultado y ticket post-venta -->
+          <div class="card-body hidden" id="contado-ticket-result" style="text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:8px">🎉</div>
+            <h4 style="margin:0 0 6px 0;color:var(--cf-accent)">¡Venta de Contado Registrada!</h4>
+            <div id="contado-res-detalle" style="background:var(--cf-bg);border-radius:var(--radius-sm);padding:12px;margin:12px 0 16px;font-size:.88rem;line-height:1.5"></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-primary btn-full" id="btn-contado-print-termica" style="font-size:1rem;padding:12px">
+                🖨 Imprimir Ticket (Térmica 80mm)
+              </button>
+              <button class="btn btn-outline btn-full hidden" id="btn-contado-ver-pdf" style="font-size:0.9rem">
+                📄 Ver PDF de Respaldo
+              </button>
+              <button class="btn btn-ghost btn-full" id="btn-contado-nueva-venta" style="margin-top:4px">
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -172,8 +195,11 @@ const Caja = (() => {
 
     on('modal-retiro-close',  'click', () => $('modal-retiro').classList.add('hidden'));
     on('modal-contado-close', 'click', () => $('modal-contado').classList.add('hidden'));
+    on('btn-contado-nueva-venta', 'click', () => $('modal-contado').classList.add('hidden'));
     on('modal-cartera-close', 'click', () => $('modal-cartera').classList.add('hidden'));
     on('modal-corte-close',   'click', () => $('modal-corte').classList.add('hidden'));
+
+    _initContadoEvents();
   }
 
   // ── Saldo ──────────────────────────────────────────────────
@@ -187,8 +213,11 @@ const Caja = (() => {
       // Cajero no ve el saldo total en pantalla
       if (!esCaj) {
         setHTML('saldo-main', fmt.currency(res.saldoCaja));
-        setHTML('saldo-sub',
-          `Campo: ${fmt.currency(res.saldoDomicilio)} · Total: ${fmt.currency(res.saldoTotal)}`);
+        let sub = `Campo: ${fmt.currency(res.saldoDomicilio)} · Total Físico: ${fmt.currency(res.saldoTotal)}`;
+        if (res.saldoTransferencias && res.saldoTransferencias > 0) {
+          sub += `<div style="margin-top:5px;font-size:0.8rem;color:#0284c7;font-weight:600">🏦 Ingresos Bancarios (No en caja): ${fmt.currency(res.saldoTransferencias)}</div>`;
+        }
+        setHTML('saldo-sub', sub);
       }
     } catch(_) {}
   }
@@ -206,6 +235,13 @@ const Caja = (() => {
         { key: 'Registro',       label: 'Tipo',   render: r => `<span class="badge ${r['Registro']==='INGRESO'?'badge-success':'badge-danger'}">${r['Registro']}</span>` },
         { key: 'Monto',          label: 'Monto',  class: 'td-right td-amount', render: r => fmt.currency(r['Monto']) },
         { key: 'Canal',          label: 'Canal',  render: r => `<span class="badge badge-muted">${r['Canal']||'—'}</span>` },
+        { key: 'Tipo',           label: 'Método', render: r => {
+            const t = String(r['Tipo'] || '').toLowerCase();
+            if (t.includes('transferencia') || t.includes('deposito')) {
+              return `<span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;white-space:nowrap">🏦 Transf/Dep</span>`;
+            }
+            return `<span class="badge" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;white-space:nowrap">💵 Efectivo</span>`;
+        }},
         { key: 'Comentarios',    label: 'Detalle' },
         { key: 'Ticket_URL',     label: 'Ticket', render: r => r['Ticket_URL']
             ? `<a href="${r['Ticket_URL']}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.75rem">🖨 Ver Ticket</a>`
@@ -252,9 +288,160 @@ const Caja = (() => {
   }
 
   // ── Venta de Contado ──────────────────────────────────────
+  let _contadoEventsBound = false;
+
+  function _initContadoEvents() {
+    if (_contadoEventsBound) return;
+    _contadoEventsBound = true;
+
+    // Cambio de selección de producto
+    on('contado-producto', 'change', () => {
+      const IDProd = $('contado-producto')?.value;
+      const prod = _productos.find(p => p['IDProd'] === IDProd);
+      const info = $('contado-precio-info');
+      if (prod && info) {
+        info.classList.remove('hidden');
+        info.innerHTML = `Precio de contado: <strong style="font-size:1.15rem;color:var(--cf-accent)">${fmt.currency(prod['Precio_de_contado'])}</strong><br>
+          <span style="font-size:.78rem;color:var(--cf-muted)">${prod['MARCA']} ${prod['MODELO']} ${prod['COLOR'] ? '· '+prod['COLOR'] : ''} ${prod['NS'] ? '· NS: '+prod['NS'] : ''}</span>`;
+      } else if (info) {
+        info.classList.add('hidden');
+      }
+    });
+
+    // Toggle tipo de pago (Efectivo vs Transferencia)
+    document.querySelectorAll('#modal-contado [data-tipo]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#modal-contado [data-tipo]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const aviso = $('contado-tipo-aviso');
+        if (aviso) {
+          if (btn.dataset.tipo === 'Efectivo') {
+            aviso.textContent = '💵 Efectivo: Dinero físico entregado en mostrador. Se suma al Saldo en Caja.';
+            aviso.style.color = 'var(--cf-muted)';
+          } else {
+            aviso.textContent = '🏦 Transferencia / Depósito: Ingreso bancario. Se registra en el sistema pero NO entra a la caja física.';
+            aviso.style.color = '#0284c7';
+          }
+        }
+      });
+    });
+
+    // Confirmar Venta
+    on('btn-contado-confirm', 'click', async () => {
+      const IDProd = $('contado-producto')?.value;
+      if (!IDProd) { toast('Selecciona un producto.', 'warning'); return; }
+      const tipoActive = document.querySelector('#modal-contado [data-tipo].active');
+      const tipo = tipoActive ? tipoActive.dataset.tipo : 'Efectivo';
+
+      showLoading(true);
+      try {
+        const res = await API.cajaVentaContado({ IDProd, tipo });
+        if (res.ok) {
+          toast(`✔ Venta de contado registrada con éxito`, 'success', 4000);
+          _productos = []; // Reset cache para que ya no aparezca como disponible
+          _loadSaldo();
+          _loadMovimientos();
+
+          // Cambiar vista del modal a resultado y ticket
+          $('contado-form-body').classList.add('hidden');
+          $('contado-ticket-result').classList.remove('hidden');
+
+          const esTransf = res.tipoPago === 'Transferencia_o_deposito';
+          const metodoDesc = esTransf
+            ? '<span style="color:#0284c7;font-weight:600">🏦 Transferencia / Depósito (Bancario)</span>'
+            : '<span style="color:#047857;font-weight:600">💵 Efectivo (En Caja)</span>';
+
+          setHTML('contado-res-detalle', `
+            <div style="font-weight:700;font-size:1.05rem">${res.marca || ''} ${res.modelo || ''}</div>
+            <div style="font-size:1.2rem;font-weight:800;color:var(--cf-accent);margin:4px 0">${fmt.currency(res.monto)}</div>
+            <div style="font-size:0.85rem">${metodoDesc}</div>
+            <div style="font-size:0.75rem;color:var(--cf-muted);margin-top:4px">Código: ${res.IDProd} ${res.ns ? '· Serie: ' + res.ns : ''}</div>
+          `);
+
+          const btnTermica = $('btn-contado-print-termica');
+          const btnPdf = $('btn-contado-ver-pdf');
+
+          btnTermica.disabled = true;
+          btnTermica.textContent = 'Generando Ticket...';
+          btnPdf.classList.add('hidden');
+          btnPdf.onclick = null;
+
+          try {
+            const tktRes = await API.ticketGenerate({
+              tipoOperacion: 'VENTA_CONTADO',
+              IDProd: res.IDProd,
+              monto: res.monto,
+              tipoPago: res.tipoPago
+            });
+
+            if (tktRes.ok) {
+              btnTermica.disabled = false;
+              btnTermica.textContent = '🖨 Imprimir Ticket (Térmica 80mm)';
+              btnTermica.onclick = () => {
+                const printWin = window.open('', '_blank', 'width=400,height=600');
+                if (printWin) {
+                  printWin.document.write(tktRes.rawHtml);
+                  printWin.document.close();
+                  printWin.focus();
+                  setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+                } else {
+                  toast('Permite ventanas emergentes para la impresión térmica.', 'warning');
+                }
+              };
+
+              if (tktRes.printUrl) {
+                btnPdf.classList.remove('hidden');
+                btnPdf.onclick = () => window.open(tktRes.printUrl, '_blank');
+              }
+
+              // Actualizar movimientos para reflejar URL de ticket
+              _loadMovimientos();
+            } else {
+              btnTermica.disabled = false;
+              btnTermica.textContent = '⚠ Error al generar ticket';
+            }
+          } catch (_) {
+            btnTermica.disabled = false;
+            btnTermica.textContent = '⚠ Error de red al generar ticket';
+          }
+
+        } else {
+          toast(res.message, 'error');
+        }
+      } catch(_) {
+        toast('Error de conexión.', 'error');
+      } finally {
+        showLoading(false);
+      }
+    });
+  }
+
   async function _openContado() {
     $('modal-contado').classList.remove('hidden');
     $('modal-contado').style.display = 'flex';
+
+    // Mostrar formulario y ocultar ticket previo
+    const formBody = $('contado-form-body');
+    const resultBody = $('contado-ticket-result');
+    if (formBody) formBody.classList.remove('hidden');
+    if (resultBody) resultBody.classList.add('hidden');
+
+    const info = $('contado-precio-info');
+    if (info) { info.classList.add('hidden'); info.innerHTML = ''; }
+
+    // Resetear a Efectivo
+    const btnEf = $('contado-efectivo');
+    const btnTr = $('contado-transfer');
+    if (btnEf && btnTr) {
+      btnEf.classList.add('active');
+      btnTr.classList.remove('active');
+      const aviso = $('contado-tipo-aviso');
+      if (aviso) {
+        aviso.textContent = '💵 Efectivo: Dinero físico entregado en mostrador. Se suma al Saldo en Caja.';
+        aviso.style.color = 'var(--cf-muted)';
+      }
+    }
+
     // Cargar productos disponibles
     if (!_productos.length) {
       try {
@@ -263,41 +450,10 @@ const Caja = (() => {
       } catch(_) {}
     }
     const sel = $('contado-producto');
-    if (sel) sel.innerHTML = '<option value="">-- Selecciona --</option>' +
-      _productos.map(p => `<option value="${p['IDProd']}">${p['MARCA']} ${p['MODELO']} ${p['COLOR']||''}</option>`).join('');
-
-    on('contado-producto', 'change', () => {
-      const IDProd = $('contado-producto').value;
-      const prod = _productos.find(p => p['IDProd'] === IDProd);
-      const info = $('contado-precio-info');
-      if (prod && info) {
-        info.classList.remove('hidden');
-        info.innerHTML = `Precio de contado: <strong style="font-size:1.1rem;color:var(--cf-accent)">${fmt.currency(prod['Precio_de_contado'])}</strong>`;
-      } else if (info) info.classList.add('hidden');
-    });
-    document.querySelectorAll('[data-tipo]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-tipo]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-    on('btn-contado-confirm', 'click', async () => {
-      const IDProd = $('contado-producto').value;
-      if (!IDProd) { toast('Selecciona un producto.', 'warning'); return; }
-      const tipoActive = document.querySelector('[data-tipo].active');
-      const tipo = tipoActive ? tipoActive.dataset.tipo : 'Efectivo';
-      showLoading(true);
-      try {
-        const res = await API.cajaVentaContado({ IDProd, tipo });
-        if (res.ok) {
-          toast(`✔ Venta registrada: ${fmt.currency(res.monto)} — ${res.tipoPago}`, 'success', 5000);
-          $('modal-contado').classList.add('hidden');
-          _productos = []; // Reset cache para recargat disponibles
-          _loadSaldo(); _loadMovimientos();
-        } else { toast(res.message, 'error'); }
-      } catch(_) { toast('Error de conexión.', 'error'); }
-      finally { showLoading(false); }
-    });
+    if (sel) {
+      sel.innerHTML = '<option value="">-- Selecciona un producto --</option>' +
+        _productos.map(p => `<option value="${p['IDProd']}">${p['MARCA']} ${p['MODELO']} ${p['COLOR'] ? '('+p['COLOR']+')' : ''} - ${fmt.currency(p['Precio_de_contado'])}</option>`).join('');
+    }
   }
 
   // ── Vaciar Cartera ────────────────────────────────────────
