@@ -66,6 +66,15 @@ const POS = (() => {
               <label for="cobro-monto-input">Monto a Cobrar ($)</label>
               <input type="number" id="cobro-monto-input" class="input-xl" min="0.01" step="0.01" placeholder="0.00">
             </div>
+            <!-- Selector tipo de pago pago normal -->
+            <div class="form-group" style="margin-bottom:10px">
+              <label style="font-size:.78rem;font-weight:600;color:var(--cf-text-secondary)">Método de pago</label>
+              <div class="toggle-group" id="pos-tipo-grupo">
+                <button class="toggle-btn active" data-pos-tipo="Efectivo" type="button">💵 Efectivo</button>
+                <button class="toggle-btn" data-pos-tipo="Transferencia_o_deposito" type="button">🏦 Transf/Depósito</button>
+              </div>
+              <div id="pos-tipo-aviso" style="font-size:.72rem;color:var(--cf-muted);margin-top:4px">💵 Entra al cajón físico — suma al Saldo en Caja</div>
+            </div>
             <button class="btn btn-success btn-full btn-xl" id="cobro-btn" style="margin-bottom:10px">
               ✔ Registrar Pago
             </button>
@@ -90,6 +99,15 @@ const POS = (() => {
                     <label style="font-size:.78rem">Monto a abonar a capital ($)</label>
                     <input type="number" id="cobro-capital-monto" min="0.01" step="0.01" placeholder="0.00" style="font-size:.9rem">
                   </div>
+                  <!-- Selector tipo de pago capital -->
+                  <div style="margin-bottom:8px">
+                    <div style="font-size:.72rem;font-weight:600;color:var(--cf-text-secondary);margin-bottom:4px">Método de pago</div>
+                    <div class="toggle-group" id="capital-tipo-grupo">
+                      <button class="toggle-btn active" data-capital-tipo="Efectivo" type="button">💵 Efectivo</button>
+                      <button class="toggle-btn" data-capital-tipo="Transferencia_o_deposito" type="button">🏦 Transf/Dep</button>
+                    </div>
+                    <div id="capital-tipo-aviso" style="font-size:.7rem;color:var(--cf-muted);margin-top:3px">💵 Suma al Saldo en Caja</div>
+                  </div>
                   <button class="btn btn-primary btn-full btn-sm" id="cobro-capital-confirmar">✔ Confirmar Abono a Capital</button>
                 </div>
               </div>
@@ -97,10 +115,20 @@ const POS = (() => {
               <!-- Panel: Liquidar -->
               <div id="cobro-liquidar-panel" class="hidden" style="margin-top:10px;background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:12px">
                 <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Cálculo de Liquidación</div>
+                <!-- Selector tipo de pago liquidar -->
+                <div style="margin-bottom:8px">
+                  <div style="font-size:.72rem;font-weight:600;color:var(--cf-text-secondary);margin-bottom:4px">Método de pago</div>
+                  <div class="toggle-group" id="liquidar-tipo-grupo">
+                    <button class="toggle-btn active" data-liq-tipo="Efectivo" type="button">💵 Efectivo</button>
+                    <button class="toggle-btn" data-liq-tipo="Transferencia_o_deposito" type="button">🏦 Transf/Dep</button>
+                  </div>
+                  <div id="liquidar-tipo-aviso" style="font-size:.7rem;color:var(--cf-muted);margin-top:3px">💵 Suma al Saldo en Caja</div>
+                </div>
                 <div id="cobro-liquidar-detalle" style="font-size:.8rem"></div>
               </div>
             </div>
           </div>
+
 
           <div id="cobro-result" class="hidden">
             <div class="ticket-result" id="cobro-ticket">
@@ -136,6 +164,36 @@ const POS = (() => {
     on('cobro-monto-input', 'keydown', e => { if (e.key === 'Enter') _cobrar(); });
     on('cobro-btn-capital',  'click', _toggleCapitalPanel);
     on('cobro-btn-liquidar', 'click', _toggleLiquidarPanel);
+
+    // Inicializar toggle de tipo de pago (pago normal)
+    _initTipoPagoToggle('pos-tipo-grupo', 'pos-tipo-aviso', 'data-pos-tipo');
+  }
+
+  // ── Helper: selector de método de pago en paneles del POS ────
+  function _initTipoPagoToggle(grupoId, avisoId, attr) {
+    const grupo = $(grupoId);
+    if (!grupo) return;
+    grupo.querySelectorAll('[' + attr + ']').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        grupo.querySelectorAll('[' + attr + ']').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        const aviso = $(avisoId);
+        if (aviso) {
+          if (btn.getAttribute(attr) === 'Efectivo') {
+            aviso.textContent = '💵 Entra al cajón físico — suma al Saldo en Caja';
+            aviso.style.color = 'var(--cf-muted)';
+          } else {
+            aviso.textContent = '🏦 Ingreso bancario — suma al Saldo en Cuenta (no al cajón)';
+            aviso.style.color = '#0284c7';
+          }
+        }
+      });
+    });
+  }
+
+  function _getTipoPago(attr) {
+    const active = document.querySelector('[' + attr + '].active');
+    return active ? active.getAttribute(attr) : 'Efectivo';
   }
 
   // ── Búsqueda ───────────────────────────────────────────────
@@ -458,6 +516,8 @@ const POS = (() => {
     try { monto = requireNum($('cobro-monto-input').value, 'Monto', 0.01); }
     catch (err) { toast(err.message, 'warning'); return; }
 
+    const tipoPago = _getTipoPago('data-pos-tipo');
+
     const btn = $('cobro-btn');
     // Bloquear inmediatamente — solo re-habilitar en error, nunca en éxito
     btn.disabled = true; btn.textContent = 'Procesando…';
@@ -467,6 +527,7 @@ const POS = (() => {
         IDCredito: _creditoData['IDCredito'],
         montoRecibido: monto,
         canal: 'CAJA',
+        tipoPago,
       });
       if (!res.ok) {
         toast(res.message || 'Error al registrar pago.', 'error');
@@ -474,7 +535,8 @@ const POS = (() => {
         return;
       }
       _showTicket(res, monto);
-      toast('✔ Pago registrado correctamente.', 'success');
+      const metodoLabel = tipoPago === 'Transferencia_o_deposito' ? '🏦 Transferencia/Depósito' : '💵 Efectivo';
+      toast('✔ Pago registrado — ' + metodoLabel, 'success');
       // Botón permanece deshabilitado: el cobro-form-area se oculta
     } catch (_) {
       toast('Error de conexión al registrar pago.', 'error');
@@ -519,6 +581,8 @@ const POS = (() => {
       alertEl.classList.remove('hidden');
     } else {
       formEl.classList.remove('hidden');
+      // Inicializar toggle de tipo de pago capital
+      _initTipoPagoToggle('capital-tipo-grupo', 'capital-tipo-aviso', 'data-capital-tipo');
       const montoInput = $('cobro-capital-monto');
       if (montoInput) { montoInput.value = ''; setTimeout(() => montoInput.focus(), 50); }
       // Asignar confirmación solo una vez
@@ -527,12 +591,14 @@ const POS = (() => {
         confirmBtn.onclick = async () => {
           const monto = parseFloat($('cobro-capital-monto')?.value);
           if (!monto || monto <= 0) { toast('Ingresa un monto válido.', 'warning'); return; }
+          const tipoPago = _getTipoPago('data-capital-tipo');
           confirmBtn.disabled = true;
           showLoading(true);
           try {
-            const res = await API.pagoCapital({ IDCredito, montoCapital: monto });
+            const res = await API.pagoCapital({ IDCredito, montoCapital: monto, tipoPago });
             if (res.ok) {
-              toast(`✔ ${res.message}`, 'success', 5000);
+              const metodoLabel = tipoPago === 'Transferencia_o_deposito' ? '🏦 Transferencia/Depósito' : '💵 Efectivo';
+              toast(`✔ ${res.message} — ${metodoLabel}`, 'success', 5000);
               $('cobro-capital-panel').classList.add('hidden');
               // Calcular semanas restantes usando datos locales
               const semanasYaCompletas = (res.resultados || []).filter(r => r.estatus === 'CAPITAL').length;
@@ -589,6 +655,8 @@ const POS = (() => {
 
   async function _cargarLiquidacion() {
     const IDCredito = _creditoData['IDCredito'];
+    // Inicializar toggle de tipo de pago de liquidar
+    _initTipoPagoToggle('liquidar-tipo-grupo', 'liquidar-tipo-aviso', 'data-liq-tipo');
     setHTML('cobro-liquidar-detalle', '<div style="opacity:.6;font-size:.78rem">Calculando…</div>');
     try {
       const res = await API.pagoLiquidar({ IDCredito });
@@ -617,12 +685,15 @@ const POS = (() => {
         btn.disabled = true;
         showLoading(true);
         try {
+          const tipoPago = _getTipoPago('data-liq-tipo');
           const resReg = await API.pagoLiquidarRegistrar({
             IDCredito,
             montoTotal: res.total,
+            tipoPago,
           });
           if (resReg.ok) {
-            toast('✔ Liquidación registrada correctamente.', 'success', 5000);
+            const metodoLabel = tipoPago === 'Transferencia_o_deposito' ? '🏦 Transferencia/Depósito' : '💵 Efectivo';
+            toast('✔ Liquidación registrada — ' + metodoLabel, 'success', 5000);
             $('cobro-liquidar-panel').classList.add('hidden');
             _showTicket({ ...resReg, montoRecibido: resReg.montoRecibido ?? res.total });
           } else { toast(resReg.message, 'error'); }
