@@ -126,7 +126,8 @@ const App = (() => {
           State.set('token', res.token);
           State.set('user', res.user);
           localStorage.setItem('credyfast_session', JSON.stringify({ token: res.token, user: res.user }));
-          _onLogin(res.user, false); // isRestore = false → login real, sí mostrar arqueo
+          // Mostrar selector de sucursal antes de entrar al app
+          _showSucursalPicker(res.user, res.sucursales || []);
         } else {
           errEl.textContent = res.message || 'Usuario o contraseña incorrectos.';
           errEl.classList.remove('hidden');
@@ -148,16 +149,36 @@ const App = (() => {
   // ── Post-login ───────────────────────────────────────────
   function _onLogin(user, isRestore = false) {
     $('login-screen').classList.add('hidden');
+    // Ocultar selector de sucursal si existe
+    const ps = $('sucursal-picker-screen');
+    if (ps) { ps.classList.add('hidden'); ps.style.display = 'none'; }
     $('app-shell').classList.remove('hidden');
     $('app-shell').style.display = '';
 
     setHTML('sidebar-username', user.username || user.Nombre_Completo || '—');
     setHTML('sidebar-role', user.rol || '');
 
+    // Mostrar sucursal activa en sidebar
+    const sucNombre = user.sucursalNombre || State.get('sucursalNombre') || '';
+    const sucEl = $('sidebar-sucursal');
+    if (sucEl) sucEl.textContent = sucNombre ? '🏢 ' + sucNombre : '';
+
     // Resetear estado de arqueo solo en login real (no en restauración de pestaña)
     if (!isRestore && typeof ArqueoModal !== 'undefined') ArqueoModal.resetSesion();
 
     Router.buildNav(user);
+
+    // ── Botón "Cambiar Sucursal" en sidebar footer (todos los roles) ─────────────
+    const sidebarFooter = document.querySelector('.sidebar-footer');
+    const existeBtn = $('btn-cambiar-sucursal');
+    if (sidebarFooter && !existeBtn) {
+      const btnSuc = document.createElement('button');
+      btnSuc.id = 'btn-cambiar-sucursal';
+      btnSuc.className = 'btn-cambiar-sucursal';
+      btnSuc.innerHTML = '🔄&nbsp; Cambiar sucursal';
+      btnSuc.addEventListener('click', () => _cambiarSucursal());
+      sidebarFooter.insertBefore(btnSuc, sidebarFooter.firstChild);
+    }
 
     // ── Botón ARQUEO en sidebar (solo Cajero) ────────────────
     if (user.rol === 'Cajero') {
@@ -216,6 +237,89 @@ const App = (() => {
       const res = await API.creditPendientes();
       if (res.ok) Router.updateBadge(res.count || 0);
     } catch (_) { }
+  }
+
+  // ── Selector de Sucursal ─────────────────────────────
+  function _showSucursalPicker(user, sucursales, isRestore = false) {
+    // Ocultar pantallas
+    $('login-screen').classList.add('hidden');
+    $('app-shell').classList.add('hidden');
+
+    let screen = $('sucursal-picker-screen');
+    if (!screen) {
+      screen = document.createElement('div');
+      screen.id = 'sucursal-picker-screen';
+      document.body.appendChild(screen);
+    }
+    screen.className = 'sucursal-picker-screen';
+    screen.style.display = 'flex';
+    screen.classList.remove('hidden');
+
+    const listaHTML = sucursales.length
+      ? sucursales.map(s => `
+        <button class="suc-btn" data-id="${s.id}">
+          <span class="suc-icon">🏢</span>
+          <span class="suc-nombre">${s.nombre}</span>
+        </button>`).join('')
+      : '<p style="color:var(--cf-danger);text-align:center">No hay sucursales disponibles. Contacta al administrador.</p>';
+
+    screen.innerHTML = `
+      <div class="suc-card">
+        <div class="suc-logo">🏦</div>
+        <h2 class="suc-title">CredyFast</h2>
+        <p class="suc-subtitle">¿Desde qué sucursal trabajas hoy,<br><strong>${user.nombre || user.username}</strong>?</p>
+        <div class="suc-list">${listaHTML}</div>
+        <p class="suc-hint" id="suc-error"></p>
+      </div>
+    `;
+
+    screen.querySelectorAll('.suc-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idSucursal = btn.dataset.id;
+        const nombre     = btn.querySelector('.suc-nombre').textContent;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="suc-icon">⏳</span><span class="suc-nombre">Entrando a ${nombre}…</span>`;
+
+        try {
+          const res = await API.sucursalSelect({ idSucursal });
+          if (!res.ok) {
+            $('suc-error').textContent = res.message || 'Error al seleccionar sucursal.';
+            btn.disabled = false;
+            btn.innerHTML = `<span class="suc-icon">🏢</span><span class="suc-nombre">${nombre}</span>`;
+            return;
+          }
+          // Actualizar user en state y localStorage con datos de sucursal
+          const updatedUser = Object.assign({}, user, {
+            sucursal:       res.sucursal,
+            sucursalNombre: res.sucursalNombre,
+          });
+          State.set('user', updatedUser);
+          const saved = JSON.parse(localStorage.getItem('credyfast_session') || '{}');
+          saved.user = updatedUser;
+          localStorage.setItem('credyfast_session', JSON.stringify(saved));
+          State.set('sucursalNombre', res.sucursalNombre);
+
+          _onLogin(updatedUser, isRestore);
+        } catch(_) {
+          $('suc-error').textContent = 'Error de conexión. Intenta de nuevo.';
+          btn.disabled = false;
+          btn.innerHTML = `<span class="suc-icon">🏢</span><span class="suc-nombre">${nombre}</span>`;
+        }
+      });
+    });
+  }
+
+  // ── Cambiar sucursal desde el sidebar ────────────────────
+  async function _cambiarSucursal() {
+    const user = State.get('user');
+    if (!user) return;
+    showLoading(true);
+    try {
+      const res = await API.sucursalListActivas();
+      showLoading(false);
+      if (res.ok) _showSucursalPicker(user, res.data || [], true);
+      else toast('Error al obtener sucursales.', 'error');
+    } catch(_) { showLoading(false); toast('Error de conexión.', 'error'); }
   }
 
   // ── Logout ───────────────────────────────────────────────
