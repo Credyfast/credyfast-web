@@ -5,6 +5,16 @@
 
 const Sucursales = (() => {
 
+  // Paleta de emojis disponibles para las sucursales
+  const EMOJIS_SUCURSAL = [
+    '🏢','🏬','🏪','🏦','🏨','🏩','🏫','🏭','🏗',
+    '🌮','🌯','🥭','🍊','🍋','🍇','🍓','🍑','🌵',
+    '🥾','👟','👒','🎩','🧢','🪖','💼','🎒','🛍',
+    '⭐','🌟','💫','✨','🔥','💎','🏆','🥇','🎯',
+    '🦅','🦁','🐯','🐺','🦊','🦋','🌻','🌴','🌾',
+    '🚀','🛸','🌈','☀️','🌙','⚡','❄️','🌊','🍀',
+  ];
+
   // ── Render ────────────────────────────────────────────────
   function render() {
     return `
@@ -28,9 +38,24 @@ const Sucursales = (() => {
           </div>
           <div class="form-group">
             <label for="suc-inp-dir">Dirección (opcional)</label>
-            <input type="text" id="suc-inp-dir" placeholder="Ej: Calle Principal #12, Naolinco Ver.">
+            <input type="text" id="suc-inp-dir" placeholder="Ej: Calle Principal #12">
           </div>
         </div>
+
+        <!-- Selector de emoji -->
+        <div class="form-group">
+          <label>Emoji de la sucursal *</label>
+          <div class="emoji-picker-area">
+            <div id="suc-emoji-preview" class="emoji-preview">🏢</div>
+            <div class="emoji-grid" id="suc-emoji-grid">
+              ${EMOJIS_SUCURSAL.map(e => `
+                <button type="button" class="emoji-opt" data-emoji="${e}" title="${e}">${e}</button>
+              `).join('')}
+            </div>
+          </div>
+          <input type="hidden" id="suc-inp-emoji" value="🏢">
+        </div>
+
         <div class="form-actions">
           <button class="btn btn-primary" id="suc-btn-guardar">💾 Guardar</button>
           <button class="btn btn-outline" id="suc-btn-cancelar">Cancelar</button>
@@ -54,6 +79,18 @@ const Sucursales = (() => {
     on('suc-btn-nueva',    'click', _abrirFormNueva);
     on('suc-btn-cancelar', 'click', _cerrarForm);
     on('suc-btn-guardar',  'click', _guardar);
+
+    // Clicks en la cuadrícula de emojis
+    document.getElementById('suc-emoji-grid')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.emoji-opt');
+      if (!btn) return;
+      const emoji = btn.dataset.emoji;
+      document.getElementById('suc-inp-emoji').value = emoji;
+      document.getElementById('suc-emoji-preview').textContent = emoji;
+      // Marcar el seleccionado
+      document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
   }
 
   // ── Estado interno ────────────────────────────────────────
@@ -81,6 +118,7 @@ const Sucursales = (() => {
         <thead>
           <tr>
             <th>ID</th>
+            <th>Emoji</th>
             <th>Nombre</th>
             <th>Dirección</th>
             <th>Estatus</th>
@@ -91,6 +129,7 @@ const Sucursales = (() => {
           ${sucursales.map(s => `
             <tr>
               <td><code style="font-size:.75rem">${s.id}</code></td>
+              <td style="font-size:1.6rem;text-align:center">${s.emoji || '🏢'}</td>
               <td><strong>${s.nombre}</strong></td>
               <td style="color:var(--cf-text-secondary);font-size:.82rem">${s.direccion || '—'}</td>
               <td>
@@ -101,7 +140,8 @@ const Sucursales = (() => {
               <td>
                 <div class="btn-group">
                   <button class="btn btn-outline btn-sm" data-suc-edit="${s.id}"
-                          data-nombre="${s.nombre}" data-dir="${s.direccion || ''}">
+                          data-nombre="${s.nombre}" data-dir="${s.direccion || ''}"
+                          data-emoji="${s.emoji || '🏢'}">
                     ✏️ Editar
                   </button>
                   <button class="btn btn-sm ${s.activa ? 'btn-danger' : 'btn-success'}"
@@ -120,8 +160,15 @@ const Sucursales = (() => {
     document.querySelectorAll('[data-suc-edit]').forEach(btn => {
       btn.addEventListener('click', () => {
         _editId = btn.dataset.sucEdit;
+        const emoji = btn.dataset.emoji || '🏢';
         $('suc-inp-nombre').value = btn.dataset.nombre || '';
-        $('suc-inp-dir').value    = btn.dataset.dir || '';
+        $('suc-inp-dir').value    = btn.dataset.dir    || '';
+        $('suc-inp-emoji').value  = emoji;
+        $('suc-emoji-preview').textContent = emoji;
+        // Marcar emoji correcto en la cuadrícula
+        document.querySelectorAll('.emoji-opt').forEach(b => {
+          b.classList.toggle('selected', b.dataset.emoji === emoji);
+        });
         setHTML('suc-form-titulo', `Editar Sucursal — ${btn.dataset.nombre}`);
         $('suc-form-area').classList.remove('hidden');
         $('suc-inp-nombre').focus();
@@ -137,6 +184,11 @@ const Sucursales = (() => {
     _editId = null;
     $('suc-inp-nombre').value = '';
     $('suc-inp-dir').value    = '';
+    $('suc-inp-emoji').value  = '🏢';
+    $('suc-emoji-preview').textContent = '🏢';
+    document.querySelectorAll('.emoji-opt').forEach(b => {
+      b.classList.toggle('selected', b.dataset.emoji === '🏢');
+    });
     setHTML('suc-form-titulo', 'Nueva Sucursal');
     $('suc-form-error').classList.add('hidden');
     $('suc-form-area').classList.remove('hidden');
@@ -152,6 +204,7 @@ const Sucursales = (() => {
   async function _guardar() {
     const nombre    = ($('suc-inp-nombre').value || '').trim();
     const direccion = ($('suc-inp-dir').value    || '').trim();
+    const emoji     = $('suc-inp-emoji').value   || '🏢';
     const errEl     = $('suc-form-error');
     errEl.classList.add('hidden');
 
@@ -168,9 +221,9 @@ const Sucursales = (() => {
     try {
       let res;
       if (_editId) {
-        res = await API.sucursalUpdate({ id: _editId, nombre, direccion });
+        res = await API.sucursalUpdate({ id: _editId, nombre, direccion, emoji });
       } else {
-        res = await API.sucursalCreate({ nombre, direccion });
+        res = await API.sucursalCreate({ nombre, direccion, emoji });
       }
       if (res.ok) {
         toast('✔ ' + res.message, 'success');
