@@ -12,15 +12,16 @@ const Router = (() => {
 
   // ── Definición de rutas ────────────────────────────────────
   const ROUTES = {
-    '#/dashboard': { module: () => Dashboard, title: 'Dashboard',              minRole: 'Cajero'     },
-    '#/pos':       { module: () => POS,       title: 'Registrar Pago',         minRole: 'Cajero'     },
-    '#/caja':      { module: () => Caja,      title: 'Caja',                   minRole: 'Cajero'     },
-    '#/clientes':  { module: () => Clientes,  title: 'Clientes',               minRole: 'Vendedor'   },
-    '#/creditos':  { module: () => Creditos,  title: 'Créditos',               minRole: 'Vendedor'   },
-    '#/simulador': { module: () => Simulador, title: 'Simulador de Crédito',   minRole: 'Vendedor'   },
-    '#/cobranza':  { module: () => Cobranza,  title: 'Cobranza en Campo',      minRole: 'Cobranza'   },
-    '#/productos': { module: () => Productos, title: 'Productos',              minRole: 'Supervisor' },
-    '#/usuarios':  { module: () => Usuarios,  title: 'Usuarios del Sistema',   minRole: 'Supervisor' },
+    '#/dashboard': { module: () => Dashboard,   title: 'Dashboard',              minRole: 'Cajero'       },
+    '#/pos':       { module: () => POS,          title: 'Registrar Pago',         minRole: 'Cajero'       },
+    '#/caja':      { module: () => Caja,         title: 'Caja',                   minRole: 'Cajero'       },
+    '#/clientes':  { module: () => Clientes,     title: 'Clientes',               minRole: 'Vendedor'     },
+    '#/creditos':  { module: () => Creditos,     title: 'Créditos',               minRole: 'Vendedor'     },
+    '#/simulador': { module: () => Simulador,    title: 'Simulador de Crédito',   minRole: 'Vendedor'     },
+    '#/cobranza':  { module: () => Cobranza,     title: 'Cobranza en Campo',      minRole: 'Cobranza'     },
+    '#/productos': { module: () => Productos,    title: 'Productos',              minRole: 'Supervisor'   },
+    '#/usuarios':  { module: () => Usuarios,     title: 'Usuarios del Sistema',   minRole: 'Supervisor'   },
+    '#/sucursales':{ module: () => Sucursales,   title: 'Sucursales',             minRole: 'SuperUsuario' },
   };
 
   // ── Menú de navegación por rol ─────────────────────────────
@@ -36,6 +37,7 @@ const Router = (() => {
     { hash: '#/cobranza',  icon: '🏠', label: 'Cobranza',       allowedRoles: ['SuperUsuario','Supervisor','Cobranza'],          showBadge: false },
     { hash: '#/productos', icon: '📦', label: 'Productos',      minRole: 'Supervisor', showBadge: false },
     { hash: '#/usuarios',  icon: '👤', label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
+    { hash: '#/sucursales',icon: '🏢', label: 'Sucursales',     allowedRoles: ['SuperUsuario'],       showBadge: false },
   ];
 
 
