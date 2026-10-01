@@ -57,6 +57,16 @@ const Usuarios = (() => {
             </div>
 
             <div class="form-group">
+              <label>Sucursal por defecto *</label>
+              <select id="usr-sucursal">
+                <option value="">-- Cargando sucursales... --</option>
+              </select>
+              <div class="form-error" style="color:var(--cf-muted);font-size:.75rem">
+                El usuario puede cambiar de sucursal al iniciar sesión.
+              </div>
+            </div>
+
+            <div class="form-group">
               <label>Contraseña <span id="usr-pwd-label">Inicial *</span></label>
               <input type="password" id="usr-password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
               <div class="form-error" id="usr-pwd-hint" style="color:var(--cf-muted)">
@@ -90,6 +100,25 @@ const Usuarios = (() => {
     on('btn-nuevo-usuario', 'click',  () => _abrirModal(null));
     on('modal-usr-close',   'click',  _cerrarModal);
     on('usr-submit-btn',    'click',  _guardar);
+    // Pre-cargar sucursales para el formulario
+    _cargarSucursales();
+  }
+
+  let _sucursales = [];
+  async function _cargarSucursales() {
+    try {
+      const res = await API.sucursalListActivas();
+      _sucursales = res.ok ? (res.data || []) : [];
+    } catch(_) { _sucursales = []; }
+  }
+
+  function _fillSucursalSelect(selectedId) {
+    const sel = $('usr-sucursal');
+    if (!sel) return;
+    sel.innerHTML = `
+      <option value="">-- Sin asignar --</option>
+      ${_sucursales.map(s => `<option value="${s.id}" ${s.id === selectedId ? 'selected' : ''}>${s.nombre}</option>`).join('')}
+    `;
   }
 
   // ── Cargar usuarios ───────────────────────────────────────
@@ -159,6 +188,10 @@ const Usuarios = (() => {
     $('usr-password').value  = '';
     $('usr-password2').value = '';
 
+    // Rellenar sucursales
+    if (!_sucursales.length) { _cargarSucursales().then(() => _fillSucursalSelect(esEdicion ? (usuario.sucursalDefault || '') : '')); }
+    else _fillSucursalSelect(esEdicion ? (usuario.sucursalDefault || '') : '');
+
     $('usr-username').disabled = esEdicion;
 
     const hint = $('usr-pwd-hint');
@@ -189,12 +222,13 @@ const Usuarios = (() => {
     const errBox   = $('usr-error');
     errBox.classList.add('hidden');
 
-    const nombre   = $('usr-nombre')?.value.trim();
-    const username = $('usr-username')?.value.trim();
-    const rol      = $('usr-rol')?.value;
-    const pwd      = $('usr-password')?.value;
-    const pwd2     = $('usr-password2')?.value;
-    const notas    = $('usr-notas')?.value.trim() || '';
+    const nombre         = $('usr-nombre')?.value.trim();
+    const username       = $('usr-username')?.value.trim();
+    const rol            = $('usr-rol')?.value;
+    const pwd            = $('usr-password')?.value;
+    const pwd2           = $('usr-password2')?.value;
+    const notas          = $('usr-notas')?.value.trim() || '';
+    const sucursalDefault= $('usr-sucursal')?.value || '';
 
     if (!nombre) { _error('El nombre es obligatorio.'); return; }
     if (!rol)    { _error('Selecciona un rol.'); return; }
@@ -224,11 +258,11 @@ const Usuarios = (() => {
     try {
       let res;
       if (editando) {
-        const p = { id: editando.id, nombre, rol, notas };
+        const p = { id: editando.id, nombre, rol, notas, sucursalDefault };
         if (passwordHash) p.passwordHash = passwordHash;
         res = await API.userUpdate(p);
       } else {
-        res = await API.userCreate({ username, passwordHash, nombre, rol, notas });
+        res = await API.userCreate({ username, passwordHash, nombre, rol, notas, sucursalDefault });
       }
 
       if (res.ok) {
