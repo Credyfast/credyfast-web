@@ -116,5 +116,13 @@ const API = (() => {
 
     // ── Archivos ──────────────────────────────────────────────
     fileUpload: (p) => call('file_upload', p),
+
+    // ── Sucursales ────────────────────────────────────────────
+    sucursalList:        ()  => call('sucursal_list'),
+    sucursalListActivas: ()  => call('sucursal_list_activas'),
+    sucursalCreate:      (p) => call('sucursal_create',  p),
+    sucursalUpdate:      (p) => call('sucursal_update',  p),
+    sucursalToggle:      (p) => call('sucursal_toggle',  p),
+    sucursalSelect:      (p) => call('sucursal_select',  p),
   };
 })();
