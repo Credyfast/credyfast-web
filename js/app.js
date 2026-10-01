@@ -266,8 +266,8 @@ const App = (() => {
     screen.innerHTML = `
       <div class="suc-card">
         <div class="suc-logo">
-          <img src="assets/LOGO_PRINCIPAL.png" alt="CredyFast"
-               style="width:180px;display:block;margin:0 auto;filter:brightness(0) invert(1);opacity:0.92">
+          <img src="assets/CFMONO.png" alt="CredyFast"
+               style="width:180px;display:block;margin:0 auto;opacity:0.92">
         </div>
         <p class="suc-subtitle">¿Desde qué sucursal trabajas hoy,<br><strong>${user.nombre || user.username}</strong>?</p>
         <div class="suc-list">${listaHTML}</div>
