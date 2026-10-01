@@ -127,6 +127,119 @@
 }
 .btn-logout:hover { background: rgba(220,38,38,0.2); color: #fca5a5; }
 
+/* ── Sucursal badge in sidebar ── */
+.sidebar-sucursal {
+  display: inline-block;
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--cf-teal-light);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Botón cambiar sucursal ── */
+.btn-cambiar-sucursal {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--cf-teal-light);
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
+  margin-bottom: 6px;
+}
+.btn-cambiar-sucursal:hover { background: rgba(91,191,160,0.15); color: #fff; }
+
+/* ── Pantalla selector de sucursal ── */
+.sucursal-picker-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(ellipse at 60% 30%, #1a4a38 0%, #0d2018 60%, #060f0a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.suc-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(91,191,160,0.2);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 40px 36px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  animation: sucCardIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes sucCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.suc-logo {
+  font-size: 2.8rem;
+  margin-bottom: 8px;
+  display: block;
+}
+.suc-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+.suc-subtitle {
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+.suc-subtitle strong { color: var(--cf-teal-light); }
+.suc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.suc-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(91,191,160,0.25);
+  background: rgba(91,191,160,0.07);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+.suc-btn:hover:not(:disabled) {
+  background: rgba(91,191,160,0.18);
+  border-color: var(--cf-teal-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(91,191,160,0.2);
+}
+.suc-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.suc-icon { font-size: 1.4rem; }
+.suc-nombre { font-size: 1rem; font-weight: 600; }
+.suc-hint {
+  font-size: 0.8rem;
+  color: var(--cf-danger);
+  min-height: 18px;
+}
+
 /* ── Header logout button ── */
 .btn-header-logout {
   margin-left: 8px;
