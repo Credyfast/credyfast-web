@@ -258,7 +258,7 @@ const App = (() => {
     const listaHTML = sucursales.length
       ? sucursales.map(s => `
         <button class="suc-btn" data-id="${s.id}">
-          <span class="suc-icon">🏢</span>
+          <span class="suc-icon">${s.emoji || '🏢'}</span>
           <span class="suc-nombre">${s.nombre}</span>
         </button>`).join('')
       : '<p style="color:var(--cf-danger);text-align:center">No hay sucursales disponibles. Contacta al administrador.</p>';
@@ -279,6 +279,7 @@ const App = (() => {
       btn.addEventListener('click', async () => {
         const idSucursal = btn.dataset.id;
         const nombre     = btn.querySelector('.suc-nombre').textContent;
+        const emoji      = btn.querySelector('.suc-icon').textContent;
         btn.disabled = true;
         btn.innerHTML = `<span class="suc-icon">⏳</span><span class="suc-nombre">Entrando a ${nombre}…</span>`;
 
@@ -287,7 +288,7 @@ const App = (() => {
           if (!res.ok) {
             $('suc-error').textContent = res.message || 'Error al seleccionar sucursal.';
             btn.disabled = false;
-            btn.innerHTML = `<span class="suc-icon">🏢</span><span class="suc-nombre">${nombre}</span>`;
+            btn.innerHTML = `<span class="suc-icon">${emoji}</span><span class="suc-nombre">${nombre}</span>`;
             return;
           }
           // Actualizar user en state y localStorage con datos de sucursal
@@ -305,7 +306,7 @@ const App = (() => {
         } catch(_) {
           $('suc-error').textContent = 'Error de conexión. Intenta de nuevo.';
           btn.disabled = false;
-          btn.innerHTML = `<span class="suc-icon">🏢</span><span class="suc-nombre">${nombre}</span>`;
+          btn.innerHTML = `<span class="suc-icon">${emoji}</span><span class="suc-nombre">${nombre}</span>`;
         }
       });
     });
