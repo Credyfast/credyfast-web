@@ -8,7 +8,10 @@ const Dashboard = (() => {
     return `
     <div class="dashboard-view">
       <div class="section-header">
-        <h2>Resumen Operativo</h2>
+        <div>
+          <h2>Resumen Operativo</h2>
+          <p id="dash-sucursal-label" style="font-size:.82rem;color:var(--cf-teal-light);margin:2px 0 0"></p>
+        </div>
         <button class="btn btn-outline btn-sm" id="dash-refresh">↻ Actualizar</button>
       </div>
 
@@ -86,6 +89,14 @@ const Dashboard = (() => {
   }
 
   function _renderStats(d) {
+    // Etiqueta de sucursal activa
+    const labelEl = $('dash-sucursal-label');
+    if (labelEl) {
+      labelEl.textContent = d.sucursalNombre && d.sucursalNombre !== 'Global'
+        ? '🏢 Datos de sucursal: ' + d.sucursalNombre
+        : '🌐 Vista consolidada — todas las sucursales';
+    }
+
     setHTML('stat-caja',       fmt.currency(d.saldoCaja ?? d.caja?.saldo ?? 0));
     setHTML('stat-cuenta',     fmt.currency(d.saldoCuenta ?? 0));
     setHTML('stat-activos',    d.creditosActivos ?? '—');
