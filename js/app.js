@@ -158,10 +158,11 @@ const App = (() => {
     setHTML('sidebar-username', user.username || user.Nombre_Completo || '—');
     setHTML('sidebar-role', user.rol || '');
 
-    // Mostrar sucursal activa en sidebar
+    // Mostrar sucursal activa en sidebar (emoji + nombre)
     const sucNombre = user.sucursalNombre || State.get('sucursalNombre') || '';
+    const sucEmoji  = user.sucursalEmoji  || '';
     const sucEl = $('sidebar-sucursal');
-    if (sucEl) sucEl.textContent = sucNombre ? '🏢 ' + sucNombre : '';
+    if (sucEl) sucEl.textContent = sucNombre ? `${sucEmoji} ${sucNombre}`.trim() : '';
 
     // Resetear estado de arqueo solo en login real (no en restauración de pestaña)
     if (!isRestore && typeof ArqueoModal !== 'undefined') ArqueoModal.resetSesion();
@@ -295,6 +296,7 @@ const App = (() => {
           const updatedUser = Object.assign({}, user, {
             sucursal:       res.sucursal,
             sucursalNombre: res.sucursalNombre,
+            sucursalEmoji:  res.sucursalEmoji || emoji,
           });
           State.set('user', updatedUser);
           const saved = JSON.parse(localStorage.getItem('credyfast_session') || '{}');
