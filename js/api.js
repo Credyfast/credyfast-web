@@ -124,5 +124,11 @@ const API = (() => {
     sucursalUpdate:      (p) => call('sucursal_update',  p),
     sucursalToggle:      (p) => call('sucursal_toggle',  p),
     sucursalSelect:      (p) => call('sucursal_select',  p),
+
+    // ── Autorizaciones y Códigos de Descuento ───────────────
+    authCodeCreate:      (p) => call('auth_code_create',   p),
+    authCodeValidate:    (p) => call('auth_code_validate', p),
+    authCodeList:        (p) => call('auth_code_list',     p),
+    authCodeCancel:      (p) => call('auth_code_cancel',   p),
   };
 })();
