@@ -12,6 +12,7 @@ const Creditos = (() => {
   let _periodoSel = null;
   let _prodSel = null;
   let _creditosActuales = [];
+  let _creditoDescuentoActivo = null;
 
   function render() {
     const user = State.get('user');
@@ -531,7 +532,7 @@ const Creditos = (() => {
 
   // ── Modal: Nueva Solicitud ─────────────────────────────────
   function _openModal(clientePreloaded = null) {
-    _periodoSel = null; _prodSel = null;
+    _periodoSel = null; _prodSel = null; _creditoDescuentoActivo = null;
     const modal = $('modal-credito');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -573,6 +574,23 @@ const Creditos = (() => {
         <div class="periodo-selector" id="cr-periodos"></div>
       </div>
       <div id="cr-cotizador" class="hidden"></div>
+
+      <!-- Sección Código Descuento en Enganche -->
+      <div id="cr-desc-wrapper" class="hidden" style="margin:12px 0;background:var(--cf-bg);border:1px dashed var(--cf-border);border-radius:var(--radius-sm);padding:10px">
+        <div id="cr-desc-toggle-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-size:0.82rem;font-weight:600;color:var(--cf-accent)">🎟️ ¿Código de descuento en enganche?</span>
+          <span id="cr-desc-toggle-icon" style="font-size:0.75rem;color:var(--cf-muted)">▼</span>
+        </div>
+        <div id="cr-desc-inputs-area" class="hidden" style="margin-top:8px">
+          <div style="display:flex;gap:6px">
+            <input type="text" id="cr-codigo-input" placeholder="6 dígitos..." maxlength="6" class="input-sm" style="font-family:monospace;font-weight:700;letter-spacing:2px;text-align:center;font-size:1.05rem;flex:1">
+            <button type="button" class="btn btn-outline btn-sm" id="btn-cr-validar-codigo">Validar</button>
+            <button type="button" class="btn btn-ghost btn-sm hidden" id="btn-cr-quitar-codigo" title="Quitar descuento">✕</button>
+          </div>
+          <div id="cr-codigo-feedback" class="hidden" style="font-size:0.78rem;margin-top:6px;line-height:1.3"></div>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group"><label>Celular del cliente *</label><input type="tel" id="cr-celular" placeholder="10 dígitos"></div>
       </div>
@@ -644,6 +662,88 @@ const Creditos = (() => {
     on('cr-submit-btn', 'click',   _submitSolicitud);
     if (idClienteDefault) setTimeout(_verificarCliente, 100);
 
+    // Toggle sección código descuento enganche
+    on('cr-desc-toggle-header', 'click', () => {
+      const area = $('cr-desc-inputs-area');
+      const icon = $('cr-desc-toggle-icon');
+      if (area) {
+        const isHidden = area.classList.toggle('hidden');
+        if (icon) icon.textContent = isHidden ? '▼' : '▲';
+        if (!isHidden) $('cr-codigo-input')?.focus();
+      }
+    });
+
+    // Validar código enganche
+    on('btn-cr-validar-codigo', 'click', async () => {
+      const codigo = $('cr-codigo-input')?.value.trim();
+      if (!codigo || codigo.length < 6) {
+        toast('Ingresa un código numérico de 6 dígitos.', 'warning');
+        return;
+      }
+      if (!_prodSel) {
+        toast('Selecciona primero un producto para validar el descuento.', 'warning');
+        return;
+      }
+      const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
+      const engancheBase = Math.round(costo * 0.20);
+
+      showLoading(true);
+      try {
+        const res = await API.authCodeValidate({
+          codigo,
+          tipoOperacion: 'ENGANCHE',
+          montoBase: engancheBase,
+        });
+        showLoading(false);
+
+        const fb = $('cr-codigo-feedback');
+        const btnQuitar = $('btn-cr-quitar-codigo');
+
+        if (res.ok && res.data) {
+          _creditoDescuentoActivo = res.data;
+          toast(`✔ Descuento autorizado por ${res.data.creadoPor}`, 'success');
+
+          if (fb) {
+            fb.classList.remove('hidden');
+            const descTxt = res.data.tipoDescuento === 'PORCENTAJE' ? `${res.data.valor}%` : fmt.currency(res.data.valor);
+            fb.innerHTML = `
+              <div style="background:rgba(16,185,129,0.1);color:#047857;padding:6px 8px;border-radius:4px;border:1px solid rgba(16,185,129,0.3)">
+                ✔ <strong>${descTxt} de descuento en enganche</strong> (-${fmt.currency(res.data.descuentoReal)})<br>
+                ${res.data.diferirEnganche ? '<strong>📌 Enganche $0 al entregar:</strong> saldo restante diferido en las semanas.<br>' : ''}
+                <small>Autorizó: ${res.data.creadoPor} · Motivo: <em>${res.data.motivo}</em></small>
+              </div>
+            `;
+          }
+          if (btnQuitar) btnQuitar.classList.remove('hidden');
+          _mostrarCotizador();
+        } else {
+          _creditoDescuentoActivo = null;
+          if (fb) {
+            fb.classList.remove('hidden');
+            fb.innerHTML = `<span style="color:var(--cf-danger)">✖ ${res.message || 'Código inválido'}</span>`;
+          }
+          if (btnQuitar) btnQuitar.classList.add('hidden');
+          _mostrarCotizador();
+        }
+      } catch (_) {
+        showLoading(false);
+        toast('Error de red al validar código.', 'error');
+      }
+    });
+
+    // Quitar código
+    on('btn-cr-quitar-codigo', 'click', () => {
+      _creditoDescuentoActivo = null;
+      const inp = $('cr-codigo-input');
+      const fb = $('cr-codigo-feedback');
+      const btnQuitar = $('btn-cr-quitar-codigo');
+      if (inp) inp.value = '';
+      if (fb) { fb.classList.add('hidden'); fb.innerHTML = ''; }
+      if (btnQuitar) btnQuitar.classList.add('hidden');
+      _mostrarCotizador();
+      toast('Descuento removido.', 'info');
+    });
+
     // ── Búsqueda por nombre con autocomplete ─────────────────
     let _searchTimer = null;
     const nombreInput    = $('cr-buscar-nombre');
@@ -708,7 +808,26 @@ const Creditos = (() => {
     _periodoSel = null;
     const periodoArea = $('cr-periodo-area');
     const cotiz = $('cr-cotizador');
-    if (!_prodSel) { periodoArea?.classList.add('hidden'); cotiz?.classList.add('hidden'); return; }
+    const descWrapper = $('cr-desc-wrapper');
+
+    if (!_prodSel) {
+      periodoArea?.classList.add('hidden');
+      cotiz?.classList.add('hidden');
+      descWrapper?.classList.add('hidden');
+      return;
+    }
+
+    // Si había un código activo, recalcular el descuento en base al nuevo costo
+    if (_creditoDescuentoActivo) {
+      const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
+      const engancheBase = Math.round(costo * 0.20);
+      if (_creditoDescuentoActivo.tipoDescuento === 'PORCENTAJE') {
+        _creditoDescuentoActivo.descuentoReal = Math.round(engancheBase * (_creditoDescuentoActivo.valor / 100));
+      } else {
+        _creditoDescuentoActivo.descuentoReal = Math.min(engancheBase, _creditoDescuentoActivo.valor);
+      }
+    }
+
     periodoArea?.classList.remove('hidden');
     const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
     const LIMITE = 8000;
@@ -733,13 +852,48 @@ const Creditos = (() => {
     const costoReal = parseFloat(_prodSel['COSTO_REAL']) || 0;
     const contado = parseFloat(_prodSel['Precio_de_contado']) || Math.round(costo * 1.5);
     const pctMap = { 13: 0.1, 26: 0.06, 39: 0.05, 52: 0.04 };
-    const enganche = Math.round(costo * 0.20);
-    const puntual = Math.round(contado * (pctMap[_periodoSel] || 0.06));
+    const engancheBase = Math.round(costo * 0.20);
+
+    let engancheFinal = engancheBase;
+    let puntual = Math.round(contado * (pctMap[_periodoSel] || 0.06));
+    let detalleDescuento = '';
+
+    if (_creditoDescuentoActivo) {
+      const desc = _creditoDescuentoActivo.descuentoReal || 0;
+      const engancheRestante = Math.max(0, engancheBase - desc);
+      const detalleTipo = _creditoDescuentoActivo.tipoDescuento === 'PORCENTAJE'
+        ? `${_creditoDescuentoActivo.valor}%`
+        : fmt.currency(_creditoDescuentoActivo.valor);
+
+      if (_creditoDescuentoActivo.diferirEnganche) {
+        engancheFinal = 0;
+        const adicSem = Math.ceil(engancheRestante / _periodoSel);
+        puntual += adicSem;
+        detalleDescuento = `
+          <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
+            Desc: ${detalleTipo} (-${fmt.currency(desc)})<br>
+            <strong>Enganche diferido: $0 hoy</strong> (+${fmt.currency(adicSem)}/sem)
+          </div>
+        `;
+      } else {
+        engancheFinal = engancheRestante;
+        detalleDescuento = `
+          <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
+            Desc: ${detalleTipo} (-${fmt.currency(desc)}) aplicado al enganche
+          </div>
+        `;
+      }
+    }
+
     const normal = Math.round(puntual * 1.10);
     const moroso = Math.round(normal * 1.10);
-    const semRec = Math.ceil((costoReal - enganche) / puntual);
+    const semRec = Math.ceil((costoReal - engancheFinal) / puntual);
     const cotiz = $('cr-cotizador'); if (!cotiz) return;
     cotiz.classList.remove('hidden');
+
+    const descWrapper = $('cr-desc-wrapper');
+    if (descWrapper) descWrapper.classList.remove('hidden');
+
     cotiz.innerHTML = `
       <div class="cotizador-result">
         <div class="cotiz-titulo">💰 Simulación — ${_periodoSel} semanas</div>
@@ -748,7 +902,11 @@ const Creditos = (() => {
           <span style="opacity:0.8">NS: ${_prodSel['NS'] || '—'} | RAM: ${_prodSel['RAM'] || 0}GB | Alm: ${_prodSel['ALMACENAMIENTO'] || 0}GB | Color: ${_prodSel['COLOR'] || '—'}</span>
         </div>
         <div class="cotizador-grid">
-          <div class="cotizador-item"><div class="ci-label">Enganche</div><div class="ci-val">${fmt.currency(enganche)}</div></div>
+          <div class="cotizador-item">
+            <div class="ci-label">Enganche ${engancheFinal === 0 ? '(Diferido)' : ''}</div>
+            <div class="ci-val" style="${_creditoDescuentoActivo ? 'color:#10b981;font-weight:800' : ''}">${fmt.currency(engancheFinal)}</div>
+            ${detalleDescuento}
+          </div>
           <div class="cotizador-item"><div class="ci-label">Pago puntual</div><div class="ci-val">${fmt.currency(puntual)}</div></div>
           <div class="cotizador-item"><div class="ci-label">Pago normal (+7d)</div><div class="ci-val">${fmt.currency(normal)}</div></div>
           <div class="cotizador-item"><div class="ci-label">Pago moroso</div><div class="ci-val">${fmt.currency(moroso)}</div></div>
@@ -790,10 +948,13 @@ const Creditos = (() => {
     const ref1t = $('cr-ref1t')?.value.trim();
     if (!ref1n || !ref1t) { toast('Referencia 1 (nombre y teléfono) es obligatoria.', 'warning'); return; }
 
+    const codigoDescuento = _creditoDescuentoActivo ? _creditoDescuentoActivo.codigo : '';
+
     showLoading(true);
     try {
       const res = await API.creditRequest({
         IDCliente, IDProd, Periodo: _periodoSel, Celular,
+        codigoDescuento,
         Nombre_referencia_1:   ref1n,
         Numero_referencia_1:   ref1t,
         Nombre_referencia_2:   $('cr-ref2n')?.value || '',
