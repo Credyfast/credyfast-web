@@ -19,25 +19,27 @@ const Router = (() => {
     '#/creditos':  { module: () => Creditos,     title: 'Créditos',               minRole: 'Vendedor'     },
     '#/simulador': { module: () => Simulador,    title: 'Simulador de Crédito',   minRole: 'Vendedor'     },
     '#/cobranza':  { module: () => Cobranza,     title: 'Cobranza en Campo',      minRole: 'Cobranza'     },
-    '#/productos': { module: () => Productos,    title: 'Productos',              minRole: 'Supervisor'   },
-    '#/usuarios':  { module: () => Usuarios,     title: 'Usuarios del Sistema',   minRole: 'Supervisor'   },
-    '#/sucursales':{ module: () => Sucursales,   title: 'Sucursales',             minRole: 'SuperUsuario' },
+    '#/productos':     { module: () => Productos,          title: 'Productos',              minRole: 'Supervisor'   },
+    '#/usuarios':      { module: () => Usuarios,           title: 'Usuarios del Sistema',   minRole: 'Supervisor'   },
+    '#/autorizaciones':{ module: () => AutorizacionesView, title: 'Códigos de Autorización', minRole: 'Supervisor'   },
+    '#/sucursales':    { module: () => Sucursales,         title: 'Sucursales',             minRole: 'SuperUsuario' },
   };
 
   // ── Menú de navegación por rol ─────────────────────────────
   // minRole: nivel mínimo para ver el item (jerárquico)
   // allowedRoles: lista exacta de roles permitidos (sobreescribe minRole si está presente)
   const NAV_ITEMS = [
-    { hash: '#/dashboard', icon: '📊', label: 'Dashboard',      allowedRoles: ['SuperUsuario','Supervisor','Cajero','Cobranza'], showBadge: false },
-    { hash: '#/pos',       icon: '💳', label: 'Registrar Pago', allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
-    { hash: '#/caja',      icon: '🏦', label: 'Caja',           allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
-    { hash: '#/clientes',  icon: '👥', label: 'Clientes',       minRole: 'Vendedor',   showBadge: false },
-    { hash: '#/creditos',  icon: '📋', label: 'Créditos',       minRole: 'Vendedor',   showBadge: true  },
-    { hash: '#/simulador', icon: '🧮', label: 'Cotizador',      allowedRoles: ['SuperUsuario','Supervisor','Vendedor'],          showBadge: false },
-    { hash: '#/cobranza',  icon: '🏠', label: 'Cobranza',       allowedRoles: ['SuperUsuario','Supervisor','Cobranza'],          showBadge: false },
-    { hash: '#/productos', icon: '📦', label: 'Productos',      minRole: 'Supervisor', showBadge: false },
-    { hash: '#/usuarios',  icon: '👤', label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
-    { hash: '#/sucursales',icon: '🏢', label: 'Sucursales',     allowedRoles: ['SuperUsuario'],       showBadge: false },
+    { hash: '#/dashboard',     icon: '📊', label: 'Dashboard',      allowedRoles: ['SuperUsuario','Supervisor','Cajero','Cobranza'], showBadge: false },
+    { hash: '#/pos',           icon: '💳', label: 'Registrar Pago', allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
+    { hash: '#/caja',          icon: '🏦', label: 'Caja',           allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
+    { hash: '#/clientes',      icon: '👥', label: 'Clientes',       minRole: 'Vendedor',   showBadge: false },
+    { hash: '#/creditos',      icon: '📋', label: 'Créditos',       minRole: 'Vendedor',   showBadge: true  },
+    { hash: '#/simulador',     icon: '🧮', label: 'Cotizador',      allowedRoles: ['SuperUsuario','Supervisor','Vendedor'],          showBadge: false },
+    { hash: '#/cobranza',      icon: '🏠', label: 'Cobranza',       allowedRoles: ['SuperUsuario','Supervisor','Cobranza'],          showBadge: false },
+    { hash: '#/productos',     icon: '📦', label: 'Productos',      minRole: 'Supervisor', showBadge: false },
+    { hash: '#/usuarios',      icon: '👤', label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
+    { hash: '#/autorizaciones',icon: '🎟️', label: 'Autorizaciones', allowedRoles: ['SuperUsuario','Supervisor'],                  showBadge: false },
+    { hash: '#/sucursales',    icon: '🏢', label: 'Sucursales',     allowedRoles: ['SuperUsuario'],                                 showBadge: false },
   ];
 
 
