@@ -9,6 +9,7 @@ const AutorizacionesView = (() => {
   let _codigos = [];
   let _timerInterval = null;
   let _sucursales = [];
+  let _ultimoCodigo = null;
 
   function render() {
     return `
@@ -80,8 +81,8 @@ const AutorizacionesView = (() => {
     </div>
 
     <!-- ══ MODAL GENERAR CÓDIGO ══ -->
-    <div id="modal-nuevo-codigo" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:250;display:flex;align-items:center;justify-content:center;padding:16px">
-      <div class="card" style="width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);border:1px solid var(--cf-border)">
+    <div id="modal-nuevo-codigo" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);z-index:250;display:none;align-items:center;justify-content:center;padding:16px">
+      <div class="card" style="width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);border:1px solid var(--cf-border);border-radius:14px">
         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
           <h3>🎟️ Generar Código de Autorización</h3>
           <button class="btn btn-ghost btn-sm" id="modal-nuevo-codigo-close">✕</button>
@@ -168,33 +169,49 @@ const AutorizacionesView = (() => {
       </div>
     </div>
 
-    <!-- ══ MODAL CÓDIGO GENERADO CON ÉXITO ══ -->
-    <div id="modal-codigo-exito" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px">
-      <div class="card" style="width:100%;max-width:440px;text-align:center;padding:24px;box-shadow:var(--shadow-xl);border:2px solid #10b981">
-        <div style="font-size:2.5rem;margin-bottom:8px">🎉</div>
-        <h3 style="margin-bottom:4px;color:#10b981">¡Código de Autorización Listo!</h3>
-        <p style="font-size:0.85rem;color:var(--cf-muted);margin-bottom:16px">
-          Proporciona este código de 6 dígitos al cajero o vendedor:
+    <!-- ══ MODAL CÓDIGO GENERADO CON ÉXITO (CENTRAL, FIJO Y NO SE CIERRA SOLO) ══ -->
+    <div id="modal-codigo-exito" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px">
+      <div class="card" style="width:100%;max-width:480px;text-align:center;padding:26px 22px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.6);border:2px solid #10b981;border-radius:18px;background:var(--cf-card-bg,#1e293b);position:relative">
+        
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="badge badge-success" style="font-size:0.75rem;padding:4px 10px;font-weight:700;letter-spacing:0.5px">✔ CÓDIGO GENERADO</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-codigo-exito-x" title="Cerrar ventana" style="font-size:1.25rem;line-height:1;padding:4px 8px;border-radius:50%;color:var(--cf-muted)">✕</button>
+        </div>
+
+        <div style="font-size:3rem;line-height:1;margin-bottom:6px">🎟️</div>
+        <h2 style="font-size:1.35rem;font-weight:800;color:var(--cf-text,#f8fafc);margin-bottom:4px">Código de Autorización Listo</h2>
+        <p style="font-size:0.84rem;color:var(--cf-muted,#94a3b8);margin-bottom:18px">
+          Proporciona este código de 6 dígitos al cajero o vendedor en mostrador:
         </p>
 
         <!-- Bloque Grande del Código -->
-        <div id="display-codigo-grande" style="font-size:2.8rem;font-weight:900;letter-spacing:6px;background:var(--cf-bg);padding:14px;border-radius:var(--radius-md);border:2px dashed #10b981;color:var(--cf-accent);margin-bottom:14px;font-family:monospace">
-          ------
+        <div style="background:rgba(16,185,129,0.08);border:2px dashed #10b981;border-radius:14px;padding:16px 10px;margin-bottom:14px">
+          <div id="display-codigo-grande" style="font-size:3.2rem;font-weight:900;letter-spacing:10px;color:#10b981;font-family:'Courier New',Courier,monospace;user-select:all;line-height:1.1;text-shadow:0 0 16px rgba(16,185,129,0.25)">
+            ------
+          </div>
         </div>
 
-        <button class="btn btn-primary btn-full btn-lg" id="btn-copiar-codigo" style="margin-bottom:14px;font-size:1rem">
-          📋 Copiar Código para WhatsApp
-        </button>
-
-        <div id="display-codigo-detalles" style="background:var(--cf-bg);border-radius:var(--radius-sm);padding:12px;font-size:0.82rem;text-align:left;line-height:1.6;margin-bottom:16px;border:1px solid var(--cf-border)">
+        <!-- Botones de Acción: Copiar Código y Copiar WhatsApp -->
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button type="button" class="btn btn-primary btn-full btn-lg" id="btn-copiar-codigo" style="font-size:0.95rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#10b981;border-color:#10b981">
+            <span id="btn-copiar-icon">📋</span> <span id="btn-copiar-text">Copiar Código</span>
+          </button>
+          <button type="button" class="btn btn-outline" id="btn-copiar-whatsapp" title="Copiar mensaje detallado para enviar por WhatsApp" style="padding:0 14px;font-size:1.15rem;white-space:nowrap;display:flex;align-items:center;gap:6px">
+            <span>💬</span> <span style="font-size:0.8rem;font-weight:600">WhatsApp</span>
+          </button>
         </div>
 
-        <div style="font-size:0.82rem;color:var(--cf-warning);font-weight:600;margin-bottom:14px">
-          ⏳ Expira en 20 minutos (Uso único)
+        <!-- Tarjeta con desglose de la autorización -->
+        <div id="display-codigo-detalles" style="background:rgba(0,0,0,0.25);border:1px solid var(--cf-border,#334155);border-radius:10px;padding:12px 14px;font-size:0.82rem;text-align:left;line-height:1.6;margin-bottom:16px">
         </div>
 
-        <button class="btn btn-ghost btn-full" id="btn-codigo-exito-cerrar">
-          Entendido, cerrar ventana
+        <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:9px 12px;font-size:0.79rem;color:#f59e0b;font-weight:600;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span>⏱️</span> <span>Vigencia: <strong>20 minutos</strong> (Uso único en mostrador)</span>
+        </div>
+
+        <!-- Botón de Cerrar Explícito (Solo se cierra al dar click aquí) -->
+        <button type="button" class="btn btn-outline btn-full btn-lg" id="btn-codigo-exito-cerrar" style="font-size:0.92rem;font-weight:700;border-color:var(--cf-border,#475569);color:var(--cf-text,#f8fafc)">
+          ✕ Cerrar Ventana
         </button>
       </div>
     </div>
@@ -227,17 +244,25 @@ const AutorizacionesView = (() => {
       $('form-nuevo-codigo')?.reset();
       _setTipoOperacion('CONTADO');
       _setTipoDescuento('MONTO');
-      $('modal-nuevo-codigo')?.classList.remove('hidden');
+      const modal = $('modal-nuevo-codigo');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+      }
     });
 
     on('modal-nuevo-codigo-close', 'click', () => {
-      $('modal-nuevo-codigo')?.classList.add('hidden');
+      const modal = $('modal-nuevo-codigo');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+      }
     });
 
-    on('btn-codigo-exito-cerrar', 'click', () => {
-      $('modal-codigo-exito')?.classList.add('hidden');
-      _loadCodigos();
-    });
+    on('btn-codigo-exito-cerrar', 'click', _cerrarModalExito);
+    on('btn-codigo-exito-x', 'click', _cerrarModalExito);
+    on('btn-copiar-codigo', 'click', _copiarCodigoGrande);
+    on('btn-copiar-whatsapp', 'click', _copiarWhatsApp);
 
     // Toggle tipo operacion
     document.querySelectorAll('#auth-tipo-operacion [data-op]').forEach(btn => {
@@ -267,17 +292,15 @@ const AutorizacionesView = (() => {
       e.preventDefault();
       await _submitNuevoCodigo();
     });
+  }
 
-    // Copiar codigo grande
-    on('btn-copiar-codigo', 'click', () => {
-      const cod = $('display-codigo-grande')?.textContent.trim();
-      if (!cod) return;
-      navigator.clipboard.writeText(cod).then(() => {
-        toast(`✔ Código ${cod} copiado al portapapeles`, 'success');
-      }).catch(() => {
-        toast(`Código: ${cod}`, 'info');
-      });
-    });
+  function _cerrarModalExito() {
+    const modal = $('modal-codigo-exito');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    _loadCodigos();
   }
 
   function _setTipoOperacion(op) {
@@ -331,15 +354,14 @@ const AutorizacionesView = (() => {
   async function _loadSucursales() {
     try {
       const res = await API.sucursalListActivas();
-      if (res.ok && Array.isArray(res.data)) {
+      if (res && res.ok && Array.isArray(res.data)) {
         _sucursales = res.data;
         const sel = $('auth-sucursal');
         if (sel) {
           sel.innerHTML = '<option value="TODAS">🏢 Válido en Cualquier Sucursal</option>' +
             _sucursales.map(s => `<option value="${s.id}">${s.emoji || '🏢'} ${s.nombre}</option>`).join('');
           
-          // Preseleccionar la sucursal activa del usuario si la tiene
-          const sucActiva = State.get('sucursal');
+          const sucActiva = (typeof State !== 'undefined' && State.get) ? State.get('sucursal') : null;
           if (sucActiva && sel.querySelector(`option[value="${sucActiva}"]`)) {
             sel.value = sucActiva;
           }
@@ -348,21 +370,35 @@ const AutorizacionesView = (() => {
     } catch (_) {}
   }
 
+  function _parseDateMs(val) {
+    if (!val) return 0;
+    if (val instanceof Date) return val.getTime();
+    const str = String(val).trim().replace(' ', 'T');
+    const t = new Date(str).getTime();
+    if (!isNaN(t)) return t;
+    const t2 = new Date(val).getTime();
+    return !isNaN(t2) ? t2 : 0;
+  }
+
   async function _loadCodigos() {
     const tbody = $('auth-tbody');
     if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px">Cargando códigos…</td></tr>';
 
     try {
       const res = await API.authCodeList();
-      if (res.ok && Array.isArray(res.data)) {
+      if (res && res.ok && Array.isArray(res.data)) {
         _codigos = res.data;
         _renderTabla();
         _actualizarStats();
       } else {
-        if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--cf-danger);padding:20px">${res.message || 'Error al cargar códigos'}</td></tr>`;
+        const msg = (res && res.message) ? res.message : 'Error al cargar códigos del servidor.';
+        console.warn('API.authCodeList no exitoso:', res);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--cf-danger);padding:20px">⚠ ${msg}</td></tr>`;
       }
     } catch (err) {
-      if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--cf-danger);padding:20px">Error de conexión al cargar códigos.</td></tr>';
+      console.error('Error al cargar códigos:', err);
+      const msg = (err && err.message) ? err.message : 'Error de conexión al cargar códigos.';
+      if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--cf-danger);padding:20px">⚠ ${msg}</td></tr>`;
     }
   }
 
@@ -370,7 +406,7 @@ const AutorizacionesView = (() => {
     const tbody = $('auth-tbody');
     if (!tbody) return;
 
-    if (_codigos.length === 0) {
+    if (!Array.isArray(_codigos) || _codigos.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--cf-muted)">No hay códigos de autorización registrados aún. Haz clic en "Generar Nuevo Código".</td></tr>';
       return;
     }
@@ -385,7 +421,7 @@ const AutorizacionesView = (() => {
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:6px">
-              <strong style="font-family:monospace;font-size:1.1rem;letter-spacing:1px;color:var(--cf-accent)">${c.codigo}</strong>
+              <strong style="font-family:monospace;font-size:1.15rem;letter-spacing:1px;color:var(--cf-accent)">${c.codigo}</strong>
               <button class="btn btn-ghost btn-sm" title="Copiar código" onclick="AutorizacionesView.copiar('${c.codigo}')" style="padding:2px 6px;font-size:0.75rem">📋</button>
             </div>
           </td>
@@ -425,10 +461,12 @@ const AutorizacionesView = (() => {
 
   function _actualizarTiemposTabla() {
     const now = Date.now();
+    if (!Array.isArray(_codigos)) return;
+
     _codigos.forEach(c => {
       if (c.estatus === 'ACTIVO') {
-        const exp = new Date(c.fechaExpiracion).getTime();
-        const seg = Math.max(0, Math.floor((exp - now) / 1000));
+        const expMs = _parseDateMs(c.fechaExpiracion);
+        const seg = expMs > 0 ? Math.max(0, Math.floor((expMs - now) / 1000)) : 0;
         c.segundosRestantes = seg;
 
         const badge = $(`badge-vigencia-${c.id}`);
@@ -447,21 +485,29 @@ const AutorizacionesView = (() => {
   }
 
   function _formatearTiempoRestante(seg) {
-    if (seg <= 0) return 'Expirado';
+    if (!seg || seg <= 0) return 'Expirado';
     const m = Math.floor(seg / 60);
     const s = seg % 60;
     return `⏳ ${m}m ${String(s).padStart(2, '0')}s`;
   }
 
   function _actualizarStats() {
+    if (!Array.isArray(_codigos)) return;
     const activos = _codigos.filter(c => c.estatus === 'ACTIVO').length;
     const usados = _codigos.filter(c => c.estatus === 'USADO').length;
     const otros = _codigos.filter(c => c.estatus === 'EXPIRADO' || c.estatus === 'CANCELADO').length;
 
-    setText('stat-auth-activos', activos);
-    setText('stat-auth-usados', usados);
-    setText('stat-auth-expirados', otros);
-    setText('auth-total-count', `${_codigos.length} códigos`);
+    if (typeof setText === 'function') {
+      setText('stat-auth-activos', activos);
+      setText('stat-auth-usados', usados);
+      setText('stat-auth-expirados', otros);
+      setText('auth-total-count', `${_codigos.length} códigos`);
+    } else {
+      const eA = $('stat-auth-activos'); if (eA) eA.textContent = activos;
+      const eU = $('stat-auth-usados'); if (eU) eU.textContent = usados;
+      const eO = $('stat-auth-expirados'); if (eO) eO.textContent = otros;
+      const eT = $('auth-total-count'); if (eT) eT.textContent = `${_codigos.length} códigos`;
+    }
   }
 
   async function _submitNuevoCodigo() {
@@ -498,30 +544,137 @@ const AutorizacionesView = (() => {
       });
 
       showLoading(false);
-      if (res.ok) {
-        $('modal-nuevo-codigo')?.classList.add('hidden');
-        toast(`✔ Código ${res.codigo} generado exitosamente`, 'success');
+      if (res && res.ok) {
+        // Cerrar modal de formulario
+        const modalForm = $('modal-nuevo-codigo');
+        if (modalForm) {
+          modalForm.classList.add('hidden');
+          modalForm.style.display = 'none';
+        }
 
-        // Mostrar modal de éxito con el código grande
-        setText('display-codigo-grande', res.codigo);
+        // Guardar para copia de WhatsApp
+        _ultimoCodigo = res;
+
+        // Llenar datos en el modal de éxito central
+        const dispGrande = $('display-codigo-grande');
+        if (dispGrande) dispGrande.textContent = res.codigo;
 
         const descDetalle = res.tipoDescuento === 'PORCENTAJE' ? `${res.valor}%` : fmt.currency(res.valor);
+        const opNombre = res.tipoOperacion === 'CONTADO' ? '🛒 Venta de Contado' : '📋 Enganche a Crédito';
+        const sucNombre = (!res.sucursal || res.sucursal === 'TODAS') ? '🌐 Cualquier sucursal' : res.sucursal;
+
         setHTML('display-codigo-detalles', `
-          <strong>Operación:</strong> ${res.tipoOperacion === 'CONTADO' ? 'Venta de Contado' : 'Enganche de Crédito'}<br>
-          <strong>Beneficio:</strong> Descuento de ${descDetalle}${res.diferirEnganche ? ' + Enganche Diferido en Semanas' : ''}<br>
-          <strong>Motivo:</strong> ${res.motivo}<br>
-          <strong>Sucursal:</strong> ${res.sucursal === 'TODAS' ? 'Cualquier sucursal' : res.sucursal}<br>
-          <strong>Vigencia:</strong> 20 minutos a partir de ahora.
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--cf-muted)">Operación:</span>
+            <strong>${opNombre}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--cf-muted)">Beneficio:</span>
+            <strong style="color:#10b981;font-size:1.05rem">${descDetalle}</strong>
+          </div>
+          ${res.diferirEnganche ? `
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;color:#059669">
+              <span>Enganche:</span>
+              <strong>✔ Diferido en Semanas ($0 hoy)</strong>
+            </div>
+          ` : ''}
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--cf-muted)">Motivo:</span>
+            <strong style="text-align:right;max-width:240px">${res.motivo}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--cf-muted)">Sucursal:</span>
+            <strong>${sucNombre}</strong>
+          </div>
         `);
 
-        $('modal-codigo-exito')?.classList.remove('hidden');
+        // MOSTRAR MODAL CENTRAL Y DEJARLO ABIERTO
+        const modalExito = $('modal-codigo-exito');
+        if (modalExito) {
+          modalExito.classList.remove('hidden');
+          modalExito.style.display = 'flex';
+        }
+
+        // Cargar códigos en segundo plano para actualizar tabla
         _loadCodigos();
       } else {
-        toast(res.message || 'Error al generar código', 'error');
+        toast((res && res.message) || 'Error al generar código', 'error');
       }
     } catch (err) {
       showLoading(false);
+      console.error('Error generando código:', err);
       toast('Error de red al generar código', 'error');
+    }
+  }
+
+  function _copiarCodigoGrande() {
+    const cod = $('display-codigo-grande')?.textContent.trim();
+    if (!cod || cod === '------') return;
+    _copiarTexto(cod, `Código ${cod} copiado`);
+    const btnText = $('btn-copiar-text');
+    const btnIcon = $('btn-copiar-icon');
+    const btn = $('btn-copiar-codigo');
+    if (btnText) btnText.textContent = '✔ ¡Código Copiado!';
+    if (btnIcon) btnIcon.textContent = '✔';
+    if (btn) btn.style.background = '#059669';
+    setTimeout(() => {
+      if (btnText) btnText.textContent = 'Copiar Código';
+      if (btnIcon) btnIcon.textContent = '📋';
+      if (btn) btn.style.background = '';
+    }, 2500);
+  }
+
+  function _copiarWhatsApp() {
+    const cod = $('display-codigo-grande')?.textContent.trim();
+    if (!_ultimoCodigo) {
+      if (cod && cod !== '------') _copiarTexto(cod, 'Código copiado');
+      return;
+    }
+    const c = _ultimoCodigo;
+    const descStr = c.tipoDescuento === 'PORCENTAJE' ? `${c.valor}%` : fmt.currency(c.valor);
+    const opStr = c.tipoOperacion === 'CONTADO' ? 'Venta de Contado' : 'Enganche a Crédito';
+    const sucStr = (!c.sucursal || c.sucursal === 'TODAS') ? 'Cualquier sucursal' : c.sucursal;
+    const diferidoStr = c.diferirEnganche ? '\n📌 *Enganche:* Diferido a pagos semanales ($0 hoy)' : '';
+
+    const msg = [
+      `🎟️ *CREDYFAST — CÓDIGO DE AUTORIZACIÓN: ${c.codigo}*`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      `🛒 *Operación:* ${opStr}`,
+      `💵 *Beneficio:* Descuento de ${descStr}${diferidoStr}`,
+      `📝 *Motivo:* ${c.motivo}`,
+      `🏢 *Sucursal:* ${sucStr}`,
+      `⏱️ *Vigencia:* 20 minutos (Uso único)`,
+    ].join('\n');
+
+    _copiarTexto(msg, 'Mensaje para WhatsApp copiado al portapapeles');
+  }
+
+  function _copiarTexto(texto, exitoMensaje = 'Copiado al portapapeles') {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(texto).then(() => {
+        toast(`✔ ${exitoMensaje}`, 'success');
+      }).catch(() => {
+        _copiarTextoFallback(texto, exitoMensaje);
+      });
+    } else {
+      _copiarTextoFallback(texto, exitoMensaje);
+    }
+  }
+
+  function _copiarTextoFallback(texto, exitoMensaje) {
+    try {
+      const input = document.createElement('textarea');
+      input.value = texto;
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      toast(`✔ ${exitoMensaje}`, 'success');
+    } catch (_) {
+      prompt('Copia este código manualmente:', texto);
     }
   }
 
@@ -533,11 +686,11 @@ const AutorizacionesView = (() => {
     try {
       const res = await API.authCodeCancel({ id });
       showLoading(false);
-      if (res.ok) {
+      if (res && res.ok) {
         toast(`✔ Código ${codigo} cancelado exitosamente`, 'success');
         _loadCodigos();
       } else {
-        toast(res.message || 'Error al cancelar código', 'error');
+        toast((res && res.message) || 'Error al cancelar código', 'error');
       }
     } catch (_) {
       showLoading(false);
@@ -546,11 +699,7 @@ const AutorizacionesView = (() => {
   }
 
   function copiar(cod) {
-    navigator.clipboard.writeText(cod).then(() => {
-      toast(`✔ Código ${cod} copiado`, 'success');
-    }).catch(() => {
-      toast(`Código: ${cod}`, 'info');
-    });
+    _copiarTexto(cod, `Código ${cod} copiado`);
   }
 
   return {
