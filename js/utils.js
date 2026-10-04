@@ -57,6 +57,11 @@ function setHTML(id, html) {
   if (el) el.innerHTML = html;
 }
 
+function setText(id, text) {
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (el) el.textContent = (text !== undefined && text !== null) ? text : '';
+}
+
 function on(id, event, fn) {
   const el = typeof id === 'string' ? document.getElementById(id) : id;
   if (el) el.addEventListener(event, fn);
