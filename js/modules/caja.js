@@ -123,9 +123,26 @@ const Caja = (() => {
               <select id="contado-producto"><option value="">-- Selecciona un producto --</option></select>
             </div>
             <div id="contado-precio-info" class="hidden" style="background:var(--cf-bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:.87rem"></div>
-            <div class="form-group">
+
+            <!-- Sección Código de Descuento -->
+            <div id="contado-desc-wrapper" style="margin-bottom:12px;background:var(--cf-bg);border:1px dashed var(--cf-border);border-radius:var(--radius-sm);padding:10px">
+              <div id="contado-desc-toggle-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+                <span style="font-size:0.82rem;font-weight:600;color:var(--cf-accent)">🎟️ ¿Código de descuento / autorización?</span>
+                <span id="contado-desc-toggle-icon" style="font-size:0.75rem;color:var(--cf-muted)">▼</span>
+              </div>
+              <div id="contado-desc-inputs-area" class="hidden" style="margin-top:8px">
+                <div style="display:flex;gap:6px">
+                  <input type="text" id="contado-codigo-input" placeholder="6 dígitos..." maxlength="6" class="input-sm" style="font-family:monospace;font-weight:700;letter-spacing:2px;text-align:center;font-size:1.05rem;flex:1">
+                  <button type="button" class="btn btn-outline btn-sm" id="btn-contado-validar-codigo">Validar</button>
+                  <button type="button" class="btn btn-ghost btn-sm hidden" id="btn-contado-quitar-codigo" title="Quitar descuento">✕</button>
+                </div>
+                <div id="contado-codigo-feedback" class="hidden" style="font-size:0.78rem;margin-top:6px;line-height:1.3"></div>
+              </div>
+            </div>
+
+            <div class="form-group" id="contado-tipo-pago-group">
               <label>Tipo de pago *</label>
-              <div class="toggle-group">
+              <div class="toggle-group" id="contado-toggle-grupo">
                 <button class="toggle-btn active" id="contado-efectivo" data-tipo="Efectivo" type="button">💵 Efectivo (Caja)</button>
                 <button class="toggle-btn" id="contado-transfer" data-tipo="Transferencia_o_deposito" type="button">🏦 Transferencia / Depósito</button>
               </div>
@@ -289,6 +306,68 @@ const Caja = (() => {
 
   // ── Venta de Contado ──────────────────────────────────────
   let _contadoEventsBound = false;
+  let _contadoDescuentoActivo = null;
+
+  function _actualizarPrecioContadoDisplay() {
+    const IDProd = $('contado-producto')?.value;
+    const prod = _productos.find(p => p['IDProd'] === IDProd);
+    const info = $('contado-precio-info');
+    const btnConfirm = $('btn-contado-confirm');
+    const tipoGroup = $('contado-tipo-pago-group');
+
+    if (!prod || !info) {
+      if (info) info.classList.add('hidden');
+      return;
+    }
+
+    const precioOriginal = parseFloat(prod['Precio_de_contado']) || 0;
+    info.classList.remove('hidden');
+
+    if (_contadoDescuentoActivo) {
+      const desc = _contadoDescuentoActivo.descuentoReal || 0;
+      const total = Math.max(0, precioOriginal - desc);
+      const detalleTipo = _contadoDescuentoActivo.tipoDescuento === 'PORCENTAJE'
+        ? `${_contadoDescuentoActivo.valor}%`
+        : fmt.currency(_contadoDescuentoActivo.valor);
+
+      const esPatrocinio = total === 0 && desc >= precioOriginal;
+
+      info.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="color:var(--cf-muted);font-size:0.8rem">Precio de lista:</span>
+          <span style="text-decoration:line-through;color:var(--cf-muted)">${fmt.currency(precioOriginal)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;color:#059669;font-weight:600">
+          <span style="font-size:0.8rem">Descuento aplicado (${detalleTipo}):</span>
+          <span>-${fmt.currency(desc)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--cf-border);padding-top:6px;margin-top:4px">
+          <span style="font-weight:700;font-size:0.95rem">Total a pagar:</span>
+          <strong style="font-size:1.3rem;color:${esPatrocinio ? '#10b981' : 'var(--cf-accent)'}">
+            ${esPatrocinio ? '🎁 $0.00 (Patrocinio)' : fmt.currency(total)}
+          </strong>
+        </div>
+        <div style="font-size:.78rem;color:var(--cf-muted);margin-top:6px">
+          ${prod['MARCA']} ${prod['MODELO']} ${prod['COLOR'] ? '· '+prod['COLOR'] : ''} ${prod['NS'] ? '· NS: '+prod['NS'] : ''}
+        </div>
+      `;
+
+      if (esPatrocinio) {
+        if (btnConfirm) btnConfirm.textContent = '🎁 Confirmar Entrega de Patrocinio ($0.00)';
+        if (tipoGroup) tipoGroup.classList.add('hidden');
+      } else {
+        if (btnConfirm) btnConfirm.textContent = `🛒 Confirmar Venta (${fmt.currency(total)})`;
+        if (tipoGroup) tipoGroup.classList.remove('hidden');
+      }
+    } else {
+      info.innerHTML = `
+        Precio de contado: <strong style="font-size:1.15rem;color:var(--cf-accent)">${fmt.currency(precioOriginal)}</strong><br>
+        <span style="font-size:.78rem;color:var(--cf-muted)">${prod['MARCA']} ${prod['MODELO']} ${prod['COLOR'] ? '· '+prod['COLOR'] : ''} ${prod['NS'] ? '· NS: '+prod['NS'] : ''}</span>
+      `;
+      if (btnConfirm) btnConfirm.textContent = '🛒 Confirmar Venta';
+      if (tipoGroup) tipoGroup.classList.remove('hidden');
+    }
+  }
 
   function _initContadoEvents() {
     if (_contadoEventsBound) return;
@@ -296,16 +375,101 @@ const Caja = (() => {
 
     // Cambio de selección de producto
     on('contado-producto', 'change', () => {
+      // Si cambia el producto y había un código activo, revalidar contra el nuevo precio
+      if (_contadoDescuentoActivo) {
+        const IDProd = $('contado-producto')?.value;
+        const prod = _productos.find(p => p['IDProd'] === IDProd);
+        if (prod) {
+          const numBase = parseFloat(prod['Precio_de_contado']) || 0;
+          if (_contadoDescuentoActivo.tipoDescuento === 'PORCENTAJE') {
+            _contadoDescuentoActivo.descuentoReal = Math.round(numBase * (_contadoDescuentoActivo.valor / 100));
+          } else {
+            _contadoDescuentoActivo.descuentoReal = Math.min(numBase, _contadoDescuentoActivo.valor);
+          }
+          _contadoDescuentoActivo.totalFinal = Math.max(0, numBase - _contadoDescuentoActivo.descuentoReal);
+        }
+      }
+      _actualizarPrecioContadoDisplay();
+    });
+
+    // Toggle sección de código de descuento
+    on('contado-desc-toggle-header', 'click', () => {
+      const area = $('contado-desc-inputs-area');
+      const icon = $('contado-desc-toggle-icon');
+      if (area) {
+        const isHidden = area.classList.toggle('hidden');
+        if (icon) icon.textContent = isHidden ? '▼' : '▲';
+        if (!isHidden) $('contado-codigo-input')?.focus();
+      }
+    });
+
+    // Validar código
+    on('btn-contado-validar-codigo', 'click', async () => {
+      const codigo = $('contado-codigo-input')?.value.trim();
+      if (!codigo || codigo.length < 6) {
+        toast('Ingresa un código numérico de 6 dígitos.', 'warning');
+        return;
+      }
       const IDProd = $('contado-producto')?.value;
       const prod = _productos.find(p => p['IDProd'] === IDProd);
-      const info = $('contado-precio-info');
-      if (prod && info) {
-        info.classList.remove('hidden');
-        info.innerHTML = `Precio de contado: <strong style="font-size:1.15rem;color:var(--cf-accent)">${fmt.currency(prod['Precio_de_contado'])}</strong><br>
-          <span style="font-size:.78rem;color:var(--cf-muted)">${prod['MARCA']} ${prod['MODELO']} ${prod['COLOR'] ? '· '+prod['COLOR'] : ''} ${prod['NS'] ? '· NS: '+prod['NS'] : ''}</span>`;
-      } else if (info) {
-        info.classList.add('hidden');
+      if (!prod) {
+        toast('Selecciona primero un producto para validar el descuento.', 'warning');
+        return;
       }
+
+      showLoading(true);
+      try {
+        const res = await API.authCodeValidate({
+          codigo,
+          tipoOperacion: 'CONTADO',
+          montoBase: prod['Precio_de_contado'],
+        });
+        showLoading(false);
+
+        const fb = $('contado-codigo-feedback');
+        const btnQuitar = $('btn-contado-quitar-codigo');
+
+        if (res.ok && res.data) {
+          _contadoDescuentoActivo = res.data;
+          toast(`✔ Descuento autorizado por ${res.data.creadoPor}`, 'success');
+
+          if (fb) {
+            fb.classList.remove('hidden');
+            fb.innerHTML = `
+              <div style="background:rgba(16,185,129,0.1);color:#047857;padding:6px 8px;border-radius:4px;border:1px solid rgba(16,185,129,0.3)">
+                ✔ <strong>${res.data.tipoDescuento === 'PORCENTAJE' ? res.data.valor + '%' : fmt.currency(res.data.valor)} de descuento</strong> (${fmt.currency(res.data.descuentoReal)})<br>
+                <small>Autorizó: ${res.data.creadoPor} · Motivo: <em>${res.data.motivo}</em></small>
+              </div>
+            `;
+          }
+          if (btnQuitar) btnQuitar.classList.remove('hidden');
+          _actualizarPrecioContadoDisplay();
+        } else {
+          _contadoDescuentoActivo = null;
+          if (fb) {
+            fb.classList.remove('hidden');
+            fb.innerHTML = `<span style="color:var(--cf-danger)">✖ ${res.message || 'Código inválido'}</span>`;
+          }
+          if (btnQuitar) btnQuitar.classList.add('hidden');
+          _actualizarPrecioContadoDisplay();
+        }
+      } catch (_) {
+        showLoading(false);
+        toast('Error de red al validar código.', 'error');
+      }
+    });
+
+    // Quitar código
+    on('btn-contado-quitar-codigo', 'click', () => {
+      _contadoDescuentoActivo = null;
+      const inp = $('contado-codigo-input');
+      const fb = $('contado-codigo-feedback');
+      const btnQuitar = $('btn-contado-quitar-codigo');
+      if (inp) inp.value = '';
+      if (fb) { fb.classList.add('hidden'); fb.innerHTML = ''; }
+      if (btnQuitar) btnQuitar.classList.add('hidden');
+      _actualizarPrecioContadoDisplay();
+      toast('Descuento removido.', 'info');
     });
 
     // Toggle tipo de pago (Efectivo vs Transferencia)
@@ -332,10 +496,11 @@ const Caja = (() => {
       if (!IDProd) { toast('Selecciona un producto.', 'warning'); return; }
       const tipoActive = document.querySelector('#modal-contado [data-tipo].active');
       const tipo = tipoActive ? tipoActive.dataset.tipo : 'Efectivo';
+      const codigoDescuento = _contadoDescuentoActivo ? _contadoDescuentoActivo.codigo : '';
 
       showLoading(true);
       try {
-        const res = await API.cajaVentaContado({ IDProd, tipo });
+        const res = await API.cajaVentaContado({ IDProd, tipo, codigoDescuento });
         if (res.ok) {
           toast(`✔ Venta de contado registrada con éxito`, 'success', 4000);
           _productos = []; // Reset cache para que ya no aparezca como disponible
@@ -347,15 +512,29 @@ const Caja = (() => {
           $('contado-ticket-result').classList.remove('hidden');
 
           const esTransf = res.tipoPago === 'Transferencia_o_deposito';
-          const metodoDesc = esTransf
-            ? '<span style="color:#0284c7;font-weight:600">🏦 Transferencia / Depósito (Bancario)</span>'
-            : '<span style="color:#047857;font-weight:600">💵 Efectivo (En Caja)</span>';
+          const esPatrocinio = res.monto === 0 && res.descuento > 0;
+          let metodoDesc = '<span style="color:#047857;font-weight:600">💵 Efectivo (En Caja)</span>';
+          if (esPatrocinio) {
+            metodoDesc = '<span style="color:#10b981;font-weight:700">🎁 Cortesía / Patrocinio (100% Descuento)</span>';
+          } else if (esTransf) {
+            metodoDesc = '<span style="color:#0284c7;font-weight:600">🏦 Transferencia / Depósito (Bancario)</span>';
+          }
+
+          let detallePrecios = '';
+          if (res.descuento > 0) {
+            detallePrecios = `
+              <div style="font-size:0.85rem;color:var(--cf-muted);text-decoration:line-through">Precio lista: ${fmt.currency(res.montoOriginal)}</div>
+              <div style="font-size:0.85rem;color:#059669;font-weight:600">Descuento autorizado: -${fmt.currency(res.descuento)}</div>
+            `;
+          }
 
           setHTML('contado-res-detalle', `
             <div style="font-weight:700;font-size:1.05rem">${res.marca || ''} ${res.modelo || ''}</div>
-            <div style="font-size:1.2rem;font-weight:800;color:var(--cf-accent);margin:4px 0">${fmt.currency(res.monto)}</div>
+            ${detallePrecios}
+            <div style="font-size:1.3rem;font-weight:800;color:var(--cf-accent);margin:6px 0">${fmt.currency(res.monto)}</div>
             <div style="font-size:0.85rem">${metodoDesc}</div>
-            <div style="font-size:0.75rem;color:var(--cf-muted);margin-top:4px">Código: ${res.IDProd} ${res.ns ? '· Serie: ' + res.ns : ''}</div>
+            ${res.codigoDescuento ? `<div style="font-size:0.78rem;color:var(--cf-muted);margin-top:4px">Cód. Autorización: <strong>${res.codigoDescuento}</strong> (${res.autorizadoPor || ''})<br>Motivo: <em>${res.motivoDescuento || ''}</em></div>` : ''}
+            <div style="font-size:0.75rem;color:var(--cf-muted);margin-top:6px">Código: ${res.IDProd} ${res.ns ? '· Serie: ' + res.ns : ''}</div>
           `);
 
           const btnTermica = $('btn-contado-print-termica');
@@ -368,10 +547,15 @@ const Caja = (() => {
 
           try {
             const tktRes = await API.ticketGenerate({
-              tipoOperacion: 'VENTA_CONTADO',
-              IDProd: res.IDProd,
-              monto: res.monto,
-              tipoPago: res.tipoPago
+              tipoOperacion:   'VENTA_CONTADO',
+              IDProd:          res.IDProd,
+              monto:           res.monto,
+              montoOriginal:   res.montoOriginal,
+              descuento:       res.descuento,
+              codigoDescuento: res.codigoDescuento,
+              motivoDescuento: res.motivoDescuento,
+              autorizadoPor:   res.autorizadoPor,
+              tipoPago:        res.tipoPago,
             });
 
             if (tktRes.ok) {
@@ -420,6 +604,20 @@ const Caja = (() => {
     $('modal-contado').classList.remove('hidden');
     $('modal-contado').style.display = 'flex';
 
+    // Resetear estado de descuento
+    _contadoDescuentoActivo = null;
+    const inpCodigo = $('contado-codigo-input');
+    const fbCodigo = $('contado-codigo-feedback');
+    const btnQuitar = $('btn-contado-quitar-codigo');
+    const areaDesc = $('contado-desc-inputs-area');
+    const iconDesc = $('contado-desc-toggle-icon');
+
+    if (inpCodigo) inpCodigo.value = '';
+    if (fbCodigo) { fbCodigo.classList.add('hidden'); fbCodigo.innerHTML = ''; }
+    if (btnQuitar) btnQuitar.classList.add('hidden');
+    if (areaDesc) areaDesc.classList.add('hidden');
+    if (iconDesc) iconDesc.textContent = '▼';
+
     // Mostrar formulario y ocultar ticket previo
     const formBody = $('contado-form-body');
     const resultBody = $('contado-ticket-result');
@@ -428,6 +626,11 @@ const Caja = (() => {
 
     const info = $('contado-precio-info');
     if (info) { info.classList.add('hidden'); info.innerHTML = ''; }
+
+    const btnConfirm = $('btn-contado-confirm');
+    const tipoGroup = $('contado-tipo-pago-group');
+    if (btnConfirm) btnConfirm.textContent = '🛒 Confirmar Venta';
+    if (tipoGroup) tipoGroup.classList.remove('hidden');
 
     // Resetear a Efectivo
     const btnEf = $('contado-efectivo');
