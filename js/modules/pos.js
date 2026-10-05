@@ -298,15 +298,21 @@ const POS = (() => {
       const atrasadas = parseInt(cr['semanasAtrasadas']) || 0;
       const completos  = parseInt(cr['pagosCompletos'])  || 0;
       const total      = parseInt(cr['totalPagos'])      || 0;
-      const badge = atrasadas > 0
-        ? `<span class="badge badge-danger" style="margin-left:6px">${atrasadas} atrasada${atrasadas > 1 ? 's' : ''}</span>`
-        : `<span class="badge badge-success" style="margin-left:6px">Al corriente</span>`;
+      const esC1M      = Boolean(cr['infoContado1Mes'] || cr['Modalidad'] === 'CONTADO_1MES');
+      const badge = esC1M
+        ? `<span class="badge" style="background:#059669;color:#fff;margin-left:6px">🌟 Contado 1 Mes</span>`
+        : (atrasadas > 0
+          ? `<span class="badge badge-danger" style="margin-left:6px">${atrasadas} atrasada${atrasadas > 1 ? 's' : ''}</span>`
+          : `<span class="badge badge-success" style="margin-left:6px">Al corriente</span>`);
       const proxFecha = cr['proximoPago'] ? cr['proximoPago']['Fecha_programada'] || '' : '';
+      const subInfo = esC1M && cr['infoContado1Mes']
+        ? `Saldo contado: ${fmt.currency(cr['infoContado1Mes'].saldoPendiente)} · Quedan ${cr['infoContado1Mes'].diasRestantes} días`
+        : `Progreso: ${completos}/${total} pagos${proxFecha ? ' · Próximo: ' + proxFecha : ''}`;
       return `
         <div class="list-item" style="cursor:pointer"
              onclick="POS._seleccionarCliente('${cliente['IDCliente']}','${cr['IDCredito']}')">
           <div class="list-item-title">💳 ${cr['IDCredito']}${badge}</div>
-          <div class="list-item-sub">Progreso: ${completos}/${total} pagos${proxFecha ? ' · Próximo: ' + proxFecha : ''}</div>
+          <div class="list-item-sub">${subInfo}</div>
         </div>`;
     }).join('');
 
@@ -391,13 +397,50 @@ const POS = (() => {
     const metaItems = [
       cl ? `📋 ${cl['IDCliente']}` : '',
       `💳 ${cr['IDCredito']}`,
-      `Periodo: ${cr['Periodo']} sem.`,
+      cr['Modalidad'] === 'CONTADO_1MES' ? '🌟 Contado 1 Mes' : `Periodo: ${cr['Periodo']} sem.`,
       cr['Celular'] ? `📞 ${cr['Celular']}` : '',
     ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
     setHTML('pos-client-meta', metaItems);
 
     const pagosCompletos = _pagosData.filter(p => ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(p['Estatus_de_pago'])).length;
     const totalPagos = _pagosData.length;
+
+    let bannerC1M = '';
+    const info = cr['infoContado1Mes'];
+    if (info && info.esContado1Mes) {
+      bannerC1M = `
+        <div style="grid-column:1/-1; background:linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.06) 100%); border:1.5px solid #10b981; border-radius:var(--radius-sm); padding:12px 14px; margin-top:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-weight:800; font-size:0.92rem; color:#047857; display:flex; align-items:center; gap:6px;">
+              🌟 PROMOCIÓN: VENTA CONTADO 1 MES
+            </span>
+            <span class="badge" style="background:#059669; color:#fff; font-size:0.75rem; font-weight:700; padding:3px 8px;">
+              ⏳ Quedan ${info.diasRestantes} días (Vence: ${fmt.date(info.fechaLimite)})
+            </span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; font-size:0.85rem; margin-top:8px; border-top:1px dashed rgba(16,185,129,0.3); padding-top:8px;">
+            <div>
+              <div style="color:var(--cf-text-secondary); font-size:0.72rem;">Precio Contado</div>
+              <div style="font-weight:700; font-size:1rem;">${fmt.currency(info.precioContado)}</div>
+            </div>
+            <div>
+              <div style="color:var(--cf-text-secondary); font-size:0.72rem;">Total Abonado</div>
+              <div style="font-weight:700; font-size:1rem; color:#047857;">${fmt.currency(info.totalAbonado)}</div>
+            </div>
+            <div>
+              <div style="color:var(--cf-text-secondary); font-size:0.72rem;">Saldo Pendiente</div>
+              <div style="font-weight:800; font-size:1.1rem; color:#059669;">${fmt.currency(info.saldoPendiente)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (cr['Modalidad'] === '13_SEMANAS_CONVERTIDO') {
+      bannerC1M = `
+        <div style="grid-column:1/-1; background:rgba(245,158,11,0.12); border:1.5px solid #f59e0b; border-radius:var(--radius-sm); padding:10px 12px; margin-top:10px; font-size:0.82rem; color:#92400e;">
+          ⚠ <strong>Crédito Convertido a 13 Semanas:</strong> Los 30 días de la promoción de contado concluyeron. El saldo se recalculó al plan de 13 semanas a partir de su entrega original.
+        </div>
+      `;
+    }
 
     setHTML('pos-credit-status', `
       <div style="flex:1">
@@ -406,11 +449,14 @@ const POS = (() => {
       </div>
       <div style="text-align:right">
         <div style="font-size:.78rem;color:var(--cf-muted)">Progreso</div>
-        <div style="font-weight:700;font-size:1rem;color:var(--cf-primary)">${pagosCompletos}/${totalPagos} pagos</div>
+        <div style="font-weight:700;font-size:1rem;color:var(--cf-primary)">${info && info.esContado1Mes ? (info.saldoPendiente <= 0 ? 'Liquidado' : 'Abonos de Contado') : `${pagosCompletos}/${totalPagos} pagos`}</div>
       </div>
+      ${bannerC1M}
     `);
 
-    setHTML('pos-saldo-badge', `${pagosCompletos} de ${totalPagos} pagadas`);
+    setHTML('pos-saldo-badge', info && info.esContado1Mes
+      ? `Saldo: ${fmt.currency(info.saldoPendiente)}`
+      : `${pagosCompletos} de ${totalPagos} pagadas`);
     _renderSchedule();
     _enableCobroPanel();
   }
@@ -449,6 +495,21 @@ const POS = (() => {
     $('cobro-empty-msg').classList.add('hidden');
     $('cobro-result').classList.add('hidden');
     $('cobro-form-area').classList.remove('hidden');
+
+    const info = _creditoData['infoContado1Mes'];
+    const opcAdic = $('cobro-form-area')?.querySelector('div[style*="border-top"]');
+
+    if (info && info.esContado1Mes) {
+      if (opcAdic) opcAdic.classList.add('hidden');
+      const saldo = info.saldoPendiente;
+      setHTML('cobro-monto-sugerido', fmt.currency(saldo) + ' (Liquidación 100%)');
+      setHTML('cobro-semana-info', `🌟 <strong>Abono libre a precio de contado</strong> (Quedan ${info.diasRestantes} días)`);
+      const input = $('cobro-monto-input');
+      if (input) { input.value = saldo > 0 ? saldo.toFixed(2) : ''; setTimeout(() => input.focus(), 50); }
+      return;
+    }
+
+    if (opcAdic) opcAdic.classList.remove('hidden');
 
     const total = parseInt(_creditoData['Periodo']) || _pagosData.length - 1;
 
@@ -707,17 +768,27 @@ const POS = (() => {
     $('cobro-form-area').classList.add('hidden');
     $('cobro-result').classList.remove('hidden');
 
-    const semActual = res.semanaActual;
-    const semLabel = semActual === 0 ? 'Enganche' : `Semana ${semActual}`;
-    const totalSem = res.totalSemanas || '?';
+    if (res.esContado1Mes) {
+      setHTML('ticket-amount', fmt.currency(res.montoRecibido));
+      setHTML('ticket-semana', `Venta Contado 1 Mes (Vence: ${fmt.date(res.fechaLimiteContado)})`);
+      setHTML('ticket-estado', res.liquidado
+        ? '🎉 ¡VENTA DE CONTADO LIQUIDADA AL 100%!'
+        : `Abono a capital registrado · Saldo restante: <strong>${fmt.currency(res.saldoPendiente)}</strong>`);
+      setHTML('ticket-saldo', `Total abonado a la fecha: ${fmt.currency(res.totalAbonado)} de ${fmt.currency(res.precioContado)}`);
+      setHTML('ticket-finalizado', res.liquidado ? '✔ PRODUCTO VENDIDO DE CONTADO' : '');
+    } else {
+      const semActual = res.semanaActual;
+      const semLabel = semActual === 0 ? 'Enganche' : `Semana ${semActual}`;
+      const totalSem = res.totalSemanas || '?';
 
-    setHTML('ticket-amount', fmt.currency(res.montoRecibido));
-    setHTML('ticket-semana', semActual !== null
-      ? `${semLabel} de ${totalSem} (${res.semanasRestantes} restantes)` : '');
-    setHTML('ticket-estado', res.pagoCompleto ? '✔ Pago completo' :
-      `⚠ Pago PARCIAL — Pendiente: ${fmt.currency(res.montoRestante)}`);
-    setHTML('ticket-saldo', '');
-    setHTML('ticket-finalizado', res.creditoFinalizado ? '🎉 ¡CRÉDITO COMPLETADO! Producto VENDIDO' : '');
+      setHTML('ticket-amount', fmt.currency(res.montoRecibido));
+      setHTML('ticket-semana', semActual !== null
+        ? `${semLabel} de ${totalSem} (${res.semanasRestantes} restantes)` : '');
+      setHTML('ticket-estado', res.pagoCompleto ? '✔ Pago completo' :
+        `⚠ Pago PARCIAL — Pendiente: ${fmt.currency(res.montoRestante)}`);
+      setHTML('ticket-saldo', '');
+      setHTML('ticket-finalizado', res.creditoFinalizado ? '🎉 ¡CRÉDITO COMPLETADO! Producto VENDIDO' : '');
+    }
 
     // Resetear botón térmico y PDF
     const btnTermica = $('cobro-termica-btn');
