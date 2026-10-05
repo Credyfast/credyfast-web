@@ -151,11 +151,14 @@ const Creditos = (() => {
 
     setHTML('cr-list', renderTable([
       { key: 'IDCredito', label: 'ID', class: 'td-mono' },
-      { key: 'Nombre_cliente', label: 'Cliente' },
+      { key: 'Nombre_cliente', label: 'Cliente', render: r => `
+        <div>${r['Nombre_cliente'] || r['IDCredito']}</div>
+        ${r['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.68rem;padding:2px 6px">🌟 Contado 1 Mes</span>' : (r['Modalidad'] === '13_SEMANAS_CONVERTIDO' ? '<span class="badge badge-warning" style="font-size:0.68rem;padding:2px 6px">⚠ Conv. 13s</span>' : '')}
+      ` },
       { key: 'ESTATUS', label: 'Estado', render: r => badgeEstado(r['ESTATUS']) },
-      { key: 'Periodo', label: 'Periodo', render: r => `${r['Periodo']} sem.` },
-      { key: 'Pago_puntual', label: 'Cuota', class: 'td-right td-amount', render: r => fmt.currency(r['Pago_puntual']) },
-      { key: 'Enganche', label: 'Enganche', class: 'td-right td-amount', render: r => fmt.currency(r['Enganche']) },
+      { key: 'Periodo', label: 'Periodo', render: r => r['Modalidad'] === 'CONTADO_1MES' ? '30 días' : `${r['Periodo']} sem.` },
+      { key: 'Pago_puntual', label: 'Cuota / P.Contado', class: 'td-right td-amount', render: r => r['Modalidad'] === 'CONTADO_1MES' ? fmt.currency(r['Precio_de_contado'] || 0) : fmt.currency(r['Pago_puntual']) },
+      { key: 'Enganche', label: 'Enganche / P.Ini', class: 'td-right td-amount', render: r => r['Modalidad'] === 'CONTADO_1MES' && r['Pago_Inicial_Contado'] !== undefined ? `${fmt.currency(r['Pago_Inicial_Contado'])}` : fmt.currency(r['Enganche']) },
       { key: 'Fecha_de_inicio', label: 'Inicio', render: r => fmt.date(r['Fecha_de_inicio']) },
       {
         key: 'NOTAS', label: 'Notas / Motivo', render: r => {
@@ -206,9 +209,14 @@ const Creditos = (() => {
       if (!panel) return;
       panel.innerHTML = res.data.map(cr => `
         <div class="entrega-card">
-          <div class="entrega-title">⏳ Pendiente de entrega: ${cr['Nombre_cliente'] || cr['IDCredito']}</div>
+          <div class="entrega-title">
+            ⏳ Pendiente de entrega: ${cr['Nombre_cliente'] || cr['IDCredito']}
+            ${cr['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.7rem;margin-left:6px">🌟 Contado 1 Mes</span>' : ''}
+          </div>
           <div style="font-size:.82rem;color:var(--cf-text-secondary);margin-bottom:10px">
-            Crédito ${cr['IDCredito']} · Enganche: <strong>${fmt.currency(cr['Enganche'])}</strong>
+            Crédito ${cr['IDCredito']} · ${cr['Modalidad'] === 'CONTADO_1MES'
+              ? `Pago Inicial en Caja: <strong>${fmt.currency(cr['Pago_Inicial_Contado'] || 0)}</strong> (Precio Contado: ${fmt.currency(cr['Precio_de_contado'] || 0)})`
+              : `Enganche en Caja: <strong>${fmt.currency(cr['Enganche'])}</strong>`}
           </div>
           <button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${cr['IDCredito']}','${cr['Nombre_cliente'] || ''}')">
             📦 Confirmar Entrega y Generar Calendario
@@ -286,8 +294,10 @@ const Creditos = (() => {
         <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
           <h4 style="margin-bottom:8px">Formulario de la Solicitud (${cr['IDCredito']})</h4>
           <div class="grid-2" style="gap:10px;font-size:.85rem">
+            <div><div class="text-muted text-sm">Modalidad</div><div class="fw-600">${cr['Modalidad'] === 'CONTADO_1MES' ? '<span style="color:#059669;font-weight:700">🌟 Contado 1 Mes (30 días)</span>' : 'Tradicional'}</div></div>
+            <div><div class="text-muted text-sm">${cr['Modalidad'] === 'CONTADO_1MES' ? 'Pago Inicial Negociado' : 'Periodo solicitado'}</div><div class="fw-600">${cr['Modalidad'] === 'CONTADO_1MES' ? fmt.currency(cr['Pago_Inicial_Contado'] || 0) : (cr['Periodo'] + ' semanas')}</div></div>
             <div><div class="text-muted text-sm">Celular</div><div class="fw-600">${cr['Celular'] || '—'}</div></div>
-            <div><div class="text-muted text-sm">Periodo solicitado</div><div class="fw-600">${cr['Periodo']} semanas</div></div>
+            <div><div class="text-muted text-sm">${cr['Modalidad'] === 'CONTADO_1MES' ? 'Precio de Contado' : 'Cuota puntual'}</div><div class="fw-600">${fmt.currency(cr['Modalidad'] === 'CONTADO_1MES' ? (cr['Precio_de_contado'] || 0) : (cr['Pago_puntual'] || 0))}</div></div>
             
             <div style="grid-column:1/-1;height:1px;background:var(--cf-border);margin:4px 0"></div>
             
@@ -354,6 +364,9 @@ const Creditos = (() => {
 
   // ── Confirmar Entrega (Cajero) ────────────────────────────
   function _confirmarEntrega(IDCredito, nombre) {
+    const cr = (_creditosActuales || []).find(c => c['IDCredito'] === IDCredito);
+    const esC1M = cr && cr['Modalidad'] === 'CONTADO_1MES';
+
     const modal = $('modal-entrega');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -361,6 +374,12 @@ const Creditos = (() => {
       <div class="alert alert-info" style="margin-bottom:14px">
         Entrega del producto a <strong>${nombre || IDCredito}</strong>.
       </div>
+      ${esC1M ? `
+        <div style="background:rgba(16,185,129,0.1);border:1.5px solid #10b981;border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:0.83rem">
+          <strong style="color:#047857">🌟 Modalidad: Venta Contado 1 Mes (30 días)</strong><br>
+          <span style="color:var(--cf-text-secondary)">Precio Contado a liquidar: <strong>${fmt.currency(cr['Precio_de_contado'] || 0)}</strong> · Pago inicial a cobrar en caja hoy: <strong>${fmt.currency(cr['Pago_Inicial_Contado'] || 0)}</strong></span>
+        </div>
+      ` : ''}
       
       <div style="margin-bottom: 16px;">
         <h4>Paso 1: Generar e Imprimir Contrato</h4>
@@ -569,6 +588,25 @@ const Creditos = (() => {
         <label>Producto *</label>
         <select id="cr-producto"><option value="">-- Selecciona producto --</option></select>
       </div>
+
+      <!-- Selector Modalidad Contado 1 Mes -->
+      <div id="cr-modalidad-box" class="hidden" style="margin: 12px 0; padding: 12px; background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: var(--radius-sm);">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; color:#047857; font-size:0.88rem; margin:0">
+          <input type="checkbox" id="cr-toggle-contado1mes" style="accent-color:#10b981; width:18px; height:18px; cursor:pointer">
+          <span>🌟 Promoción: Venta Contado 1 Mes (30 días)</span>
+        </label>
+        <div id="cr-c1m-detalle-area" class="hidden" style="margin-top:10px; font-size:0.8rem; color:var(--cf-text-secondary); line-height:1.45; border-top:1px dashed rgba(16,185,129,0.3); padding-top:10px">
+          <div style="margin-bottom:8px">
+            El cliente tiene <strong>30 días naturales</strong> para liquidar a <strong>precio de contado</strong> con abonos libres sin intereses. Si no liquida en 30 días, se convertirá automáticamente al plan de respaldo de <strong>13 semanas</strong>.
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--cf-text-primary)">Pago Inicial Negociado ($)</label>
+            <input type="number" id="cr-c1m-pago-inicial" placeholder="0.00 (Libre u opcional)" min="0" step="any" style="font-size:0.9rem">
+            <small style="color:var(--cf-muted); display:block; margin-top:2px">Monto libre que deja el cliente hoy en caja al entregarse el producto.</small>
+          </div>
+        </div>
+      </div>
+
       <div id="cr-periodo-area" class="hidden">
         <label style="font-size:.82rem;font-weight:600;color:var(--cf-text-secondary);margin-bottom:6px;display:block">Periodo *</label>
         <div class="periodo-selector" id="cr-periodos"></div>
@@ -661,6 +699,44 @@ const Creditos = (() => {
     on('cr-producto',   'change',  _onProductoChange);
     on('cr-submit-btn', 'click',   _submitSolicitud);
     if (idClienteDefault) setTimeout(_verificarCliente, 100);
+
+    // Toggle Modalidad Contado 1 Mes
+    on('cr-toggle-contado1mes', 'change', (e) => {
+      const isC1M = e.target.checked;
+      const detArea = $('cr-c1m-detalle-area');
+      const periodoArea = $('cr-periodo-area');
+      const descWrapper = $('cr-desc-wrapper');
+
+      if (detArea) detArea.classList.toggle('hidden', !isC1M);
+      if (descWrapper) descWrapper.classList.toggle('hidden', isC1M);
+
+      if (isC1M) {
+        _periodoSel = 13;
+        if (periodoArea) {
+          setHTML('cr-periodos', `<div style="font-size:0.83rem;font-weight:700;color:#047857;background:rgba(16,185,129,0.12);padding:6px 12px;border-radius:4px;border:1px solid rgba(16,185,129,0.3)">🔒 Plan de respaldo fijado a 13 semanas</div>`);
+          periodoArea.classList.remove('hidden');
+        }
+      } else {
+        _periodoSel = null;
+        if (_prodSel) {
+          const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
+          const LIMITE = 8000;
+          const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
+          setHTML('cr-periodos', periodos.map(p =>
+            `<button class="periodo-btn" data-p="${p}" type="button">${p} sem.</button>`
+          ).join(''));
+          document.querySelectorAll('.periodo-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              _periodoSel = parseInt(btn.dataset.p);
+              _mostrarCotizador();
+            });
+          });
+        }
+      }
+      _mostrarCotizador();
+    });
 
     // Toggle sección código descuento enganche
     on('cr-desc-toggle-header', 'click', () => {
@@ -809,13 +885,22 @@ const Creditos = (() => {
     const periodoArea = $('cr-periodo-area');
     const cotiz = $('cr-cotizador');
     const descWrapper = $('cr-desc-wrapper');
+    const modBox = $('cr-modalidad-box');
+    const toggleC1M = $('cr-toggle-contado1mes');
+    const c1mDetArea = $('cr-c1m-detalle-area');
+
+    if (toggleC1M) toggleC1M.checked = false;
+    if (c1mDetArea) c1mDetArea.classList.add('hidden');
 
     if (!_prodSel) {
       periodoArea?.classList.add('hidden');
       cotiz?.classList.add('hidden');
       descWrapper?.classList.add('hidden');
+      modBox?.classList.add('hidden');
       return;
     }
+
+    if (modBox) modBox.classList.remove('hidden');
 
     // Si había un código activo, recalcular el descuento en base al nuevo costo
     if (_creditoDescuentoActivo) {
@@ -853,6 +938,48 @@ const Creditos = (() => {
     const contado = parseFloat(_prodSel['Precio_de_contado']) || Math.round(costo * 1.5);
     const pctMap = { 13: 0.1, 26: 0.06, 39: 0.05, 52: 0.04 };
     const engancheBase = Math.round(costo * 0.20);
+    const cotiz = $('cr-cotizador'); if (!cotiz) return;
+    cotiz.classList.remove('hidden');
+
+    const descWrapper = $('cr-desc-wrapper');
+    const isContado1Mes = $('cr-toggle-contado1mes')?.checked || false;
+
+    if (isContado1Mes) {
+      if (descWrapper) descWrapper.classList.add('hidden');
+      const puntual13 = Math.round(contado * 0.1);
+      cotiz.innerHTML = `
+        <div class="cotizador-result" style="border: 2px solid #10b981; background: rgba(16,185,129,0.04); border-radius: var(--radius-sm); padding: 14px;">
+          <div class="cotiz-titulo" style="color:#047857; font-weight:800; display:flex; align-items:center; gap:6px;">
+            🌟 Modalidad: Venta Contado 1 Mes (30 días)
+          </div>
+          <div style="font-size:0.8rem;color:var(--cf-text-secondary);margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(16,185,129,0.2)">
+            <strong>${_prodSel['MARCA']} ${_prodSel['MODELO']}</strong> (${_prodSel['MOD_COMERCIAL'] || '—'})<br>
+            <span style="opacity:0.8">NS: ${_prodSel['NS'] || '—'} | RAM: ${_prodSel['RAM'] || 0}GB | Alm: ${_prodSel['ALMACENAMIENTO'] || 0}GB | Color: ${_prodSel['COLOR'] || '—'}</span>
+          </div>
+          <div class="cotizador-grid">
+            <div class="cotizador-item" style="grid-column: 1 / -1; background: rgba(16,185,129,0.12); padding: 12px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.3)">
+              <div class="ci-label" style="font-size:0.82rem; color:#047857; font-weight:700">PRECIO DE CONTADO A LIQUIDAR (30 DÍAS)</div>
+              <div class="ci-val" style="font-size:1.5rem; color:#047857; font-weight:900">${fmt.currency(contado)}</div>
+              <div style="font-size:0.75rem; color:var(--cf-text-secondary); margin-top:4px">
+                Abonos libres directos al saldo durante los primeros 30 días naturales sin intereses.
+              </div>
+            </div>
+            <div class="cotizador-item">
+              <div class="ci-label">Enganche de respaldo</div>
+              <div class="ci-val">${fmt.currency(engancheBase)}</div>
+            </div>
+            <div class="cotizador-item">
+              <div class="ci-label">Cuota puntual respaldo</div>
+              <div class="ci-val">${fmt.currency(puntual13)}</div>
+            </div>
+            <div class="cotizador-item">
+              <div class="ci-label">Plazo de respaldo</div>
+              <div class="ci-val">13 semanas</div>
+            </div>
+          </div>
+        </div>`;
+      return;
+    }
 
     let engancheFinal = engancheBase;
     let puntual = Math.round(contado * (pctMap[_periodoSel] || 0.06));
@@ -888,10 +1015,7 @@ const Creditos = (() => {
     const normal = Math.round(puntual * 1.10);
     const moroso = Math.round(normal * 1.10);
     const semRec = Math.ceil((costoReal - engancheFinal) / puntual);
-    const cotiz = $('cr-cotizador'); if (!cotiz) return;
-    cotiz.classList.remove('hidden');
 
-    const descWrapper = $('cr-desc-wrapper');
     if (descWrapper) descWrapper.classList.remove('hidden');
 
     cotiz.innerHTML = `
@@ -941,6 +1065,10 @@ const Creditos = (() => {
     const IDCliente = $('cr-id-cliente')?.value.trim();
     const IDProd    = $('cr-producto')?.value;
     const Celular   = $('cr-celular')?.value.trim();
+    const isContado1Mes = $('cr-toggle-contado1mes')?.checked || false;
+    if (isContado1Mes) {
+      _periodoSel = 13;
+    }
     if (!IDCliente || !IDProd) { toast('Cliente y producto son obligatorios.', 'warning'); return; }
     if (!_periodoSel) { toast('Selecciona un periodo.', 'warning'); return; }
     if (!Celular) { toast('Celular del cliente es obligatorio.', 'warning'); return; }
@@ -949,12 +1077,15 @@ const Creditos = (() => {
     if (!ref1n || !ref1t) { toast('Referencia 1 (nombre y teléfono) es obligatoria.', 'warning'); return; }
 
     const codigoDescuento = _creditoDescuentoActivo ? _creditoDescuentoActivo.codigo : '';
+    const pagoInicial = isContado1Mes ? (parseFloat($('cr-c1m-pago-inicial')?.value) || 0) : 0;
 
     showLoading(true);
     try {
       const res = await API.creditRequest({
         IDCliente, IDProd, Periodo: _periodoSel, Celular,
         codigoDescuento,
+        modalidad: isContado1Mes ? 'CONTADO_1MES' : 'TRADICIONAL',
+        pagoInicial,
         Nombre_referencia_1:   ref1n,
         Numero_referencia_1:   ref1t,
         Nombre_referencia_2:   $('cr-ref2n')?.value || '',
