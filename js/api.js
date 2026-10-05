@@ -130,5 +130,8 @@ const API = (() => {
     authCodeValidate:    (p) => call('auth_code_validate', p),
     authCodeList:        (p) => call('auth_code_list',     p),
     authCodeCancel:      (p) => call('auth_code_cancel',   p),
+
+    // ── Activador / Corte Diario ─────────────────────────────
+    triggerDiarioEjecutar: () => call('trigger_diario_ejecutar'),
   };
 })();
