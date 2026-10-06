@@ -27,19 +27,34 @@ const Router = (() => {
 
   // ── Menú de navegación por rol ─────────────────────────────
   // minRole: nivel mínimo para ver el item (jerárquico)
+  // ── Menú de navegación por rol ─────────────────────────────
+  // minRole: nivel mínimo para ver el item (jerárquico)
   // allowedRoles: lista exacta de roles permitidos (sobreescribe minRole si está presente)
+  const SVG_ICONS = {
+    dashboard: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>',
+    pos: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>',
+    caja: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>',
+    clientes: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    creditos: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    cotizador: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/></svg>',
+    cobranza: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>',
+    inventario: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+    usuarios: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>',
+    autorizaciones: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+  };
+
   const NAV_ITEMS = [
-    { hash: '#/dashboard',     icon: '📊', label: 'Dashboard',      allowedRoles: ['SuperUsuario','Supervisor','Cajero','Cobranza'], showBadge: false },
-    { hash: '#/pos',           icon: '💳', label: 'Registrar Pago', allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
-    { hash: '#/caja',          icon: '🏦', label: 'Caja',           allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
-    { hash: '#/clientes',      icon: '👥', label: 'Clientes',       minRole: 'Vendedor',   showBadge: false },
-    { hash: '#/creditos',      icon: '📋', label: 'Créditos',       minRole: 'Vendedor',   showBadge: true  },
-    { hash: '#/simulador',     icon: '🧮', label: 'Cotizador',      allowedRoles: ['SuperUsuario','Supervisor','Vendedor'],          showBadge: false },
-    { hash: '#/cobranza',      icon: '🏠', label: 'Cobranza',       allowedRoles: ['SuperUsuario','Supervisor','Cobranza'],          showBadge: false },
-    { hash: '#/productos',     icon: '📦', label: 'Productos',      minRole: 'Supervisor', showBadge: false },
-    { hash: '#/usuarios',      icon: '👤', label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
-    { hash: '#/autorizaciones',icon: '🎟️', label: 'Autorizaciones', allowedRoles: ['SuperUsuario','Supervisor'],                  showBadge: false },
-    { hash: '#/sucursales',    icon: '🏢', label: 'Sucursales',     allowedRoles: ['SuperUsuario'],                                 showBadge: false },
+    { hash: '#/dashboard',     icon: SVG_ICONS.dashboard, label: 'Dashboard',      allowedRoles: ['SuperUsuario','Supervisor','Cajero','Cobranza'], showBadge: false },
+    { hash: '#/pos',           icon: SVG_ICONS.pos,       label: 'POS Caja',        allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
+    { hash: '#/caja',          icon: SVG_ICONS.caja,      label: 'Caja',           allowedRoles: ['SuperUsuario','Supervisor','Cajero'],             showBadge: false },
+    { hash: '#/clientes',      icon: SVG_ICONS.clientes,  label: 'Clientes',       minRole: 'Vendedor',   showBadge: false },
+    { hash: '#/creditos',      icon: SVG_ICONS.creditos,  label: 'Solicitudes',    minRole: 'Vendedor',   showBadge: true  },
+    { hash: '#/simulador',     icon: SVG_ICONS.cotizador, label: 'Cotizador',      allowedRoles: ['SuperUsuario','Supervisor','Vendedor'],          showBadge: false },
+    { hash: '#/cobranza',      icon: SVG_ICONS.cobranza,  label: 'Cobranza',       allowedRoles: ['SuperUsuario','Supervisor','Cobranza'],          showBadge: false },
+    { hash: '#/productos',     icon: SVG_ICONS.inventario,label: 'Inventario',     minRole: 'Supervisor', showBadge: false },
+    { hash: '#/usuarios',      icon: SVG_ICONS.usuarios,  label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
+    { hash: '#/autorizaciones',icon: SVG_ICONS.autorizaciones, label: 'Autorizaciones', allowedRoles: ['SuperUsuario','Supervisor'],                  showBadge: false },
+    { hash: '#/sucursales',    icon: '🏢',                label: 'Sucursales',     allowedRoles: ['SuperUsuario'],                                 showBadge: false },
   ];
 
 
@@ -57,13 +72,16 @@ const Router = (() => {
     const nav = $('sidebar-nav');
     if (!nav) return;
     const items = NAV_ITEMS.filter(n => _hasAccess(user.rol, n));
-    nav.innerHTML = items.map(n => `
-      <div class="nav-item" data-hash="${n.hash}" id="nav-${n.hash.replace('#/','')}" role="button" tabindex="0">
-        <span class="nav-icon">${n.icon}</span>
-        <span>${n.label}</span>
-        ${n.showBadge ? `<span class="nav-badge hidden" id="badge-${n.hash.replace('#/','')}">0</span>` : ''}
-      </div>
-    `).join('');
+    nav.innerHTML = `
+      <div class="nav-section-label">Menú Operativo</div>
+      ${items.map(n => `
+        <div class="nav-item" data-hash="${n.hash}" id="nav-${n.hash.replace('#/','')}" role="button" tabindex="0">
+          <span class="nav-icon">${n.icon}</span>
+          <span class="nav-label">${n.label}</span>
+          ${n.showBadge ? `<span class="nav-badge hidden" id="badge-${n.hash.replace('#/','')}">0</span>` : ''}
+        </div>
+      `).join('')}
+    `;
 
     nav.querySelectorAll('.nav-item').forEach(el => {
       el.addEventListener('click', () => navigate(el.dataset.hash));
