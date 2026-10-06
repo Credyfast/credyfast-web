@@ -3,103 +3,209 @@
    ============================================================ */
 
 :root {
-  /* ── Paleta CredyFast — extraída del logo ── */
+  /* ── Paleta CredyFast Fintech — Light Mode ── */
+  --cf-primary: #047857;          /* Verde esmeralda corporativo profundo */
+  --cf-primary-dark: #065F46;
+  --cf-primary-light: #059669;
+  --cf-primary-subtle: #ECFDF5;
 
-  /* Logo teal (fondo CREDY) */
-  --cf-primary:        #3DA58A;
-  --cf-primary-dark:   #2C8570;
-  --cf-primary-light:  #5BBFA0;
+  /* Acentos cálidos del logo (Rayo y Sol) */
+  --cf-gold: #D97706;             /* Ámbar cálido para VIP / Score / Puntos */
+  --cf-gold-light: #F59E0B;
+  --cf-gold-bg: #FEF3C7;
+  --cf-orange: #EA580C;           /* Naranja para alertas / urgencias */
+  --cf-orange-light: #F97316;
+  --cf-orange-bg: #FFF7ED;
 
-  /* Logo ámbar/dorado (el rayo) */
-  --cf-gold:           #D4922A;
-  --cf-gold-light:     #E8A83C;
-  --cf-gold-dark:      #B97A1F;
+  /* Funcionales */
+  --cf-teal: #0D9488;
+  --cf-accent: #059669;
+  --cf-accent-dark: #047857;
+  --cf-danger: #DC2626;
+  --cf-danger-light: #EF4444;
+  --cf-danger-bg: #FEF2F2;
+  --cf-warning: #D97706;
+  --cf-warning-dark: #B45309;
+  --cf-info: #0284C7;
+  --cf-info-bg: #F0F9FF;
 
-  /* Logo amarillo (círculo $) */
-  --cf-yellow:         #F5D633;
+  /* Fondos — Ultra Clean Light Canvas */
+  --cf-bg: #F4F6F9;               /* Gris nube suave moderno */
+  --cf-surface: #FFFFFF;          /* Blanco puro para tarjetas */
+  --cf-surface-2: #F8FAFC;        /* Gris claro para áreas secundarias */
+  --cf-border: #E2E8F0;          /* Borde fino sutil */
+  --cf-border-light: #F1F5F9;
+  --cf-border-dark: #CBD5E1;
 
-  /* ── Funcionales ── */
-  --cf-teal:           #3DA58A;      /* acento principal = teal del logo  */
-  --cf-teal-light:     #5BBFA0;
-  --cf-accent:         #3DA58A;      /* botones primarios                */
-  --cf-accent-dark:    #2C8570;
-  --cf-danger:         #E05252;
-  --cf-danger-dark:    #C13A3A;
-  --cf-warning:        #D4922A;      /* = dorado del logo                */
-  --cf-warning-dark:   #B97A1F;
-  --cf-info:           #4A9FD4;
+  /* Texto */
+  --cf-text: #0F172A;             /* Slate oscuro de alto contraste */
+  --cf-text-secondary: #475569;   /* Slate medio */
+  --cf-muted: #94A3B8;            /* Slate suave para metadatos */
 
-  /* ── Fondos ── */
-  --cf-bg:             #F2F5F7;      /* gris muy claro, limpio            */
-  --cf-surface:        #FFFFFF;
-  --cf-surface-2:      #F8FAFB;
-  --cf-border:         #DDE3E9;
-  --cf-border-dark:    #C4CDD6;
+  /* Sidebar — Blanco puro minimalista */
+  --cf-sidebar-bg: #FFFFFF;
+  --cf-sidebar-border: #E2E8F0;
+  --cf-sidebar-text: #64748B;
+  --cf-sidebar-hover: #F1F5F9;
+  --cf-sidebar-active: #047857;   /* Pastilla esmeralda sólida */
+  --cf-sidebar-active-text: #FFFFFF;
 
-  /* ── Texto ── */
-  --cf-text:           #1C2833;      /* casi negro, no puro               */
-  --cf-text-secondary: #4A5E6D;
-  --cf-muted:          #8FA3B1;
+  /* Dimensiones */
+  --sidebar-width: 240px;
+  --header-height: 64px;
 
-  /* ── Sidebar — oscuro con teal del logo ── */
-  --cf-sidebar-bg:     #4c786b;      /* verde muy oscuro (teal oscuro)    */
-  --cf-sidebar-hover:  rgba(91,191,160,0.10);
-  --cf-sidebar-active: rgba(91,191,160,0.20);
-  --cf-sidebar-text:   #B8D4CC;      /* teal apagado para texto normal    */
+  /* Formas */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
 
-  /* ── Dimensiones ── */
-  --sidebar-width:     230px;
-  --header-height:     56px;
+  /* Sombras suaves difuminadas */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 6px 18px -3px rgba(15, 23, 42, 0.07), 0 3px 8px -2px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 14px 32px -4px rgba(15, 23, 42, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
 
-  /* ── Formas ── */
-  --radius-sm:         5px;
-  --radius:            9px;
-  --radius-lg:         14px;
-
-  /* ── Sombras ── */
-  --shadow-sm:         0 1px 3px rgba(0,0,0,0.08);
-  --shadow:            0 2px 10px rgba(0,0,0,0.10);
-  --shadow-lg:         0 6px 24px rgba(0,0,0,0.14);
-
-  --transition:        0.15s ease;
+  --transition: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+html {
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--cf-bg);
   color: var(--cf-text);
   line-height: 1.5;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-a { color: inherit; text-decoration: none; }
-img { max-width: 100%; display: block; }
-ul, ol { list-style: none; }
-button { cursor: pointer; border: none; background: none; font-family: inherit; font-size: inherit; }
-input, select, textarea { font-family: inherit; font-size: inherit; outline: none; }
+.td-amount, .ticket-amount, .stat-value, .ci-val, .tabular-nums {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--cf-border-dark); border-radius: 3px; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-.hidden { display: none !important; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+img {
+  max-width: 100%;
+  display: block;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cf-border-dark);
+  border-radius: 3px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
 
 /* ── Tipografía utilitaria ── */
-.text-sm    { font-size: 0.8rem; }
-.text-lg    { font-size: 1.1rem; }
-.text-xl    { font-size: 1.3rem; }
-.text-muted { color: var(--cf-muted); }
-.text-secondary { color: var(--cf-text-secondary); }
-.text-success { color: var(--cf-accent); }
-.text-danger  { color: var(--cf-danger); }
-.text-warning { color: var(--cf-warning); }
-.fw-500 { font-weight: 500; }
-.fw-600 { font-weight: 600; }
-.fw-700 { font-weight: 700; }
-.text-right { text-align: right; }
-.text-center { text-align: center; }
+.text-sm {
+  font-size: 0.8rem;
+}
+
+.text-lg {
+  font-size: 1.1rem;
+}
+
+.text-xl {
+  font-size: 1.3rem;
+}
+
+.text-muted {
+  color: var(--cf-muted);
+}
+
+.text-secondary {
+  color: var(--cf-text-secondary);
+}
+
+.text-success {
+  color: var(--cf-accent);
+}
+
+.text-danger {
+  color: var(--cf-danger);
+}
+
+.text-warning {
+  color: var(--cf-warning);
+}
+
+.fw-500 {
+  font-weight: 500;
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+
+.fw-700 {
+  font-weight: 700;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
