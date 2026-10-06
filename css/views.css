@@ -139,7 +139,9 @@
 }
 
 /* ══ DASHBOARD ════════════════════════════════════════════ */
-.dashboard-view {}
+.dashboard-view {
+  width: 100%;
+}
 
 .stats-grid {
   display: grid;
