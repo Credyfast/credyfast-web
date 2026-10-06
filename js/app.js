@@ -176,7 +176,7 @@ const App = (() => {
       const btnSuc = document.createElement('button');
       btnSuc.id = 'btn-cambiar-sucursal';
       btnSuc.className = 'btn-cambiar-sucursal';
-      btnSuc.innerHTML = '🔄&nbsp; Cambiar sucursal';
+      btnSuc.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>&nbsp; Cambiar sucursal';
       btnSuc.addEventListener('click', () => _cambiarSucursal());
       sidebarFooter.insertBefore(btnSuc, sidebarFooter.firstChild);
     }
@@ -188,7 +188,7 @@ const App = (() => {
         const btnArqueo = document.createElement('button');
         btnArqueo.id = 'btn-arqueo-sidebar';
         btnArqueo.className = 'btn-arqueo';
-        btnArqueo.innerHTML = '🏦&nbsp; Arqueo de Caja';
+        btnArqueo.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>&nbsp; Arqueo de Caja';
         btnArqueo.addEventListener('click', () => {
           ArqueoModal.open('espontaneo', (result) => {
             // Si el arqueo fue correcto el botón ya cambió; si elige cerrar sesión desde él:
