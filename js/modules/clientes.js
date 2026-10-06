@@ -32,17 +32,26 @@ const Clientes = (() => {
               <div class="form-group" style="margin-bottom:0">
                 <input type="text" id="cl-search-input" placeholder="Buscar por nombre o apellido…">
               </div>
-              <button class="btn btn-teal btn-sm" id="cl-search-btn">Buscar</button>
+              <button class="btn btn-primary btn-sm" id="cl-search-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buscar
+              </button>
             </div>
           </div>
           <div id="cl-list" style="max-height:500px;overflow-y:auto">
-            <div class="empty-state"><div class="empty-icon">👥</div><p>Busca un cliente</p></div>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--cf-text-secondary)"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              </div>
+              <p>Busca un cliente</p>
+            </div>
           </div>
         </div>
 
         <div id="cl-detail" class="card card-body">
           <div class="empty-state" style="padding:40px 0">
-            <div class="empty-icon">📋</div>
+            <div class="empty-icon">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--cf-text-secondary)"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
             <p>Selecciona un cliente para ver su detalle.</p>
           </div>
         </div>
