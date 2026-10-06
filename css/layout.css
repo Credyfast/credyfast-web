@@ -202,15 +202,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--cf-teal-light);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  color: var(--cf-text-secondary);
+  border: 1px solid var(--cf-border);
+  background: var(--cf-surface-2);
   font-size: 0.82rem;
-  font-weight: 500;
-  transition: background var(--transition), color var(--transition);
-  margin-bottom: 6px;
+  font-weight: 600;
+  transition: all var(--transition);
+  margin-bottom: 8px;
+  cursor: pointer;
 }
-.btn-cambiar-sucursal:hover { background: rgba(91,191,160,0.15); color: #fff; }
+.btn-cambiar-sucursal:hover {
+  background: #ECFDF5;
+  border-color: #047857;
+  color: #047857;
+}
 
 /* ── Pantalla selector de sucursal ── */
 .sucursal-picker-screen {
