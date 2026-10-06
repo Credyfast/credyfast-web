@@ -41,6 +41,7 @@ const Router = (() => {
     inventario: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
     usuarios: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>',
     autorizaciones: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
+    sucursales: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>',
   };
 
   const NAV_ITEMS = [
@@ -54,7 +55,7 @@ const Router = (() => {
     { hash: '#/productos',     icon: SVG_ICONS.inventario,label: 'Inventario',     minRole: 'Supervisor', showBadge: false },
     { hash: '#/usuarios',      icon: SVG_ICONS.usuarios,  label: 'Usuarios',       minRole: 'Supervisor', showBadge: false },
     { hash: '#/autorizaciones',icon: SVG_ICONS.autorizaciones, label: 'Autorizaciones', allowedRoles: ['SuperUsuario','Supervisor'],                  showBadge: false },
-    { hash: '#/sucursales',    icon: '🏢',                label: 'Sucursales',     allowedRoles: ['SuperUsuario'],                                 showBadge: false },
+    { hash: '#/sucursales',    icon: SVG_ICONS.sucursales,label: 'Sucursales',     allowedRoles: ['SuperUsuario'],                                 showBadge: false },
   ];
 
 
