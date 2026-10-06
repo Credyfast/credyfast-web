@@ -39,30 +39,37 @@ const Caja = (() => {
             </div>`}
             <div style="padding:14px">
               <button class="caja-action-btn" id="btn-caja-pago">
-                <span class="caja-btn-icon">💳</span><div><div>Registrar Pago</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Ir al POS</div></div>
+                <span class="caja-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg></span>
+                <div><div>Registrar Pago</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Ir al POS</div></div>
               </button>
               <button class="caja-action-btn" id="btn-caja-contado">
-                <span class="caja-btn-icon">🛒</span><div><div>Venta de Contado</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Venta directa</div></div>
+                <span class="caja-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></span>
+                <div><div>Venta de Contado</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Venta directa</div></div>
               </button>
               <button class="caja-action-btn" id="btn-caja-retiro">
-                <span class="caja-btn-icon">💸</span><div><div>Retiro</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Retiro de caja</div></div>
+                <span class="caja-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/><path d="m15 4 3-3m0 0h-3m3 0v3"/></svg></span>
+                <div><div>Retiro</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Retiro de caja</div></div>
               </button>
 
               ${puedeArqueo ? `
               <button class="caja-action-btn" id="btn-caja-arqueo">
-                <span class="caja-btn-icon">⚖️</span><div><div>Arqueo de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Conteo físico</div></div>
+                <span class="caja-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg></span>
+                <div><div>Arqueo de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Conteo físico</div></div>
               </button>` : ''}
 
               ${esSup ? `
               <button class="caja-action-btn" id="btn-caja-corte">
-                <span class="caja-btn-icon">📊</span><div><div>Corte de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Reporte del día</div></div>
+                <span class="caja-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+                <div><div>Corte de Caja</div><div style="font-size:.75rem;font-weight:400;color:var(--cf-muted)">Reporte del día</div></div>
               </button>` : ''}
             </div>
           </div>
 
           <!-- Saldo cobradores en campo -->
           <div class="card">
-            <div class="card-header"><h3>💼 Cobradores en Campo</h3></div>
+            <div class="card-header">
+              <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Cobradores en Campo</h3>
+            </div>
             <div id="caja-cobradores"><div class="table-empty">Cargando…</div></div>
           </div>
         </div>
@@ -105,7 +112,9 @@ const Caja = (() => {
               <label>Comentarios</label>
               <input type="text" id="retiro-comentarios" placeholder="Motivo del retiro…">
             </div>
-            <button class="btn btn-danger btn-full" id="btn-retiro-confirm">💸 Confirmar Retiro</button>
+            <button class="btn btn-danger btn-full" id="btn-retiro-confirm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>Confirmar Retiro
+            </button>
           </div>
         </div>
       </div>
@@ -127,7 +136,10 @@ const Caja = (() => {
             <!-- Sección Código de Descuento -->
             <div id="contado-desc-wrapper" style="margin-bottom:12px;background:var(--cf-bg);border:1px dashed var(--cf-border);border-radius:var(--radius-sm);padding:10px">
               <div id="contado-desc-toggle-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
-                <span style="font-size:0.82rem;font-weight:600;color:var(--cf-accent)">🎟️ ¿Código de descuento / autorización?</span>
+                <span style="font-size:0.82rem;font-weight:600;color:var(--cf-primary);display:flex;align-items:center;gap:6px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>
+                  ¿Código de descuento / autorización?
+                </span>
                 <span id="contado-desc-toggle-icon" style="font-size:0.75rem;color:var(--cf-muted)">▼</span>
               </div>
               <div id="contado-desc-inputs-area" class="hidden" style="margin-top:8px">
@@ -150,12 +162,14 @@ const Caja = (() => {
                 💵 Efectivo: Dinero físico entregado en mostrador. Se suma al Saldo en Caja.
               </div>
             </div>
-            <button class="btn btn-success btn-full" id="btn-contado-confirm">🛒 Confirmar Venta</button>
+            <button class="btn btn-success btn-full" id="btn-contado-confirm">Confirmar Venta</button>
           </div>
           <!-- Contenedor resultado y ticket post-venta -->
           <div class="card-body hidden" id="contado-ticket-result" style="text-align:center">
-            <div style="font-size:2.5rem;margin-bottom:8px">🎉</div>
-            <h4 style="margin:0 0 6px 0;color:var(--cf-accent)">¡Venta de Contado Registrada!</h4>
+            <div style="margin-bottom:8px">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h4 style="margin:0 0 6px 0;color:var(--cf-primary)">¡Venta de Contado Registrada!</h4>
             <div id="contado-res-detalle" style="background:var(--cf-bg);border-radius:var(--radius-sm);padding:12px;margin:12px 0 16px;font-size:.88rem;line-height:1.5"></div>
             <div style="display:flex;flex-direction:column;gap:10px">
               <button class="btn btn-primary btn-full" id="btn-contado-print-termica" style="font-size:1rem;padding:12px">
