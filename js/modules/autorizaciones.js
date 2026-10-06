@@ -15,39 +15,45 @@ const AutorizacionesView = (() => {
     return `
     <div class="view-header">
       <div>
-        <h2>🎟️ Códigos de Autorización y Descuentos</h2>
+        <h2 style="display:flex;align-items:center;gap:8px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          Códigos de Autorización y Descuentos
+        </h2>
         <p class="text-secondary" style="font-size:0.85rem;margin-top:2px">
           Genera códigos numéricos de 6 dígitos de uso único con vigencia máxima de 20 minutos.
         </p>
       </div>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-outline" id="btn-auth-refresh">🔄 Actualizar</button>
-        <button class="btn btn-primary" id="btn-auth-nuevo">➕ Generar Nuevo Código</button>
+        <button class="btn btn-outline" id="btn-auth-refresh">Actualizar</button>
+        <button class="btn btn-primary" id="btn-auth-nuevo">+ Generar Nuevo Código</button>
       </div>
     </div>
 
-    <!-- ── STATS CARDS ── -->
-    <div class="dash-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:20px">
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981">⚡</div>
-        <div>
+    <!-- ── STATS CARDS (3 casillas en la misma fila con líneas de color) ── -->
+    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-bottom:20px">
+      <div class="stat-card" style="--stat-accent:#047857;border-top:3.5px solid #047857">
+        <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="stat-label">Códigos Activos</div>
-          <div class="stat-val" id="stat-auth-activos">0</div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
+        <div class="stat-value" id="stat-auth-activos">0</div>
+        <div class="stat-sub">Vigentes y listos para uso</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6">✔</div>
-        <div>
+      <div class="stat-card" style="--stat-accent:#0284c7;border-top:3.5px solid #0284c7">
+        <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="stat-label">Usados</div>
-          <div class="stat-val" id="stat-auth-usados">0</div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
+        <div class="stat-value" id="stat-auth-usados">0</div>
+        <div class="stat-sub">Aplicados en ventas</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444">⏳</div>
-        <div>
+      <div class="stat-card" style="--stat-accent:#ef4444;border-top:3.5px solid #ef4444">
+        <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="stat-label">Expirados / Cancelados</div>
-          <div class="stat-val" id="stat-auth-expirados">0</div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
+        <div class="stat-value" id="stat-auth-expirados">0</div>
+        <div class="stat-sub">Caducados o revocados</div>
       </div>
     </div>
 
