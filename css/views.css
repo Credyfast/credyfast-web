@@ -143,18 +143,24 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
   margin-bottom: 24px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr;
   }
@@ -704,38 +710,56 @@
 
 /* ══ COTIZADOR ═════════════════════════════════════════════ */
 .cotizador-result {
-  background: linear-gradient(135deg, #064E3B 0%, #047857 100%);
+  background: #FFFFFF;
+  border: 1px solid var(--cf-border);
+  border-top: 3.5px solid var(--cf-primary);
   border-radius: var(--radius-lg);
   padding: 22px 24px;
-  color: #fff;
+  color: var(--cf-text);
   margin-bottom: 18px;
-  box-shadow: 0 10px 20px -5px rgba(4, 120, 87, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
 }
 
 .cotizador-result .cotiz-titulo {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.85;
+  letter-spacing: 0.06em;
+  color: var(--cf-primary);
   margin-bottom: 12px;
 }
 
 .cotizador-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
+}
+
+.cotizador-item {
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
 }
 
 .cotizador-item .ci-label {
-  font-size: 0.75rem;
-  opacity: 0.8;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--cf-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
 }
 
 .cotizador-item .ci-val {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 800;
+  color: var(--cf-text);
   font-variant-numeric: tabular-nums;
+}
+
+.cotizador-item:first-child .ci-val {
+  color: var(--cf-primary);
 }
 
 .periodo-selector {
