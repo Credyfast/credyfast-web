@@ -21,7 +21,9 @@ const POS = (() => {
             <input type="text" id="pos-search-input"
               placeholder="Nombre del cliente o ID Cliente (CLxxxxx)…"
               class="input-lg" autocomplete="off" autofocus>
-            <button class="btn btn-primary" id="pos-search-btn">🔍 Buscar</button>
+            <button class="btn btn-primary" id="pos-search-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buscar
+            </button>
           </div>
           <div id="pos-search-error" class="hidden" style="color:var(--cf-danger);font-size:.82rem;margin-top:4px"></div>
         </div>
@@ -42,7 +44,9 @@ const POS = (() => {
         </div>
 
         <div id="pos-empty" class="empty-state">
-          <div class="empty-icon">💳</div>
+          <div class="empty-icon">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--cf-text-secondary)"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
+          </div>
           <p>Busca un cliente o crédito para registrar un pago.</p>
         </div>
       </div>
