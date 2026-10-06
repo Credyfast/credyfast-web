@@ -148,12 +148,13 @@
 .stat-card {
   background: var(--cf-surface);
   border: 1px solid var(--cf-border);
-  border-radius: 14px;
-  padding: 18px 20px;
+  border-top: 3.5px solid var(--stat-accent, var(--cf-primary));
+  border-radius: 12px;
+  padding: 16px 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   position: relative;
   overflow: hidden;
   transition: transform var(--transition), box-shadow var(--transition);
@@ -168,27 +169,36 @@
   align-items: center;
 }
 .stat-label {
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--cf-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .stat-value {
-  font-size: 1.85rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: var(--cf-text);
   line-height: 1.15;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  margin: 4px 0 2px;
+  margin: 3px 0 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .stat-sub {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--cf-text-secondary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ══ FORMULARIOS ══════════════════════════════════════════ */
@@ -263,22 +273,28 @@ table {
 thead th {
   text-align: left;
   padding: 12px 16px;
-  font-size: 0.70rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--cf-muted);
-  border-bottom: 1px solid var(--cf-border);
+  color: var(--cf-text);
+  border-bottom: 2px solid var(--cf-border);
   white-space: nowrap;
-  background: var(--cf-surface-2);
+  background: #F1F5F9;
 }
 tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--cf-border-light);
   vertical-align: middle;
 }
+tbody tr:nth-child(odd) {
+  background: #FFFFFF;
+}
+tbody tr:nth-child(even) {
+  background: #F8FAFC;
+}
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: #F8FAFC; }
+tbody tr:hover { background: #ECFDF5 !important; }
 .td-mono { font-family: 'Courier New', monospace; font-size: 0.82rem; font-weight: 600; }
 .td-amount { font-weight: 700; font-variant-numeric: tabular-nums; }
 .td-right { text-align: right; }
