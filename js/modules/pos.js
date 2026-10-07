@@ -101,7 +101,7 @@ const POS = (() => {
                 <div id="cobro-capital-form" class="hidden">
                   <div class="form-group" style="margin-bottom:8px">
                     <label style="font-size:.78rem">Monto a abonar a capital ($)</label>
-                    <input type="number" id="cobro-capital-monto" min="0.01" step="0.01" placeholder="0.00" style="font-size:.9rem">
+                    <input type="number" id="cobro-capital-monto" min="1" step="1" placeholder="0" style="font-size:.9rem">
                   </div>
                   <!-- Selector tipo de pago capital -->
                   <div style="margin-bottom:8px">
@@ -649,12 +649,18 @@ const POS = (() => {
       // Inicializar toggle de tipo de pago capital
       _initTipoPagoToggle('capital-tipo-grupo', 'capital-tipo-aviso', 'data-capital-tipo');
       const montoInput = $('cobro-capital-monto');
-      if (montoInput) { montoInput.value = ''; setTimeout(() => montoInput.focus(), 50); }
+      if (montoInput) {
+        montoInput.value = cuotaCapital; // Pre-llenar con la cuota redondeada exacta
+        setTimeout(() => {
+          montoInput.focus();
+          montoInput.select();
+        }, 50);
+      }
       // Asignar confirmación solo una vez
       const confirmBtn = $('cobro-capital-confirmar');
       if (confirmBtn) {
         confirmBtn.onclick = async () => {
-          const monto = parseFloat($('cobro-capital-monto')?.value);
+          const monto = Math.round(parseFloat($('cobro-capital-monto')?.value) || 0);
           if (!monto || monto <= 0) { toast('Ingresa un monto válido.', 'warning'); return; }
           const tipoPago = _getTipoPago('data-capital-tipo');
           confirmBtn.disabled = true;
@@ -677,7 +683,7 @@ const POS = (() => {
                 tipoOperacion:    'CAPITAL',
                 montoRecibido:    monto,
                 montoRestante:    0,
-                semanaActual:     res.resultados?.[0]?.semana ?? null,
+                semanaActual:     res.resultados?.[0]?.semana ?? res.resultados?.[0]?.semNum ?? null,
                 semanasRestantes: semanasRestantesAhora,
                 totalSemanas:     parseInt(_creditoData?.['Periodo'] || 0),
                 pagoCompleto:     true,
@@ -726,17 +732,18 @@ const POS = (() => {
     try {
       const res = await API.pagoLiquidar({ IDCredito });
       if (!res.ok) { setHTML('cobro-liquidar-detalle', `<span style="color:var(--cf-danger)">${res.message}</span>`); return; }
+      const totalLiq = Math.round(res.total);
       setHTML('cobro-liquidar-detalle', `
         <table style="width:100%;font-size:.78rem;border-collapse:collapse">
           <tr><td style="padding:3px 0;color:var(--cf-text-secondary)">Cuota sin interés</td>
-              <td style="text-align:right">${fmt.currency(res.cuotaSinInteres)} / sem</td></tr>
+              <td style="text-align:right">${fmt.currency(Math.round(res.cuotaSinInteres))} / sem</td></tr>
           <tr><td style="padding:3px 0;color:var(--cf-danger)">Semanas atrasadas (${res.semanasAtrasadas})</td>
-              <td style="text-align:right;color:var(--cf-danger)">${fmt.currency(res.totalAtrasados)}</td></tr>
+              <td style="text-align:right;color:var(--cf-danger)">${fmt.currency(Math.round(res.totalAtrasados))}</td></tr>
           <tr><td style="padding:3px 0;color:var(--cf-text-secondary)">Semanas restantes (${res.semanasRestantes} × sin interés)</td>
-              <td style="text-align:right">${fmt.currency(res.totalRestantes)}</td></tr>
+              <td style="text-align:right">${fmt.currency(Math.round(res.totalRestantes))}</td></tr>
           <tr style="border-top:2px solid var(--cf-border)">
               <td style="padding:6px 0;font-weight:800;font-size:.92rem">TOTAL A LIQUIDAR</td>
-              <td style="text-align:right;font-weight:800;font-size:.92rem;color:var(--cf-primary)">${fmt.currency(res.total)}</td></tr>
+              <td style="text-align:right;font-weight:800;font-size:.92rem;color:var(--cf-primary)">${fmt.currency(totalLiq)}</td></tr>
         </table>
         <button class="btn btn-danger btn-full btn-sm" style="margin-top:10px" id="cobro-liquidar-confirmar">🔒 Confirmar Liquidación Total</button>
       `);
@@ -748,14 +755,14 @@ const POS = (() => {
           const tipoPago = _getTipoPago('data-liq-tipo');
           const resReg = await API.pagoLiquidarRegistrar({
             IDCredito,
-            montoTotal: res.total,
+            montoTotal: totalLiq,
             tipoPago,
           });
           if (resReg.ok) {
             const metodoLabel = tipoPago === 'Transferencia_o_deposito' ? '🏦 Transferencia/Depósito' : '💵 Efectivo';
             toast('✔ Liquidación registrada — ' + metodoLabel, 'success', 5000);
             $('cobro-liquidar-panel').classList.add('hidden');
-            _showTicket({ ...resReg, montoRecibido: resReg.montoRecibido ?? res.total });
+            _showTicket({ ...resReg, montoRecibido: resReg.montoRecibido ?? totalLiq });
           } else { toast(resReg.message, 'error'); }
         } catch (_) { toast('Error de conexión.', 'error'); }
         finally { btn.disabled = false; showLoading(false); }
