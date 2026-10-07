@@ -734,14 +734,9 @@ const POS = (() => {
               <td style="text-align:right;color:var(--cf-danger)">${fmt.currency(res.totalAtrasados)}</td></tr>
           <tr><td style="padding:3px 0;color:var(--cf-text-secondary)">Semanas restantes (${res.semanasRestantes} × sin interés)</td>
               <td style="text-align:right">${fmt.currency(res.totalRestantes)}</td></tr>
-          <tr style="border-top:1px solid var(--cf-border)">
-              <td style="padding:4px 0;font-weight:600">Subtotal</td>
-              <td style="text-align:right;font-weight:600">${fmt.currency(res.subtotal)}</td></tr>
-          <tr><td style="padding:2px 0;font-size:.72rem;color:var(--cf-text-secondary)">Recargo (5%)</td>
-              <td style="text-align:right;font-size:.72rem">${fmt.currency(res.recargo)}</td></tr>
           <tr style="border-top:2px solid var(--cf-border)">
               <td style="padding:6px 0;font-weight:800;font-size:.92rem">TOTAL A LIQUIDAR</td>
-              <td style="text-align:right;font-weight:800;font-size:.92rem;color:var(--cf-accent)">${fmt.currency(res.total)}</td></tr>
+              <td style="text-align:right;font-weight:800;font-size:.92rem;color:var(--cf-primary)">${fmt.currency(res.total)}</td></tr>
         </table>
         <button class="btn btn-danger btn-full btn-sm" style="margin-top:10px" id="cobro-liquidar-confirmar">🔒 Confirmar Liquidación Total</button>
       `);
