@@ -80,6 +80,12 @@ const Clientes = (() => {
             </div>
           </div>
         </div>
+      <!-- Modal Validación Duplicado / Homónimo -->
+      <div id="modal-cliente-duplicado" class="hidden" style="
+        position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:300;
+        display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)">
+        <div class="card" id="modal-duplicado-card" style="width:100%;max-width:480px;box-shadow:var(--shadow-xl);padding:22px;border-radius:var(--radius-lg);text-align:center">
+        </div>
       </div>
     </div>`;
   }
@@ -455,11 +461,15 @@ const Clientes = (() => {
     const modal = $('modal-nuevo-cliente');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    const dupModal = $('modal-cliente-duplicado');
+    if (dupModal) dupModal.classList.add('hidden');
     _renderStep();
   }
 
   function _closeWizard() {
     $('modal-nuevo-cliente').classList.add('hidden');
+    const dupModal = $('modal-cliente-duplicado');
+    if (dupModal) dupModal.classList.add('hidden');
     if (_leafletMap) { _leafletMap.remove(); _leafletMap = null; _leafletMarker = null; }
   }
 
@@ -659,6 +669,44 @@ const Clientes = (() => {
       if (!_wizardData.CURP || _wizardData.CURP.length !== 18) {
         toast('CURP debe tener exactamente 18 caracteres.', 'warning'); return;
       }
+
+      // Verificación de duplicados (CURP y Nombre independientes)
+      const curpActual = (_wizardData.CURP || '').toUpperCase().trim();
+      const nomActual  = (_wizardData.Nombre_s || '').trim();
+      const apActual   = (_wizardData.Apellido_paterno || '').trim();
+      const amActual   = (_wizardData.Apellido_materno || '').trim();
+      const hashPaso1  = `${nomActual}|${apActual}|${amActual}|${curpActual}`;
+
+      if (_wizardData._verificadoHash !== hashPaso1) {
+        const nextBtn = $('wizard-next');
+        if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Verificando…'; }
+        try {
+          const checkRes = await API.clientCheckDuplicate({
+            Nombre_s: nomActual,
+            Apellido_paterno: apActual,
+            Apellido_materno: amActual,
+            CURP: curpActual,
+          });
+
+          if (checkRes.duplicado) {
+            if (checkRes.tipo === 'CURP_DUPLICADO') {
+              _mostrarAlertaCurpDuplicado(checkRes);
+              return;
+            } else if (checkRes.tipo === 'NOMBRE_DUPLICADO') {
+              _mostrarModalHomonimo(checkRes, hashPaso1);
+              return;
+            }
+          }
+          // Todo en orden, sin duplicados
+          _wizardData._verificadoHash = hashPaso1;
+          _wizardData.ignorarHomonimo = false;
+        } catch (_) {
+          toast('Error al verificar duplicados en el servidor.', 'error');
+          return;
+        } finally {
+          if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Siguiente →'; }
+        }
+      }
     }
     if (_wizardStep === 3 && !MODO_PRUEBA) {
       if (!_wizardData.INE_Frente_ID || !_wizardData.INE_Reverso_ID || !_wizardData.Comprobante_ID) {
@@ -687,9 +735,7 @@ const Clientes = (() => {
         INE_Frente_ID:      _wizardData.INE_Frente_ID || '',
         INE_Reverso_ID:     _wizardData.INE_Reverso_ID || '',
         Comprobante_ID:     _wizardData.Comprobante_ID || '',
-        // Las referencias se envían pero el backend las necesita mapeadas
-        // (el backend 06_Clientes no las tiene — son del crédito, no del cliente)
-        // Las guardamos en wizardData para pre-llenar el form de crédito
+        ignorarHomonimo:    !!_wizardData.ignorarHomonimo,
       });
       if (res.ok) {
         toast(`✔ Cliente ${res.id} registrado: ${res.nombreCompleto}`, 'success', 5000);
@@ -701,6 +747,97 @@ const Clientes = (() => {
       }
     } catch(_) { toast('Error de conexión.', 'error'); }
     finally { showLoading(false); }
+  }
+
+  // ── Modales de validación duplicado / homónimo ─────────────
+  function _mostrarAlertaCurpDuplicado(res) {
+    const card = $('modal-duplicado-card');
+    const modal = $('modal-cliente-duplicado');
+    if (!card || !modal) return;
+
+    card.innerHTML = `
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--cf-danger)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      </div>
+      <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:6px;color:var(--cf-text-primary)">⛔ Cliente ya registrado</h3>
+      <p style="font-size:.82rem;color:var(--cf-text-secondary);margin-bottom:14px">
+        ${res.mismoNombre ? 'Este cliente ya existe en el sistema con el mismo CURP y Nombre.' : 'El CURP ingresado ya pertenece a otro cliente registrado.'}
+      </p>
+      <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-md);padding:12px;text-align:left;margin-bottom:16px;font-size:.8rem">
+        <div style="margin-bottom:6px">
+          <span style="color:var(--cf-muted);font-size:.74rem;display:block">CLIENTE EN SISTEMA:</span>
+          <strong style="color:var(--cf-text-primary);font-size:.86rem">[${res.clienteExistente.id}] ${res.clienteExistente.nombre}</strong>
+        </div>
+        <div>
+          <span style="color:var(--cf-muted);font-size:.74rem;display:block">CURP REGISTRADO:</span>
+          <strong style="font-family:monospace;font-size:.9rem;color:var(--cf-danger)">${res.curpRegistrado}</strong>
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:var(--cf-muted);margin-bottom:18px">
+        No es posible registrar dos clientes con el mismo CURP. Si deseas otorgarle un nuevo crédito a esta persona, búscalo directamente en el catálogo.
+      </p>
+      <button class="btn btn-primary btn-full" id="btn-cerrar-curp-dup">Entendido, revisar datos</button>
+    `;
+
+    modal.classList.remove('hidden');
+    on('btn-cerrar-curp-dup', 'click', () => {
+      modal.classList.add('hidden');
+      const curpInput = $('wiz-curp');
+      if (curpInput) { curpInput.focus(); curpInput.select(); }
+    });
+  }
+
+  function _mostrarModalHomonimo(res, hashPaso1) {
+    const card = $('modal-duplicado-card');
+    const modal = $('modal-cliente-duplicado');
+    if (!card || !modal) return;
+
+    card.innerHTML = `
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(245,158,11,0.14);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--cf-warning)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:6px;color:var(--cf-text-primary)">⚠️ ¿Seguro se trata de un cliente diferente?</h3>
+      <p style="font-size:.82rem;color:var(--cf-text-secondary);margin-bottom:14px">
+        Este nombre ya existe registrado en el sistema pero tiene un <strong>CURP diferente</strong>.
+      </p>
+      <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-md);padding:12px;text-align:left;margin-bottom:16px;font-size:.8rem">
+        <div style="margin-bottom:10px">
+          <span style="color:var(--cf-muted);font-size:.72rem;display:block">CLIENTE COINCIDENTE EN SISTEMA:</span>
+          <strong style="color:var(--cf-text-primary);font-size:.86rem">[${res.clienteExistente.id}] ${res.clienteExistente.nombre}</strong>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px dashed var(--cf-border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="color:var(--cf-muted);font-size:.76rem">CURP Registrado:</span>
+            <span style="font-family:monospace;font-weight:700;color:var(--cf-primary);font-size:.84rem">${res.curpRegistrado || 'Sin CURP'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="color:var(--cf-muted);font-size:.76rem">CURP Ingresado:</span>
+            <span style="font-family:monospace;font-weight:700;color:var(--cf-accent);font-size:.84rem">${res.curpIngresado}</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.77rem;color:var(--cf-muted);margin-bottom:18px">
+        Valida que ambos CURP sean realmente distintos para confirmar si es un homónimo o si hubo un error al escribir el nombre o el CURP.
+      </p>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" style="flex:1" id="btn-homonimo-cancelar">← Corregir Datos</button>
+        <button class="btn btn-primary" style="flex:1.2" id="btn-homonimo-continuar">✔ Es diferente (Continuar)</button>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+
+    on('btn-homonimo-cancelar', 'click', () => {
+      modal.classList.add('hidden');
+    });
+
+    on('btn-homonimo-continuar', 'click', () => {
+      modal.classList.add('hidden');
+      _wizardData._verificadoHash = hashPaso1;
+      _wizardData.ignorarHomonimo = true;
+      _wizardStep++;
+      _renderStep();
+    });
   }
 
   // ── Helpers CURP ──────────────────────────────────────────
