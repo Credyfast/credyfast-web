@@ -72,10 +72,11 @@ const API = (() => {
     productToggle: (p) => call('product_toggle', p),
 
     // ── Clientes ──────────────────────────────────────────────
-    clientSearch:      (p) => call('client_search',      p),
-    clientGet:         (p) => call('client_get',         p),
-    clientCreate:      (p) => call('client_create',      p),
-    clientUpdateFotos: (p) => call('client_update_fotos',p),
+    clientSearch:         (p) => call('client_search',          p),
+    clientGet:            (p) => call('client_get',             p),
+    clientCreate:         (p) => call('client_create',          p),
+    clientUpdateFotos:    (p) => call('client_update_fotos',    p),
+    clientCheckDuplicate: (p) => call('client_check_duplicate', p),
 
     // ── Créditos ──────────────────────────────────────────────
     creditRequest:          (p) => call('credit_request',           p),
