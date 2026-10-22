@@ -10,6 +10,7 @@ const AutorizacionesView = (() => {
   let _timerInterval = null;
   let _sucursales = [];
   let _ultimoCodigo = null;
+  let _creditoRenovacionSeleccionado = null;
 
   function render() {
     return `
@@ -99,49 +100,102 @@ const AutorizacionesView = (() => {
             <!-- 1. Tipo de Operación -->
             <div class="form-group" style="margin-bottom:14px">
               <label style="font-weight:600;font-size:0.85rem">1. Tipo de Operación</label>
-              <div class="toggle-group" id="auth-tipo-operacion" style="margin-top:6px">
-                <button type="button" class="toggle-btn active" data-op="CONTADO">🛒 Venta de Contado</button>
-                <button type="button" class="toggle-btn" data-op="ENGANCHE">📋 Enganche a Crédito</button>
+              <div class="toggle-group" id="auth-tipo-operacion" style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" class="toggle-btn active" data-op="CONTADO">🛒 Venta Contado</button>
+                <button type="button" class="toggle-btn" data-op="ENGANCHE">📋 Enganche Crédito</button>
+                <button type="button" class="toggle-btn" data-op="RENOVACION">🔄 Renovación Anticipada</button>
               </div>
             </div>
 
-            <!-- 2. Tipo de Descuento ($ o %) -->
-            <div class="form-group" style="margin-bottom:14px">
-              <label style="font-weight:600;font-size:0.85rem">2. Modalidad del Descuento</label>
-              <div class="toggle-group" id="auth-tipo-descuento" style="margin-top:6px">
-                <button type="button" class="toggle-btn active" data-desc="MONTO">💵 Monto Fijo ($)</button>
-                <button type="button" class="toggle-btn" data-desc="PORCENTAJE">％ Porcentaje (%)</button>
+            <!-- CONTENEDOR DESCUENTOS NORMALES (CONTADO Y ENGANCHE) -->
+            <div id="auth-descuento-box">
+              <!-- 2. Tipo de Descuento ($ o %) -->
+              <div class="form-group" style="margin-bottom:14px">
+                <label style="font-weight:600;font-size:0.85rem">2. Modalidad del Descuento</label>
+                <div class="toggle-group" id="auth-tipo-descuento" style="margin-top:6px">
+                  <button type="button" class="toggle-btn active" data-desc="MONTO">💵 Monto Fijo ($)</button>
+                  <button type="button" class="toggle-btn" data-desc="PORCENTAJE">％ Porcentaje (%)</button>
+                </div>
               </div>
-            </div>
 
-            <!-- 3. Valor -->
-            <div class="form-group" style="margin-bottom:14px">
-              <label for="auth-valor" id="auth-valor-label" style="font-weight:600;font-size:0.85rem">Monto del Descuento ($)</label>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input type="number" id="auth-valor" class="input-lg" min="0.01" step="any" placeholder="Ej. 300" required style="font-size:1.15rem;font-weight:700">
-                <button type="button" class="btn btn-outline btn-sm" id="btn-auth-100pct" style="white-space:nowrap;font-size:0.75rem">
-                  🎁 100% Regalo / Patrocinio
-                </button>
+              <!-- 3. Valor -->
+              <div class="form-group" style="margin-bottom:14px">
+                <label for="auth-valor" id="auth-valor-label" style="font-weight:600;font-size:0.85rem">Monto del Descuento ($)</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="number" id="auth-valor" class="input-lg" min="0.01" step="any" placeholder="Ej. 300" style="font-size:1.15rem;font-weight:700">
+                  <button type="button" class="btn btn-outline btn-sm" id="btn-auth-100pct" style="white-space:nowrap;font-size:0.75rem">
+                    🎁 100% Regalo / Patrocinio
+                  </button>
+                </div>
+                <div id="auth-valor-ayuda" style="font-size:0.76rem;color:var(--cf-muted);margin-top:4px">
+                  Ingresa el monto directo en pesos que se restará al precio.
+                </div>
               </div>
-              <div id="auth-valor-ayuda" style="font-size:0.76rem;color:var(--cf-muted);margin-top:4px">
-                Ingresa el monto directo en pesos que se restará al precio.
-              </div>
-            </div>
 
-            <!-- 4. Si es Enganche: Opción Diferir -->
-            <div id="auth-enganche-opciones" class="hidden" style="margin-bottom:14px;padding:12px;background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm)">
-              <div style="font-weight:600;font-size:0.82rem;color:var(--cf-accent);margin-bottom:6px">
-                ⚙️ Opciones de Enganche
-              </div>
-              <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;cursor:pointer;line-height:1.4">
-                <input type="checkbox" id="auth-diferir-enganche" style="margin-top:3px">
-                <span>
-                  <strong>Diferir enganche restante a las semanas de pago</strong><br>
-                  <span style="color:var(--cf-muted);font-size:0.75rem">
-                    El cliente no pagará enganche hoy para llevarse el equipo ($0 al entregar); el saldo se suma en cuotas iguales a sus semanas.
+              <!-- 4. Si es Enganche: Opción Diferir -->
+              <div id="auth-enganche-opciones" class="hidden" style="margin-bottom:14px;padding:12px;background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm)">
+                <div style="font-weight:600;font-size:0.82rem;color:var(--cf-accent);margin-bottom:6px">
+                  ⚙️ Opciones de Enganche
+                </div>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;cursor:pointer;line-height:1.4">
+                  <input type="checkbox" id="auth-diferir-enganche" style="margin-top:3px">
+                  <span>
+                    <strong>Diferir enganche restante a las semanas de pago</strong><br>
+                    <span style="color:var(--cf-muted);font-size:0.75rem">
+                      El cliente no pagará enganche hoy para llevarse el equipo ($0 al entregar); el saldo se suma en cuotas iguales a sus semanas.
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+              </div>
+            </div>
+
+            <!-- CONTENEDOR RENOVACIÓN ANTICIPADA -->
+            <div id="auth-renovacion-box" class="hidden" style="margin-bottom:14px">
+              <div style="background:rgba(2,132,199,0.06);border:1px solid rgba(2,132,199,0.25);border-radius:var(--radius-sm);padding:14px">
+                <div style="font-weight:700;font-size:0.85rem;color:#0284c7;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                  🔄 Crédito Activo a Renovar
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label style="font-size:0.8rem;font-weight:600">ID del Crédito Vigente</label>
+                  <div style="display:flex;gap:8px">
+                    <input type="text" id="auth-renov-id-credito" class="input-lg" placeholder="Ej. CR00005" style="font-weight:700;text-transform:uppercase">
+                    <button type="button" class="btn btn-primary" id="btn-auth-renov-consultar" style="white-space:nowrap">
+                      🔍 Consultar Crédito
+                    </button>
+                  </div>
+                  <div style="font-size:0.75rem;color:var(--cf-muted);margin-top:4px">
+                    El sistema verificará que el crédito esté activo y <strong>al corriente sin atrasos</strong> para calcular el saldo a diferir sin intereses.
+                  </div>
+                </div>
+
+                <!-- Resumen del crédito consultado -->
+                <div id="auth-renov-resumen" class="hidden" style="margin-top:10px"></div>
+
+                <!-- Opciones del nuevo crédito -->
+                <div id="auth-renov-opciones-nuevo" class="hidden" style="margin-top:14px;padding-top:12px;border-top:1px dashed rgba(2,132,199,0.3)">
+                  <div style="font-weight:600;font-size:0.82rem;color:var(--cf-text);margin-bottom:8px">
+                    ⚙️ Beneficios para el Nuevo Crédito (Opcional):
+                  </div>
+                  <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;cursor:pointer;line-height:1.4;margin-bottom:10px">
+                    <input type="checkbox" id="auth-renov-diferir-enganche" style="margin-top:3px">
+                    <span>
+                      <strong>Diferir enganche del nuevo producto ($0 al entregar)</strong><br>
+                      <span style="color:var(--cf-muted);font-size:0.75rem">El cliente no pagará enganche al recibir su nuevo equipo; el enganche se divide entre sus semanas.</span>
+                    </span>
+                  </label>
+
+                  <div style="margin-top:8px">
+                    <label style="font-size:0.8rem;font-weight:600">Descuento al nuevo enganche (opcional)</label>
+                    <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;margin-top:4px">
+                      <select id="auth-renov-tipo-desc-enganche" style="font-size:0.82rem">
+                        <option value="MONTO">Monto Fijo ($)</option>
+                        <option value="PORCENTAJE">Porcentaje (%)</option>
+                      </select>
+                      <input type="number" id="auth-renov-desc-enganche" min="0" step="any" placeholder="0 (Sin descuento)" style="font-size:0.85rem">
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- 5. Motivo / Justificación (OBLIGATORIO) -->
@@ -280,6 +334,15 @@ const AutorizacionesView = (() => {
       btn.addEventListener('click', () => _setTipoDescuento(btn.dataset.desc));
     });
 
+    // Consulta de crédito para Renovación Anticipada
+    on('btn-auth-renov-consultar', 'click', _consultarCreditoRenovacion);
+    on('auth-renov-id-credito', 'keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        _consultarCreditoRenovacion();
+      }
+    });
+
     // Boton 100% patrocinio
     on('btn-auth-100pct', 'click', () => {
       _setTipoDescuento('PORCENTAJE');
@@ -313,9 +376,19 @@ const AutorizacionesView = (() => {
     document.querySelectorAll('#auth-tipo-operacion [data-op]').forEach(b => {
       b.classList.toggle('active', b.dataset.op === op);
     });
+    const descBox = $('auth-descuento-box');
+    const renovBox = $('auth-renovacion-box');
     const opcionesEnganche = $('auth-enganche-opciones');
-    if (opcionesEnganche) {
-      opcionesEnganche.classList.toggle('hidden', op !== 'ENGANCHE');
+
+    if (op === 'RENOVACION') {
+      if (descBox) descBox.classList.add('hidden');
+      if (renovBox) renovBox.classList.remove('hidden');
+    } else {
+      if (descBox) descBox.classList.remove('hidden');
+      if (renovBox) renovBox.classList.add('hidden');
+      if (opcionesEnganche) {
+        opcionesEnganche.classList.toggle('hidden', op !== 'ENGANCHE');
+      }
     }
     _actualizarAyudaValor();
   }
@@ -348,12 +421,137 @@ const AutorizacionesView = (() => {
       } else {
         ayuda.textContent = 'Monto en pesos que se descontará directamente del enganche.';
       }
-    } else {
+    } else if (op === 'CONTADO') {
       if (tipo === 'PORCENTAJE') {
         ayuda.textContent = 'Porcentaje de descuento sobre el precio de contado (soporta hasta el 100% para patrocinios).';
       } else {
         ayuda.textContent = 'Monto directo en pesos que se restará al precio de contado.';
       }
+    }
+  }
+
+  // ── Consultar Crédito para Renovación Anticipada ─────────────
+  async function _consultarCreditoRenovacion() {
+    const idInput = $('auth-renov-id-credito');
+    const id = idInput ? idInput.value.trim().toUpperCase() : '';
+    const resBox = $('auth-renov-resumen');
+    const opcionesNuevo = $('auth-renov-opciones-nuevo');
+
+    if (!id) {
+      toast('Ingresa el ID del crédito a consultar (ej. CR00005)', 'warning');
+      return;
+    }
+
+    if (resBox) {
+      resBox.classList.remove('hidden');
+      resBox.innerHTML = '<div style="padding:10px;text-align:center;color:var(--cf-muted);font-size:0.82rem">🔍 Verificando estado y saldo a diferir del crédito…</div>';
+    }
+
+    try {
+      // 1. Obtener datos del crédito
+      const resCred = await API.creditList({ IDCredito: id });
+      const cred = (resCred && resCred.ok && resCred.data && resCred.data.length) ? resCred.data[0] : null;
+
+      if (!cred) {
+        _creditoRenovacionSeleccionado = null;
+        if (resBox) {
+          resBox.innerHTML = `<div style="background:rgba(239,68,68,0.1);color:var(--cf-danger);border:1px solid rgba(239,68,68,0.3);padding:10px;border-radius:6px;font-size:0.83rem">
+            ✖ Crédito <strong>${id}</strong> no encontrado en la base de datos.
+          </div>`;
+        }
+        if (opcionesNuevo) opcionesNuevo.classList.add('hidden');
+        return;
+      }
+
+      if (cred['ESTATUS'] !== 'APROVADO') {
+        _creditoRenovacionSeleccionado = null;
+        if (resBox) {
+          resBox.innerHTML = `<div style="background:rgba(239,68,68,0.1);color:var(--cf-danger);border:1px solid rgba(239,68,68,0.3);padding:10px;border-radius:6px;font-size:0.83rem">
+            ⚠️ El crédito <strong>${id}</strong> no está activo (Estatus actual: <strong>${cred['ESTATUS']}</strong>). Solo se pueden renovar créditos vigentes y aprobados.
+          </div>`;
+        }
+        if (opcionesNuevo) opcionesNuevo.classList.add('hidden');
+        return;
+      }
+
+      // 2. Calcular liquidación sin intereses
+      const resLiq = await API.pagoLiquidar({ IDCredito: id });
+      if (!resLiq || !resLiq.ok) {
+        _creditoRenovacionSeleccionado = null;
+        if (resBox) {
+          resBox.innerHTML = `<div style="background:rgba(239,68,68,0.1);color:var(--cf-danger);border:1px solid rgba(239,68,68,0.3);padding:10px;border-radius:6px;font-size:0.83rem">
+            ⚠️ ${(resLiq && resLiq.message) || 'Error al calcular liquidación del crédito.'}
+          </div>`;
+        }
+        if (opcionesNuevo) opcionesNuevo.classList.add('hidden');
+        return;
+      }
+
+      // 3. Validar si tiene atrasos
+      if (resLiq.semanasAtrasadas > 0) {
+        _creditoRenovacionSeleccionado = { ...resLiq, ...cred, tieneAtrasos: true };
+        if (resBox) {
+          resBox.innerHTML = `
+            <div style="background:rgba(239,68,68,0.1);color:var(--cf-danger);border:1px solid rgba(239,68,68,0.3);padding:12px;border-radius:6px;font-size:0.83rem;line-height:1.4">
+              <strong>⛔ NO PROCEDE PARA RENOVACIÓN: TIENE SEMANAS ATRASADAS</strong><br>
+              Cliente: <strong>${cred['Nombre_cliente'] || cred['IDCliente']}</strong><br>
+              Semanas atrasadas: <strong>${resLiq.semanasAtrasadas} sem.</strong> (${fmt.currency(resLiq.totalAtrasados)})<br>
+              <div style="margin-top:6px;font-size:0.78rem;opacity:0.9">
+                El cliente debe liquidar primero sus semanas en atraso para poder solicitar la promoción de Renovación Anticipada.
+              </div>
+            </div>`;
+        }
+        if (opcionesNuevo) opcionesNuevo.classList.add('hidden');
+        return;
+      }
+
+      if (resLiq.semanasRestantes <= 0) {
+        _creditoRenovacionSeleccionado = null;
+        if (resBox) {
+          resBox.innerHTML = `<div style="background:rgba(245,158,11,0.1);color:#b45309;border:1px solid rgba(245,158,11,0.3);padding:10px;border-radius:6px;font-size:0.83rem">
+            El crédito <strong>${id}</strong> ya tiene todas sus semanas cubiertas. No hay saldo pendiente por diferir.
+          </div>`;
+        }
+        if (opcionesNuevo) opcionesNuevo.classList.add('hidden');
+        return;
+      }
+
+      // Crédito válido y al corriente
+      _creditoRenovacionSeleccionado = {
+        IDCredito: id,
+        cliente: cred['Nombre_cliente'] || cred['IDCliente'],
+        totalRestantes: resLiq.totalRestantes,
+        semanasRestantes: resLiq.semanasRestantes,
+        semanasAtrasadas: 0,
+        cuotaSinInteres: resLiq.cuotaSinInteres,
+      };
+
+      if (resBox) {
+        resBox.innerHTML = `
+          <div style="background:rgba(16,185,129,0.1);color:#047857;border:1px solid rgba(16,185,129,0.3);padding:12px;border-radius:6px;font-size:0.84rem;line-height:1.45">
+            <div style="font-weight:700;font-size:0.92rem;margin-bottom:4px">
+              ✔ Crédito Elegible para Renovación Anticipada
+            </div>
+            <div>Cliente: <strong>${cred['Nombre_cliente'] || cred['IDCliente']}</strong> (${cred['IDCliente']})</div>
+            <div style="margin-top:4px">
+              Semanas restantes: <strong>${resLiq.semanasRestantes} sem.</strong> · Cuota contado: <strong>${fmt.currency(resLiq.cuotaSinInteres)}</strong>
+            </div>
+            <div style="margin-top:6px;padding-top:6px;border-top:1px dashed rgba(16,185,129,0.3);font-size:0.95rem">
+              💰 Saldo a diferir en nuevo crédito: <strong style="font-size:1.15rem;color:#047857">${fmt.currency(resLiq.totalRestantes)}</strong>
+            </div>
+          </div>`;
+      }
+
+      if (opcionesNuevo) opcionesNuevo.classList.remove('hidden');
+
+      const motivoInput = $('auth-motivo');
+      if (motivoInput && !motivoInput.value) {
+        motivoInput.value = `Renovación anticipada por promoción (${cred['Nombre_cliente'] || id} - ${resLiq.semanasRestantes} sem restantes)`;
+      }
+
+    } catch (err) {
+      console.error('Error al consultar crédito para renovación:', err);
+      toast('Error al consultar crédito', 'error');
     }
   }
 
@@ -420,7 +618,16 @@ const AutorizacionesView = (() => {
     tbody.innerHTML = _codigos.map(c => {
       const esActivo = c.estatus === 'ACTIVO';
       const badgeCls = esActivo ? 'badge-success' : (c.estatus === 'USADO' ? 'badge-info' : 'badge-danger');
-      const descStr = c.tipoDescuento === 'PORCENTAJE' ? `${c.valor}%` : fmt.currency(c.valor);
+      const opBadge = c.tipoOperacion === 'CONTADO'
+        ? '<span class="badge badge-warning">🛒 Contado</span>'
+        : (c.tipoOperacion === 'RENOVACION'
+          ? '<span class="badge" style="background:#0284c7;color:#fff">🔄 Renovación</span>'
+          : '<span class="badge badge-primary">📋 Enganche</span>');
+
+      const descStr = c.tipoOperacion === 'RENOVACION'
+        ? `Diferir: ${fmt.currency(c.saldoDiferido || 0)}<br><small style="color:var(--cf-muted)">Orig: ${c.idCreditoOrigen || '—'}</small>`
+        : (c.tipoDescuento === 'PORCENTAJE' ? `${c.valor}%` : fmt.currency(c.valor));
+
       const tiempoTexto = esActivo ? _formatearTiempoRestante(c.segundosRestantes) : c.estatus;
 
       return `
@@ -431,11 +638,7 @@ const AutorizacionesView = (() => {
               <button class="btn btn-ghost btn-sm" title="Copiar código" onclick="AutorizacionesView.copiar('${c.codigo}')" style="padding:2px 6px;font-size:0.75rem">📋</button>
             </div>
           </td>
-          <td>
-            <span class="badge ${c.tipoOperacion === 'CONTADO' ? 'badge-warning' : 'badge-primary'}">
-              ${c.tipoOperacion === 'CONTADO' ? '🛒 Contado' : '📋 Enganche'}
-            </span>
-          </td>
+          <td>${opBadge}</td>
           <td style="font-weight:700">${descStr}</td>
           <td>
             ${c.diferirEnganche ? '<span style="color:#059669;font-weight:600">✔ Sí (Diferido)</span>' : '<span style="color:var(--cf-muted)">No</span>'}
@@ -518,10 +721,115 @@ const AutorizacionesView = (() => {
 
   async function _submitNuevoCodigo() {
     const op = document.querySelector('#auth-tipo-operacion .active')?.dataset.op || 'CONTADO';
-    const tipoDesc = document.querySelector('#auth-tipo-descuento .active')?.dataset.desc || 'MONTO';
-    const valor = parseFloat($('auth-valor')?.value) || 0;
     const motivo = $('auth-motivo')?.value.trim();
     const sucursal = $('auth-sucursal')?.value || 'TODAS';
+
+    // ── Si es Renovación Anticipada ─────────────────────────
+    if (op === 'RENOVACION') {
+      const idCreditoOrigen = $('auth-renov-id-credito')?.value.trim().toUpperCase();
+      if (!idCreditoOrigen) {
+        toast('Ingresa y consulta el crédito vigente a renovar.', 'warning');
+        $('auth-renov-id-credito')?.focus();
+        return;
+      }
+      if (!_creditoRenovacionSeleccionado || _creditoRenovacionSeleccionado.IDCredito !== idCreditoOrigen) {
+        toast('Haz clic en "Consultar Crédito" para validar el crédito antes de generar el código.', 'warning');
+        return;
+      }
+      if (_creditoRenovacionSeleccionado.semanasAtrasadas > 0) {
+        toast('El crédito seleccionado tiene semanas atrasadas. Debe estar al corriente.', 'error');
+        return;
+      }
+      if (!motivo) {
+        toast('El motivo de la renovación es obligatorio.', 'warning');
+        $('auth-motivo')?.focus();
+        return;
+      }
+
+      const diferirEng = $('auth-renov-diferir-enganche')?.checked || false;
+      const descEng = parseFloat($('auth-renov-desc-enganche')?.value) || 0;
+      const tipoDescEng = $('auth-renov-tipo-desc-enganche')?.value || 'MONTO';
+
+      showLoading(true);
+      try {
+        const res = await API.authCodeCreate({
+          tipoOperacion: 'RENOVACION',
+          idCreditoOrigen,
+          saldoDiferido: _creditoRenovacionSeleccionado.totalRestantes,
+          semanasRestantesOrigen: _creditoRenovacionSeleccionado.semanasRestantes,
+          motivo,
+          sucursal,
+          diferirEnganche: diferirEng,
+          descuentoEnganche: descEng,
+          tipoDescuentoEnganche: tipoDescEng,
+        });
+
+        showLoading(false);
+        if (res && res.ok) {
+          const modalForm = $('modal-nuevo-codigo');
+          if (modalForm) {
+            modalForm.classList.add('hidden');
+            modalForm.style.display = 'none';
+          }
+          _ultimoCodigo = res;
+          const dispGrande = $('display-codigo-grande');
+          if (dispGrande) dispGrande.textContent = res.codigo;
+
+          setHTML('display-codigo-detalles', `
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--cf-muted)">Operación:</span>
+              <strong style="color:#0284c7">🔄 Renovación Anticipada</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--cf-muted)">Crédito Origen:</span>
+              <strong>${res.idCreditoOrigen}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--cf-muted)">Saldo a Diferir:</span>
+              <strong style="color:#047857;font-size:1.1rem">${fmt.currency(res.saldoDiferido)}</strong>
+            </div>
+            ${res.diferirEnganche ? `
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;color:#059669">
+                <span>Enganche Nuevo:</span>
+                <strong>✔ Diferido en Semanas ($0 hoy)</strong>
+              </div>
+            ` : ''}
+            ${res.descuentoEnganche > 0 ? `
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;color:#10b981">
+                <span>Descuento Enganche:</span>
+                <strong>${res.tipoDescuentoEnganche === 'PORCENTAJE' ? res.descuentoEnganche + '%' : fmt.currency(res.descuentoEnganche)}</strong>
+              </div>
+            ` : ''}
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--cf-muted)">Motivo:</span>
+              <strong style="text-align:right;max-width:240px">${res.motivo}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--cf-muted)">Sucursal:</span>
+              <strong>${(!res.sucursal || res.sucursal === 'TODAS') ? '🌐 Cualquier sucursal' : res.sucursal}</strong>
+            </div>
+          `);
+
+          const modalExito = $('modal-codigo-exito');
+          if (modalExito) {
+            modalExito.classList.remove('hidden');
+            modalExito.style.display = 'flex';
+          }
+          _loadCodigos();
+        } else {
+          toast((res && res.message) || 'Error al generar código', 'error');
+        }
+      } catch (err) {
+        showLoading(false);
+        console.error('Error generando código:', err);
+        toast('Error de red al generar código', 'error');
+      }
+      return;
+    }
+
+    // ── Si es Contado o Enganche Tradicional ──────────────────
+    const tipoDesc = document.querySelector('#auth-tipo-descuento .active')?.dataset.desc || 'MONTO';
+    const valor = parseFloat($('auth-valor')?.value) || 0;
     const diferirEnganche = $('auth-diferir-enganche')?.checked || false;
 
     if (valor <= 0) {
@@ -637,8 +945,16 @@ const AutorizacionesView = (() => {
       return;
     }
     const c = _ultimoCodigo;
-    const descStr = c.tipoDescuento === 'PORCENTAJE' ? `${c.valor}%` : fmt.currency(c.valor);
-    const opStr = c.tipoOperacion === 'CONTADO' ? 'Venta de Contado' : 'Enganche a Crédito';
+    const opStr = c.tipoOperacion === 'CONTADO'
+      ? 'Venta de Contado'
+      : (c.tipoOperacion === 'RENOVACION'
+        ? `Renovación Anticipada (Crédito ${c.idCreditoOrigen || ''})`
+        : 'Enganche a Crédito');
+
+    const descStr = c.tipoOperacion === 'RENOVACION'
+      ? `Saldo diferido a nuevo crédito: ${fmt.currency(c.saldoDiferido || 0)}`
+      : (c.tipoDescuento === 'PORCENTAJE' ? `${c.valor}%` : fmt.currency(c.valor));
+
     const sucStr = (!c.sucursal || c.sucursal === 'TODAS') ? 'Cualquier sucursal' : c.sucursal;
     const diferidoStr = c.diferirEnganche ? '\n📌 *Enganche:* Diferido a pagos semanales ($0 hoy)' : '';
 
@@ -646,7 +962,7 @@ const AutorizacionesView = (() => {
       `🎟️ *CREDYFAST — CÓDIGO DE AUTORIZACIÓN: ${c.codigo}*`,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       `🛒 *Operación:* ${opStr}`,
-      `💵 *Beneficio:* Descuento de ${descStr}${diferidoStr}`,
+      `💵 *Beneficio:* ${descStr}${diferidoStr}`,
       `📝 *Motivo:* ${c.motivo}`,
       `🏢 *Sucursal:* ${sucStr}`,
       `⏱️ *Vigencia:* 20 minutos (Uso único)`,
