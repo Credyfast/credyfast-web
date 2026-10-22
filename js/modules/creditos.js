@@ -153,6 +153,7 @@ const Creditos = (() => {
       { key: 'IDCredito', label: 'ID', class: 'td-mono' },
       { key: 'Nombre_cliente', label: 'Cliente', render: r => `
         <div>${r['Nombre_cliente'] || r['IDCredito']}</div>
+        ${r['Tipo_Credito'] === 'RENOVACION' ? `<span class="badge" style="background:#0284c7;color:#fff;font-size:0.68rem;padding:2px 6px">🔄 Renovación (de ${r['ID_Credito_Origen'] || '—'})</span> ` : ''}
         ${r['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.68rem;padding:2px 6px">🌟 Contado 1 Mes</span>' : (r['Modalidad'] === '13_SEMANAS_CONVERTIDO' ? '<span class="badge badge-warning" style="font-size:0.68rem;padding:2px 6px">⚠ Conv. 13s</span>' : '')}
       ` },
       { key: 'ESTATUS', label: 'Estado', render: r => badgeEstado(r['ESTATUS']) },
@@ -211,6 +212,7 @@ const Creditos = (() => {
         <div class="entrega-card">
           <div class="entrega-title">
             ⏳ Pendiente de entrega: ${cr['Nombre_cliente'] || cr['IDCredito']}
+            ${cr['Tipo_Credito'] === 'RENOVACION' ? `<span class="badge" style="background:#0284c7;color:#fff;font-size:0.7rem;margin-left:6px">🔄 Renovación</span>` : ''}
             ${cr['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.7rem;margin-left:6px">🌟 Contado 1 Mes</span>' : ''}
           </div>
           <div style="font-size:.82rem;color:var(--cf-text-secondary);margin-bottom:10px">
@@ -616,7 +618,7 @@ const Creditos = (() => {
       <!-- Sección Código Descuento en Enganche -->
       <div id="cr-desc-wrapper" class="hidden" style="margin:12px 0;background:var(--cf-bg);border:1px dashed var(--cf-border);border-radius:var(--radius-sm);padding:10px">
         <div id="cr-desc-toggle-header" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
-          <span style="font-size:0.82rem;font-weight:600;color:var(--cf-accent)">🎟️ ¿Código de descuento en enganche?</span>
+          <span style="font-size:0.82rem;font-weight:600;color:var(--cf-accent)">🎟️ ¿Código de autorización / descuento / renovación?</span>
           <span id="cr-desc-toggle-icon" style="font-size:0.75rem;color:var(--cf-muted)">▼</span>
         </div>
         <div id="cr-desc-inputs-area" class="hidden" style="margin-top:8px">
@@ -777,18 +779,36 @@ const Creditos = (() => {
 
         if (res.ok && res.data) {
           _creditoDescuentoActivo = res.data;
-          toast(`✔ Descuento autorizado por ${res.data.creadoPor}`, 'success');
+          const esRenov = res.data.tipoOperacion === 'RENOVACION';
+          toast(esRenov ? `✔ Renovación autorizada por ${res.data.creadoPor}` : `✔ Descuento autorizado por ${res.data.creadoPor}`, 'success');
 
           if (fb) {
             fb.classList.remove('hidden');
-            const descTxt = res.data.tipoDescuento === 'PORCENTAJE' ? `${res.data.valor}%` : fmt.currency(res.data.valor);
-            fb.innerHTML = `
-              <div style="background:rgba(16,185,129,0.1);color:#047857;padding:6px 8px;border-radius:4px;border:1px solid rgba(16,185,129,0.3)">
-                ✔ <strong>${descTxt} de descuento en enganche</strong> (-${fmt.currency(res.data.descuentoReal)})<br>
-                ${res.data.diferirEnganche ? '<strong>📌 Enganche $0 al entregar:</strong> saldo restante diferido en las semanas.<br>' : ''}
-                <small>Autorizó: ${res.data.creadoPor} · Motivo: <em>${res.data.motivo}</em></small>
-              </div>
-            `;
+            if (esRenov) {
+              const saldoDif = parseFloat(res.data.saldoDiferido) || 0;
+              const semOrig = res.data.semanasRestantesOrigen || 0;
+              const descTxt = res.data.descuentoReal > 0
+                ? (res.data.tipoDescuento === 'PORCENTAJE' ? `${res.data.valor}%` : fmt.currency(res.data.valor))
+                : null;
+              fb.innerHTML = `
+                <div style="background:rgba(2,132,199,0.08);color:#0369a1;padding:8px 10px;border-radius:4px;border:1px solid rgba(2,132,199,0.3)">
+                  <div style="font-weight:700;font-size:0.85rem">🔄 Renovación Anticipada (Crédito ${res.data.idCreditoOrigen || '—'})</div>
+                  <div style="margin-top:3px">• <strong>Saldo a diferir:</strong> ${fmt.currency(saldoDif)} (${semOrig} sem. pendientes sin interés)</div>
+                  ${descTxt ? `<div>• <strong>Descuento en nuevo enganche:</strong> ${descTxt} (-${fmt.currency(res.data.descuentoReal)})</div>` : ''}
+                  ${res.data.diferirEnganche ? '<div>• <strong>Enganche $0 al entregar:</strong> diferido en el nuevo crédito</div>' : ''}
+                  <div style="margin-top:3px"><small>Autorizó: ${res.data.creadoPor} · Motivo: <em>${res.data.motivo || '—'}</em></small></div>
+                </div>
+              `;
+            } else {
+              const descTxt = res.data.tipoDescuento === 'PORCENTAJE' ? `${res.data.valor}%` : fmt.currency(res.data.valor);
+              fb.innerHTML = `
+                <div style="background:rgba(16,185,129,0.1);color:#047857;padding:6px 8px;border-radius:4px;border:1px solid rgba(16,185,129,0.3)">
+                  ✔ <strong>${descTxt} de descuento en enganche</strong> (-${fmt.currency(res.data.descuentoReal)})<br>
+                  ${res.data.diferirEnganche ? '<strong>📌 Enganche $0 al entregar:</strong> saldo restante diferido en las semanas.<br>' : ''}
+                  <small>Autorizó: ${res.data.creadoPor} · Motivo: <em>${res.data.motivo}</em></small>
+                </div>
+              `;
+            }
           }
           if (btnQuitar) btnQuitar.classList.remove('hidden');
           _mostrarCotizador();
@@ -984,31 +1004,72 @@ const Creditos = (() => {
     let engancheFinal = engancheBase;
     let puntual = Math.round(contado * (pctMap[_periodoSel] || 0.06));
     let detalleDescuento = '';
+    let detalleRenovacion = '';
 
     if (_creditoDescuentoActivo) {
-      const desc = _creditoDescuentoActivo.descuentoReal || 0;
-      const engancheRestante = Math.max(0, engancheBase - desc);
-      const detalleTipo = _creditoDescuentoActivo.tipoDescuento === 'PORCENTAJE'
-        ? `${_creditoDescuentoActivo.valor}%`
-        : fmt.currency(_creditoDescuentoActivo.valor);
+      if (_creditoDescuentoActivo.tipoOperacion === 'RENOVACION') {
+        const saldoDiferido = parseFloat(_creditoDescuentoActivo.saldoDiferido) || 0;
+        const adicSemRenov = Math.ceil(saldoDiferido / _periodoSel);
+        puntual += adicSemRenov;
 
-      if (_creditoDescuentoActivo.diferirEnganche) {
-        engancheFinal = 0;
-        const adicSem = Math.ceil(engancheRestante / _periodoSel);
-        puntual += adicSem;
-        detalleDescuento = `
-          <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
-            Desc: ${detalleTipo} (-${fmt.currency(desc)})<br>
-            <strong>Enganche diferido: $0 hoy</strong> (+${fmt.currency(adicSem)}/sem)
+        const desc = _creditoDescuentoActivo.descuentoReal || 0;
+        const engancheRestante = Math.max(0, engancheBase - desc);
+        const detalleTipo = _creditoDescuentoActivo.tipoDescuento === 'PORCENTAJE'
+          ? `${_creditoDescuentoActivo.valor}%`
+          : fmt.currency(_creditoDescuentoActivo.valor);
+
+        if (_creditoDescuentoActivo.diferirEnganche) {
+          engancheFinal = 0;
+          const adicSemEng = Math.ceil(engancheRestante / _periodoSel);
+          puntual += adicSemEng;
+          detalleDescuento = `
+            <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
+              ${desc > 0 ? `Desc: ${detalleTipo} (-${fmt.currency(desc)})<br>` : ''}
+              <strong>Enganche diferido: $0 hoy</strong> (+${fmt.currency(adicSemEng)}/sem)
+            </div>
+          `;
+        } else if (desc > 0) {
+          engancheFinal = engancheRestante;
+          detalleDescuento = `
+            <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
+              Desc: ${detalleTipo} (-${fmt.currency(desc)}) en enganche
+            </div>
+          `;
+        } else {
+          engancheFinal = engancheBase;
+        }
+
+        detalleRenovacion = `
+          <div style="margin-bottom:10px;padding:8px 10px;background:rgba(2,132,199,0.08);border:1px solid rgba(2,132,199,0.25);border-radius:4px;font-size:0.78rem;color:#0369a1;line-height:1.4">
+            🔄 <strong>Renovación Anticipada (Crédito ${_creditoDescuentoActivo.idCreditoOrigen || '—'}):</strong><br>
+            Saldo anterior sin intereses: <strong>${fmt.currency(saldoDiferido)}</strong> diferido en ${_periodoSel} semanas (+${fmt.currency(adicSemRenov)}/sem sumado a la cuota).
           </div>
         `;
       } else {
-        engancheFinal = engancheRestante;
-        detalleDescuento = `
-          <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
-            Desc: ${detalleTipo} (-${fmt.currency(desc)}) aplicado al enganche
-          </div>
-        `;
+        const desc = _creditoDescuentoActivo.descuentoReal || 0;
+        const engancheRestante = Math.max(0, engancheBase - desc);
+        const detalleTipo = _creditoDescuentoActivo.tipoDescuento === 'PORCENTAJE'
+          ? `${_creditoDescuentoActivo.valor}%`
+          : fmt.currency(_creditoDescuentoActivo.valor);
+
+        if (_creditoDescuentoActivo.diferirEnganche) {
+          engancheFinal = 0;
+          const adicSem = Math.ceil(engancheRestante / _periodoSel);
+          puntual += adicSem;
+          detalleDescuento = `
+            <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
+              Desc: ${detalleTipo} (-${fmt.currency(desc)})<br>
+              <strong>Enganche diferido: $0 hoy</strong> (+${fmt.currency(adicSem)}/sem)
+            </div>
+          `;
+        } else {
+          engancheFinal = engancheRestante;
+          detalleDescuento = `
+            <div style="font-size:0.75rem;color:#059669;margin-top:2px;font-weight:600">
+              Desc: ${detalleTipo} (-${fmt.currency(desc)}) aplicado al enganche
+            </div>
+          `;
+        }
       }
     }
 
@@ -1025,6 +1086,7 @@ const Creditos = (() => {
           <strong>${_prodSel['MARCA']} ${_prodSel['MODELO']}</strong> (${_prodSel['MOD_COMERCIAL'] || '—'})<br>
           <span style="opacity:0.8">NS: ${_prodSel['NS'] || '—'} | RAM: ${_prodSel['RAM'] || 0}GB | Alm: ${_prodSel['ALMACENAMIENTO'] || 0}GB | Color: ${_prodSel['COLOR'] || '—'}</span>
         </div>
+        ${detalleRenovacion}
         <div class="cotizador-grid">
           <div class="cotizador-item">
             <div class="ci-label">Enganche ${engancheFinal === 0 ? '(Diferido)' : ''}</div>
