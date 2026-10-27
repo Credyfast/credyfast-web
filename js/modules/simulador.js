@@ -74,7 +74,7 @@ const Simulador = (() => {
     
     periodoArea?.classList.remove('hidden');
     const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-    const LIMITE = 8000;
+    const LIMITE = 7000;
     const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
     
     setHTML('sim-periodos', periodos.map(p =>
