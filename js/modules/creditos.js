@@ -747,7 +747,7 @@ const Creditos = (() => {
         _periodoSel = null;
         if (_prodSel) {
           const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-          const LIMITE = 7000;
+          const LIMITE = 8000;
           const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
           setHTML('cr-periodos', periodos.map(p =>
             `<button class="periodo-btn" data-p="${p}" type="button">${p} sem.</button>`
@@ -788,7 +788,7 @@ const Creditos = (() => {
         return;
       }
       const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-      const engancheBase = Math.round(costo * 0.20);
+      const engancheBase = Math.round(costo * 0.20) + 119;
 
       showLoading(true);
       try {
@@ -950,7 +950,7 @@ const Creditos = (() => {
     // Si había un código activo, recalcular el descuento en base al nuevo costo
     if (_creditoDescuentoActivo) {
       const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-      const engancheBase = Math.round(costo * 0.20);
+      const engancheBase = Math.round(costo * 0.20) + 119;
       if (_creditoDescuentoActivo.tipoDescuento === 'PORCENTAJE') {
         _creditoDescuentoActivo.descuentoReal = Math.round(engancheBase * (_creditoDescuentoActivo.valor / 100));
       } else {
@@ -960,7 +960,7 @@ const Creditos = (() => {
 
     periodoArea?.classList.remove('hidden');
     const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-    const LIMITE = 7000;
+    const LIMITE = 8000;
     const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
     setHTML('cr-periodos', periodos.map(p =>
       `<button class="periodo-btn" data-p="${p}" type="button">${p} sem.</button>`
@@ -982,7 +982,7 @@ const Creditos = (() => {
     const costoReal = parseFloat(_prodSel['COSTO_REAL']) || 0;
     const contado = parseFloat(_prodSel['Precio_de_contado']) || Math.round(costo * 1.5);
     const pctMap = { 13: 0.1, 26: 0.06, 39: 0.05, 52: 0.04 };
-    const engancheBase = Math.round(costo * 0.20);
+    const engancheBase = Math.round(costo * 0.20) + 119;
     const cotiz = $('cr-cotizador'); if (!cotiz) return;
     cotiz.classList.remove('hidden');
 
