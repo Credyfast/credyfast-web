@@ -23,6 +23,7 @@ const Productos = (() => {
         <select id="prod-filter-estatus" style="padding:7px 12px;border:1.5px solid var(--cf-border);border-radius:var(--radius-sm);background:var(--cf-bg)">
           <option value="">Todos los estados</option>
           <option value="DISPONIBLE">DISPONIBLE</option>
+          <option value="APARTADO">APARTADO</option>
           <option value="OCUPADO">OCUPADO</option>
           <option value="VENDIDO">VENDIDO</option>
           <option value="BAJA">BAJA</option>
