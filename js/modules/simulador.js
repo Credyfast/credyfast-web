@@ -74,7 +74,7 @@ const Simulador = (() => {
     
     periodoArea?.classList.remove('hidden');
     const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-    const LIMITE = 7000;
+    const LIMITE = 8000;
     const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
     
     setHTML('sim-periodos', periodos.map(p =>
@@ -99,7 +99,7 @@ const Simulador = (() => {
     const contado = parseFloat(_prodSel['Precio_de_contado']) || Math.round(costo * 1.5);
     const pctMap = { 13: 0.1, 26: 0.06, 39: 0.05, 52: 0.04 };
     
-    const enganche = Math.round(costo * 0.20);
+    const enganche = Math.round(costo * 0.20) + 119;
     const puntual = Math.round(contado * (pctMap[_periodoSel] || 0.06));
     const normal = Math.round(puntual * 1.10);
     const moroso = Math.round(normal * 1.10);
