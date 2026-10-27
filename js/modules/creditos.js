@@ -747,7 +747,7 @@ const Creditos = (() => {
         _periodoSel = null;
         if (_prodSel) {
           const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-          const LIMITE = 8000;
+          const LIMITE = 7000;
           const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
           setHTML('cr-periodos', periodos.map(p =>
             `<button class="periodo-btn" data-p="${p}" type="button">${p} sem.</button>`
@@ -960,7 +960,7 @@ const Creditos = (() => {
 
     periodoArea?.classList.remove('hidden');
     const costo = parseFloat(_prodSel['COSTO_MOSTRADO']) || 0;
-    const LIMITE = 8000;
+    const LIMITE = 7000;
     const periodos = costo <= LIMITE ? [13, 26] : [13, 26, 39, 52];
     setHTML('cr-periodos', periodos.map(p =>
       `<button class="periodo-btn" data-p="${p}" type="button">${p} sem.</button>`
