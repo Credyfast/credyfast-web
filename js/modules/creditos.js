@@ -498,7 +498,7 @@ const Creditos = (() => {
         printWin.document.write(`
           <html><head><title>Contrato ${IDCredito}</title>
           <style>
-            body { font-family: 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; padding: 40px; margin: 0; }
+            body { font-family: 'Arial', sans-serif; font-size: 10pt; line-height: 1.4; padding: 40px; margin: 0; }
             .contrato-texto { white-space: pre-wrap; text-align: justify; }
             @media print {
               .page-break { page-break-before: always; }
