@@ -314,22 +314,13 @@ const Clientes = (() => {
           'APROBADO_EN_ESPERA': 'badge-info',
           'APROVADO':           'badge-success',
           'FINALIZADO':         'badge-muted',
+          'CANCELADO':          'badge-danger',
           'RECHAZADO':          'badge-danger',
         };
         return `<span class="badge ${map[e] || 'badge-muted'}">${e}</span>`;
       };
       panel.innerHTML = creditos.map(cr => {
-        const estatusBadge = e => {
-          const map = {
-            'PENDIENTE':          'badge-warning',
-            'APROBADO_EN_ESPERA': 'badge-info',
-            'APROVADO':           'badge-success',
-            'FINALIZADO':         'badge-muted',
-            'RECHAZADO':          'badge-danger',
-          };
-          return `<span class="badge ${map[e] || 'badge-muted'}">${e}</span>`;
-        };
-        const conCalendario = ['APROVADO','APROBADO_EN_ESPERA','FINALIZADO'].includes(cr['ESTATUS']);
+        const conCalendario = ['APROVADO','FINALIZADO'].includes(cr['ESTATUS']);
         return `
         <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
@@ -361,7 +352,7 @@ const Clientes = (() => {
 
       // Cargar estado de pago de cada crédito activo en paralelo
       creditos
-        .filter(cr => ['APROVADO','APROBADO_EN_ESPERA','FINALIZADO'].includes(cr['ESTATUS']))
+        .filter(cr => ['APROVADO','FINALIZADO'].includes(cr['ESTATUS']))
         .forEach(cr => _cargarEstadoPago(cr['IDCredito']));
 
     } catch(_) {
