@@ -30,6 +30,7 @@ const Creditos = (() => {
             <option value="APROBADO_EN_ESPERA">En Espera Entrega</option>
             <option value="APROBADO">Activos</option>
             <option value="FINALIZADO">Finalizados</option>
+            <option value="CANCELADO">Cancelados</option>
             <option value="RECHAZADO">Rechazados</option>
           </select>
           ${user?.rol !== 'Cajero' ? `<button class="btn btn-primary btn-sm" id="btn-nuevo-credito">+ Nueva Solicitud</button>` : ''}
@@ -176,8 +177,13 @@ const Creditos = (() => {
           const btns = [];
           if (r['ESTATUS'] === 'PENDIENTE' && esSup) {
             btns.push(`<button class="btn btn-info btn-sm" onclick="Creditos._revisarInfo('${r['IDCredito']}')">&#x1F50D; Revisar Info</button>`);
-          } else if (r['ESTATUS'] === 'APROBADO_EN_ESPERA' && esCaj) {
-            btns.push(`<button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${r['IDCredito']}','${r['Nombre_cliente'] || ''}')">&#x1F4E6; Confirmar Entrega</button>`);
+          } else if (r['ESTATUS'] === 'APROBADO_EN_ESPERA') {
+            if (esCaj) {
+              btns.push(`<button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${r['IDCredito']}','${(r['Nombre_cliente'] || '').replace(/'/g, "\\'")}')">&#x1F4E6; Confirmar Entrega</button>`);
+            }
+            if (esSup) {
+              btns.push(`<button class="btn btn-outline btn-sm" style="color:var(--cf-danger);border-color:var(--cf-danger);margin-left:4px" onclick="Creditos._cancelarCredito('${r['IDCredito']}','${(r['Nombre_cliente'] || '').replace(/'/g, "\\'")}')">✖ Cancelar</button>`);
+            }
           }
           return btns.join('') || '—';
         }
@@ -220,9 +226,14 @@ const Creditos = (() => {
               ? `Pago Inicial en Caja: <strong>${fmt.currency(cr['Pago_Inicial_Contado'] || 0)}</strong> (Precio Contado: ${fmt.currency(cr['Precio_de_contado'] || 0)})`
               : `Enganche en Caja: <strong>${fmt.currency(cr['Enganche'])}</strong>`}
           </div>
-          <button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${cr['IDCredito']}','${cr['Nombre_cliente'] || ''}')">
-            📦 Confirmar Entrega y Generar Calendario
-          </button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${cr['IDCredito']}','${(cr['Nombre_cliente'] || '').replace(/'/g, "\\'")}')">
+              📦 Confirmar Entrega y Contrato
+            </button>
+            ${esSup ? `<button class="btn btn-outline btn-sm" style="color:var(--cf-danger);border-color:var(--cf-danger)" onclick="Creditos._cancelarCredito('${cr['IDCredito']}','${(cr['Nombre_cliente'] || '').replace(/'/g, "\\'")}')">
+              ✖ Cancelar
+            </button>` : ''}
+          </div>
         </div>
       `).join('');
     } catch (_) { }
@@ -402,7 +413,17 @@ const Creditos = (() => {
           📦 Confirmar Entrega
         </button>
       </div>
+
+      <div style="border-top: 1px dashed var(--cf-border); margin: 16px 0; padding-top: 10px; text-align: center;">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-cancelar-modal-entrega" style="color:var(--cf-danger); font-size:0.8rem">
+          ✖ El cliente desistió (Cancelar Solicitud)
+        </button>
+      </div>
     `);
+
+    on('btn-cancelar-modal-entrega', 'click', () => {
+      Creditos._cancelarCredito(IDCredito, nombre || '');
+    });
 
     // Logic for printing the contract
     on('btn-imprimir-contrato', 'click', async () => {
@@ -416,10 +437,14 @@ const Creditos = (() => {
         btn.disabled = false; btn.textContent = '📄 Imprimir Contrato';
         return;
       }
-      printWin.document.write('<html><head><title>Generando...</title></head><body style="font-family:sans-serif;padding:40px"><h2>⏳ Generando contrato, por favor espera...</h2></body></html>');
+      printWin.document.write('<html><head><title>Generando...</title></head><body style="font-family:sans-serif;padding:40px"><h2>⏳ Generando contrato y calendario, por favor espera...</h2></body></html>');
       printWin.document.close();
 
       try {
+        // 1. Generar o regenerar el calendario con fecha de HOY
+        const resCal = await API.creditGenerarCalendario({ IDCredito });
+        if (!resCal.ok) throw new Error(resCal.message || 'No se pudo generar el calendario');
+
         const resTxt = await fetch('assets/CONTRATO CASME.txt');
         let text = await resTxt.text();
 
@@ -1168,5 +1193,39 @@ const Creditos = (() => {
     finally { showLoading(false); }
   }
 
-  return { render, init, initRequestFor, _accion, _revisarInfo, _confirmarEntrega, _verificarClientePublic };
+  async function _cancelarCredito(IDCredito, nombreCliente) {
+    const user = State.get('user');
+    const esSup = ['SuperUsuario', 'Supervisor'].includes(user?.rol);
+    if (!esSup) {
+      toast('Solo supervisores pueden cancelar créditos en espera.', 'warning');
+      return;
+    }
+
+    const motivo = prompt(`¿Estás seguro de cancelar la solicitud ${IDCredito} (${nombreCliente || 'Cliente'})?\n\nEl producto regresará a DISPONIBLE y los pagos generados se marcarán como CANCELADO.\n\nIngresa el motivo de cancelación:`);
+    if (motivo === null) return;
+    if (!motivo.trim()) {
+      toast('Debes ingresar un motivo para cancelar la solicitud.', 'warning');
+      return;
+    }
+
+    showLoading(true);
+    try {
+      const res = await API.creditCancel({ IDCredito, motivo: motivo.trim() });
+      if (res.ok) {
+        toast(res.message || 'Crédito cancelado exitosamente.', 'success', 5000);
+        const modal = $('modal-entrega');
+        if (modal) modal.classList.add('hidden');
+        _loadList();
+        _loadEntregasPendientes();
+      } else {
+        toast(res.message || 'Error al cancelar crédito', 'error');
+      }
+    } catch (_) {
+      toast('Error de conexión al cancelar crédito.', 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  return { render, init, initRequestFor, _accion, _revisarInfo, _confirmarEntrega, _cancelarCredito, _verificarClientePublic };
 })();
