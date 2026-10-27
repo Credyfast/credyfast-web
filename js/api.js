@@ -83,6 +83,8 @@ const API = (() => {
     creditApprove:          (p) => call('credit_approve',           p),
     creditReject:           (p) => call('credit_reject',            p),
     creditConfirmarEntrega: (p) => call('credit_confirmar_entrega', p),
+    creditCancel:           (p) => call('credit_cancel',            p),
+    creditGenerarCalendario:(p) => call('credit_generar_calendario',p),
     creditList:             (p) => call('credit_list',              p),
     creditPendientes:       ()  => call('credit_pendientes'),
 
