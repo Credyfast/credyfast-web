@@ -17,6 +17,11 @@ const App = (() => {
     // ── Inicializar router ───────────────────────────────────
     Router.init();
 
+    // ── Registro Service Worker PWA (Instalación en móvil y PC) ─
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
     // ── Sidebar toggle (mobile) ──────────────────────────────
     const menuBtn = $('btn-menu-toggle');
     const sidebar = document.querySelector('.sidebar');
