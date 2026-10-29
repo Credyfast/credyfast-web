@@ -416,6 +416,11 @@
   background: var(--cf-bg);
 }
 
+/* ── Mobile Bottom Navigation (solo en celulares <768px) ── */
+.mobile-bottom-nav {
+  display: none;
+}
+
 /* ── Mobile (<768px) ── */
 @media (max-width: 768px) {
   .sidebar {
@@ -423,7 +428,7 @@
   }
   .sidebar.open {
     transform: translateX(0);
-    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    box-shadow: 4px 0 25px rgba(0,0,0,0.3);
   }
   .main-area {
     margin-left: 0;
@@ -433,6 +438,76 @@
   }
   .view-container {
     padding: 12px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--cf-border);
+    z-index: 95;
+    box-shadow: 0 -3px 12px rgba(15, 23, 42, 0.05);
+  }
+
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 100%;
+    color: var(--cf-muted);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s ease, transform 0.1s ease;
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(0.93);
+  }
+
+  .mobile-nav-item.active {
+    color: var(--cf-primary);
+  }
+
+  .mobile-nav-item .nav-svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.2;
+  }
+
+  .mobile-nav-badge {
+    position: absolute;
+    top: 5px;
+    right: calc(50% - 18px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--cf-orange);
+    color: #fff;
+    border-radius: var(--radius-full);
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(234, 88, 12, 0.3);
+  }
+
+  .toast-container {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 }
 
