@@ -42,6 +42,7 @@ const Router = (() => {
     usuarios: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>',
     autorizaciones: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>',
     sucursales: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>',
+    menu: '<svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
   };
 
   const NAV_ITEMS = [
@@ -71,29 +72,94 @@ const Router = (() => {
   // ── Construir nav según rol ────────────────────────────────
   function buildNav(user) {
     const nav = $('sidebar-nav');
-    if (!nav) return;
-    const items = NAV_ITEMS.filter(n => _hasAccess(user.rol, n));
-    nav.innerHTML = `
-      <div class="nav-section-label">Menú Operativo</div>
-      ${items.map(n => `
-        <div class="nav-item" data-hash="${n.hash}" id="nav-${n.hash.replace('#/','')}" role="button" tabindex="0">
-          <span class="nav-icon">${n.icon}</span>
-          <span class="nav-label">${n.label}</span>
-          ${n.showBadge ? `<span class="nav-badge hidden" id="badge-${n.hash.replace('#/','')}">0</span>` : ''}
-        </div>
-      `).join('')}
-    `;
+    if (nav) {
+      const items = NAV_ITEMS.filter(n => _hasAccess(user.rol, n));
+      nav.innerHTML = `
+        <div class="nav-section-label">Menú Operativo</div>
+        ${items.map(n => `
+          <div class="nav-item" data-hash="${n.hash}" id="nav-${n.hash.replace('#/','')}" role="button" tabindex="0">
+            <span class="nav-icon">${n.icon}</span>
+            <span class="nav-label">${n.label}</span>
+            ${n.showBadge ? `<span class="nav-badge hidden" id="badge-${n.hash.replace('#/','')}">0</span>` : ''}
+          </div>
+        `).join('')}
+      `;
 
-    nav.querySelectorAll('.nav-item').forEach(el => {
-      el.addEventListener('click', () => navigate(el.dataset.hash));
-      el.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(el.dataset.hash); });
-    });
+      nav.querySelectorAll('.nav-item').forEach(el => {
+        el.addEventListener('click', () => navigate(el.dataset.hash));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(el.dataset.hash); });
+      });
+    }
+
+    // ── Construir Mobile Bottom Nav Bar ───────────────────────
+    const bottomNav = $('mobile-bottom-nav');
+    if (bottomNav) {
+      let mobileItems = [];
+      if (user.rol === 'Cobranza') {
+        mobileItems = [
+          { hash: '#/dashboard', icon: SVG_ICONS.dashboard, label: 'Inicio' },
+          { hash: '#/cobranza',  icon: SVG_ICONS.cobranza,  label: 'Cobranza' },
+        ];
+      } else if (user.rol === 'Vendedor') {
+        mobileItems = [
+          { hash: '#/dashboard', icon: SVG_ICONS.dashboard, label: 'Inicio' },
+          { hash: '#/clientes',  icon: SVG_ICONS.clientes,  label: 'Clientes' },
+          { hash: '#/creditos',  icon: SVG_ICONS.creditos,  label: 'Solicitudes', showBadge: true },
+          { hash: '#/simulador', icon: SVG_ICONS.cotizador, label: 'Cotizador' },
+        ];
+      } else if (user.rol === 'Cajero') {
+        mobileItems = [
+          { hash: '#/dashboard', icon: SVG_ICONS.dashboard, label: 'Inicio' },
+          { hash: '#/pos',       icon: SVG_ICONS.pos,       label: 'POS Caja' },
+          { hash: '#/caja',      icon: SVG_ICONS.caja,      label: 'Caja' },
+          { hash: '#/creditos',  icon: SVG_ICONS.creditos,  label: 'Entregas', showBadge: true },
+        ];
+      } else { // Supervisor / SuperUsuario
+        mobileItems = [
+          { hash: '#/dashboard', icon: SVG_ICONS.dashboard, label: 'Inicio' },
+          { hash: '#/pos',       icon: SVG_ICONS.pos,       label: 'POS' },
+          { hash: '#/caja',      icon: SVG_ICONS.caja,      label: 'Caja' },
+          { hash: '#/creditos',  icon: SVG_ICONS.creditos,  label: 'Créditos', showBadge: true },
+        ];
+      }
+
+      bottomNav.innerHTML = `
+        ${mobileItems.map(item => `
+          <div class="mobile-nav-item" data-hash="${item.hash}" role="button" tabindex="0">
+            <span class="mobile-nav-icon">${item.icon}</span>
+            <span class="mobile-nav-label">${item.label}</span>
+            ${item.showBadge ? `<span class="mobile-nav-badge hidden" id="mobile-badge-creditos">0</span>` : ''}
+          </div>
+        `).join('')}
+        <div class="mobile-nav-item" id="mobile-nav-menu-btn" role="button" tabindex="0">
+          <span class="mobile-nav-icon">${SVG_ICONS.menu}</span>
+          <span class="mobile-nav-label">Menú</span>
+        </div>
+      `;
+
+      bottomNav.querySelectorAll('.mobile-nav-item[data-hash]').forEach(el => {
+        el.addEventListener('click', () => navigate(el.dataset.hash));
+      });
+
+      const menuMoreBtn = $('mobile-nav-menu-btn');
+      if (menuMoreBtn) {
+        menuMoreBtn.addEventListener('click', () => {
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          if (sidebar) {
+            sidebar.classList.toggle('open');
+            overlay?.classList.toggle('active');
+          }
+        });
+      }
+    }
   }
 
   // ── Actualizar badge de pendientes ─────────────────────────
   function updateBadge(count) {
     const navBadge    = $('badge-creditos');
     const headerBadge = $('notif-badge');
+    const mobileBadge = $('mobile-badge-creditos');
 
     if (navBadge) {
       navBadge.textContent = count;
@@ -102,6 +168,10 @@ const Router = (() => {
     if (headerBadge) {
       headerBadge.textContent = count;
       headerBadge.classList.toggle('hidden', count === 0);
+    }
+    if (mobileBadge) {
+      mobileBadge.textContent = count;
+      mobileBadge.classList.toggle('hidden', count === 0);
     }
   }
 
@@ -130,6 +200,10 @@ const Router = (() => {
     setHTML('header-title', route.title);
 
     document.querySelectorAll('.nav-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.hash === hash);
+    });
+
+    document.querySelectorAll('.mobile-nav-item[data-hash]').forEach(el => {
       el.classList.toggle('active', el.dataset.hash === hash);
     });
 
