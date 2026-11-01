@@ -137,7 +137,13 @@ const Creditos = (() => {
     const estatus = $('cr-filter-estatus')?.value;
     showLoading(true);
     try {
-      const res = await API.creditList(estatus ? { estatus } : {});
+      const [res, resProds] = await Promise.all([
+        API.creditList(estatus ? { estatus } : {}),
+        _productos.length ? Promise.resolve({ ok: true, data: _productos }) : API.productList()
+      ]);
+      if (resProds.ok && resProds.data) {
+        _productos = resProds.data;
+      }
       if (!res.ok) { toast(res.message, 'error'); return; }
       _creditosActuales = res.data || [];
       _renderList(_creditosActuales);
@@ -157,6 +163,14 @@ const Creditos = (() => {
         ${r['Tipo_Credito'] === 'RENOVACION' ? `<span class="badge" style="background:#0284c7;color:#fff;font-size:0.68rem;padding:2px 6px">🔄 Renovación (de ${r['ID_Credito_Origen'] || '—'})</span> ` : ''}
         ${r['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.68rem;padding:2px 6px">🌟 Contado 1 Mes</span>' : (r['Modalidad'] === '13_SEMANAS_CONVERTIDO' ? '<span class="badge badge-warning" style="font-size:0.68rem;padding:2px 6px">⚠ Conv. 13s</span>' : '')}
       ` },
+      { key: 'IDProd', label: 'Producto', render: r => {
+        const p = (_productos || []).find(x => x['IDProd'] === r['IDProd']);
+        if (p) {
+          return `<div><strong>${p['MOD_COMERCIAL'] || p['MODELO'] || r['IDProd']}</strong></div>
+                  <div style="font-size:0.75rem;color:var(--cf-muted)">${p['MARCA'] || ''} · ${r['IDProd']}</div>`;
+        }
+        return `<div><strong>${r['IDProd'] || '—'}</strong></div>`;
+      }},
       { key: 'ESTATUS', label: 'Estado', render: r => badgeEstado(r['ESTATUS']) },
       { key: 'Periodo', label: 'Periodo', render: r => r['Modalidad'] === 'CONTADO_1MES' ? '30 días' : `${r['Periodo']} sem.` },
       { key: 'Pago_puntual', label: 'Cuota / P.Contado', class: 'td-right td-amount', render: r => r['Modalidad'] === 'CONTADO_1MES' ? fmt.currency(r['Precio_de_contado'] || 0) : fmt.currency(r['Pago_puntual']) },
@@ -210,11 +224,18 @@ const Creditos = (() => {
   // ── Entregas pendientes (APROBADO_EN_ESPERA) ───────────────
   async function _loadEntregasPendientes() {
     try {
-      const res = await API.creditList({ estatus: 'APROBADO_EN_ESPERA' });
+      const [res, resProds] = await Promise.all([
+        API.creditList({ estatus: 'APROBADO_EN_ESPERA' }),
+        _productos.length ? Promise.resolve({ ok: true, data: _productos }) : API.productList()
+      ]);
+      if (resProds.ok && resProds.data) _productos = resProds.data;
       if (!res.ok || !res.data?.length) return;
       const panel = $('entregas-panel');
       if (!panel) return;
-      panel.innerHTML = res.data.map(cr => `
+      panel.innerHTML = res.data.map(cr => {
+        const prod = (_productos || []).find(p => p['IDProd'] === cr['IDProd']);
+        const prodDesc = prod ? `${prod['MOD_COMERCIAL'] || prod['MODELO']} (${prod['MARCA'] || ''})` : (cr['IDProd'] || '—');
+        return `
         <div class="entrega-card">
           <div class="entrega-title">
             ⏳ Pendiente de entrega: ${cr['Nombre_cliente'] || cr['IDCredito']}
@@ -222,7 +243,7 @@ const Creditos = (() => {
             ${cr['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.7rem;margin-left:6px">🌟 Contado 1 Mes</span>' : ''}
           </div>
           <div style="font-size:.82rem;color:var(--cf-text-secondary);margin-bottom:10px">
-            Crédito ${cr['IDCredito']} · ${cr['Modalidad'] === 'CONTADO_1MES'
+            Crédito ${cr['IDCredito']} · 📱 <strong>${prodDesc}</strong> · ${cr['Modalidad'] === 'CONTADO_1MES'
               ? `Pago Inicial en Caja: <strong>${fmt.currency(cr['Pago_Inicial_Contado'] || 0)}</strong> (Precio Contado: ${fmt.currency(cr['Precio_de_contado'] || 0)})`
               : `Enganche en Caja: <strong>${fmt.currency(cr['Enganche'])}</strong>`}
           </div>
@@ -235,7 +256,7 @@ const Creditos = (() => {
             </button>` : ''}
           </div>
         </div>
-      `).join('');
+      `;}).join('');
     } catch (_) { }
   }
 
@@ -248,14 +269,21 @@ const Creditos = (() => {
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
     
-    setHTML('cr-review-body', '<div class="table-empty">Cargando información del cliente…</div>');
+    setHTML('cr-review-body', '<div class="table-empty">Cargando información de la solicitud…</div>');
     
     try {
-      // Obtener detalles del cliente y su historial de créditos
-      const [resClient, resCredits] = await Promise.all([
+      // Obtener detalles del cliente, su historial de créditos y catálogo de productos
+      const [resClient, resCredits, resProds] = await Promise.all([
         API.clientGet({ id: cr['IDCliente'] }),
-        API.creditList({ IDCliente: cr['IDCliente'] })
+        API.creditList({ IDCliente: cr['IDCliente'] }),
+        _productos.length ? Promise.resolve({ ok: true, data: _productos }) : API.productList()
       ]);
+
+      if (resProds.ok && resProds.data) {
+        _productos = resProds.data;
+      }
+
+      const prod = (_productos || []).find(p => p['IDProd'] === cr['IDProd']) || null;
 
       let clientHtml = '';
       if (resClient.ok && resClient.data) {
@@ -301,8 +329,36 @@ const Creditos = (() => {
         `;
       }
 
+      let prodHtml = '';
+      if (prod) {
+        prodHtml = `
+          <div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <h4 style="color:#166534;margin:0;display:flex;align-items:center;gap:6px">
+                📱 Producto Solicitado: <strong>${prod['MOD_COMERCIAL'] || prod['MODELO'] || prod['IDProd']}</strong>
+              </h4>
+              <span class="badge" style="background:#166534;color:#fff;font-size:0.75rem">${prod['IDProd']}</span>
+            </div>
+            <div class="grid-2" style="gap:10px;font-size:.85rem">
+              <div><div class="text-muted text-sm">Marca y Modelo</div><div class="fw-600">${prod['MARCA'] || ''} ${prod['MODELO'] || ''}</div></div>
+              <div><div class="text-muted text-sm">Número de Serie (NS)</div><div class="fw-600" style="font-family:monospace">${prod['NS'] || '—'}</div></div>
+              <div><div class="text-muted text-sm">Especificaciones</div><div>${prod['RAM'] ? prod['RAM'] + 'GB RAM' : ''} ${prod['ALMACENAMIENTO'] ? '· ' + prod['ALMACENAMIENTO'] + 'GB' : ''} ${prod['COLOR'] ? '· Color: ' + prod['COLOR'] : ''}</div></div>
+              <div><div class="text-muted text-sm">Estatus Actual en Inventario</div><div><span class="badge" style="background:${prod['Estatus'] === 'DISPONIBLE' ? 'var(--cf-success)' : 'var(--cf-warning)'};color:#fff">${prod['Estatus'] || '—'}</span></div></div>
+            </div>
+          </div>
+        `;
+      } else if (cr['IDProd']) {
+        prodHtml = `
+          <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:var(--radius-sm);padding:12px;margin-bottom:14px">
+            <h4 style="color:#92400E;margin-bottom:4px">📱 Producto Solicitado</h4>
+            <div style="font-size:0.85rem"><strong>ID Producto:</strong> ${cr['IDProd']} <span class="text-muted">(Datos no encontrados en catálogo disponible)</span></div>
+          </div>
+        `;
+      }
+
       setHTML('cr-review-body', `
         ${clientHtml}
+        ${prodHtml}
         
         <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
           <h4 style="margin-bottom:8px">Formulario de la Solicitud (${cr['IDCredito']})</h4>
@@ -311,6 +367,8 @@ const Creditos = (() => {
             <div><div class="text-muted text-sm">${cr['Modalidad'] === 'CONTADO_1MES' ? 'Pago Inicial Negociado' : 'Periodo solicitado'}</div><div class="fw-600">${cr['Modalidad'] === 'CONTADO_1MES' ? fmt.currency(cr['Pago_Inicial_Contado'] || 0) : (cr['Periodo'] + ' semanas')}</div></div>
             <div><div class="text-muted text-sm">Celular</div><div class="fw-600">${cr['Celular'] || '—'}</div></div>
             <div><div class="text-muted text-sm">${cr['Modalidad'] === 'CONTADO_1MES' ? 'Precio de Contado' : 'Cuota puntual'}</div><div class="fw-600">${fmt.currency(cr['Modalidad'] === 'CONTADO_1MES' ? (cr['Precio_de_contado'] || 0) : (cr['Pago_puntual'] || 0))}</div></div>
+            <div><div class="text-muted text-sm">${cr['Modalidad'] === 'CONTADO_1MES' ? 'Enganche de Respaldo' : 'Enganche'}</div><div class="fw-600">${fmt.currency(cr['Enganche'] || 0)}</div></div>
+            ${cr['Descuento_Enganche'] ? `<div><div class="text-muted text-sm">Descuento en Enganche</div><div class="fw-600" style="color:var(--cf-success)">-${fmt.currency(cr['Descuento_Enganche'])}</div></div>` : ''}
             
             <div style="grid-column:1/-1;height:1px;background:var(--cf-border);margin:4px 0"></div>
             
@@ -338,7 +396,7 @@ const Creditos = (() => {
       `);
       
     } catch(err) {
-      setHTML('cr-review-body', '<div class="alert alert-danger">Error al cargar la información del cliente.</div>');
+      setHTML('cr-review-body', '<div class="alert alert-danger">Error al cargar la información del cliente o producto.</div>');
     }
   }
 
