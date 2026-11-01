@@ -75,6 +75,7 @@ const API = (() => {
     clientSearch:         (p) => call('client_search',          p),
     clientGet:            (p) => call('client_get',             p),
     clientCreate:         (p) => call('client_create',          p),
+    clientUpdate:         (p) => call('client_update',          p),
     clientUpdateFotos:    (p) => call('client_update_fotos',    p),
     clientCheckDuplicate: (p) => call('client_check_duplicate', p),
 
@@ -82,6 +83,7 @@ const API = (() => {
     creditRequest:          (p) => call('credit_request',           p),
     creditApprove:          (p) => call('credit_approve',           p),
     creditReject:           (p) => call('credit_reject',            p),
+    creditEditarSolicitud:  (p) => call('credit_editar_solicitud',  p),
     creditConfirmarEntrega: (p) => call('credit_confirmar_entrega', p),
     creditCancel:           (p) => call('credit_cancel',            p),
     creditGenerarCalendario:(p) => call('credit_generar_calendario',p),
