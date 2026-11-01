@@ -710,6 +710,12 @@ const Clientes = (() => {
     if (!_wizardData.Nombre_referencia_1 || !_wizardData.Numero_referencia_1) {
       toast('Referencia 1 (nombre y teléfono) es obligatoria.', 'warning'); return;
     }
+    if (!fmt.isValidPhone(_wizardData.Numero_referencia_1)) {
+      toast('El teléfono de la Referencia 1 debe tener exactamente 10 dígitos válidos.', 'warning'); return;
+    }
+    if (_wizardData.Numero_referencia_2 && !fmt.isValidPhone(_wizardData.Numero_referencia_2)) {
+      toast('El teléfono de la Referencia 2 debe tener exactamente 10 dígitos válidos.', 'warning'); return;
+    }
     showLoading(true);
     try {
       const res = await API.clientCreate({
@@ -851,5 +857,138 @@ const Clientes = (() => {
     return c === 'H' ? 'HOMBRE' : c === 'M' ? 'MUJER' : '';
   }
 
-  return { render, init, _verCalendario };
+  // ── Modal para Editar Cliente (Abierto desde Clientes o Créditos) ─
+  function modalEditarCliente(idCliente, onSavedCallback = null) {
+    if (!idCliente) return;
+    const modal = $('modal-editar-cliente');
+    const body  = $('modal-edit-cl-body');
+    if (!modal || !body) return;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    setHTML('modal-edit-cl-body', '<div class="table-empty">Cargando datos del cliente…</div>');
+
+    on('modal-edit-cl-close', 'click', () => {
+      modal.classList.add('hidden');
+    });
+
+    API.clientGet({ id: idCliente }).then(res => {
+      if (!res.ok || !res.data) {
+        setHTML('modal-edit-cl-body', `<div class="alert alert-danger">${res.message || 'Cliente no encontrado'}</div>`);
+        return;
+      }
+      const cl = res.data;
+      setHTML('modal-edit-cl-body', `
+        <form id="form-edit-cl" autocomplete="off" onsubmit="return false;">
+          <div style="font-size:0.8rem;color:var(--cf-muted);margin-bottom:12px">
+            ID: <strong>${cl['IDCliente']}</strong> · Registrado: ${fmt.date(cl['Marca_temporal'])}
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre(s) *</label>
+              <input type="text" id="edit-cl-nombres" value="${cl['Nombre_s'] || ''}" required>
+            </div>
+            <div class="form-group">
+              <label>Apellido Paterno *</label>
+              <input type="text" id="edit-cl-apat" value="${cl['Apellido_paterno'] || ''}" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Apellido Materno</label>
+              <input type="text" id="edit-cl-amat" value="${cl['Apellido_materno'] || ''}">
+            </div>
+            <div class="form-group">
+              <label>Número INE (IDMEX)</label>
+              <input type="text" id="edit-cl-idmex" value="${cl['IDMEX'] || ''}" maxlength="18">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>CURP * (18 caracteres)</label>
+            <input type="text" id="edit-cl-curp" value="${cl['CURP'] || ''}" maxlength="18" style="text-transform:uppercase" required>
+          </div>
+
+          <div class="form-group">
+            <label>Dirección completa *</label>
+            <input type="text" id="edit-cl-direccion" value="${cl['Direccion'] || ''}" placeholder="Calle, número, colonia, ciudad…" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>A qué se dedica (Ocupación)</label>
+              <input type="text" id="edit-cl-ocup" value="${cl['A_que_se_dedica'] || ''}">
+            </div>
+            <div class="form-group">
+              <label>Ingreso semanal ($)</label>
+              <input type="number" id="edit-cl-ingreso" value="${cl['Ingreso_semanal'] || 0}" min="0" step="0.01">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Gastos semanales ($)</label>
+            <input type="number" id="edit-cl-gastos" value="${cl['Gastos_semanales'] || 0}" min="0" step="0.01">
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-edit-cl" style="flex:1">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btn-save-edit-cl" style="flex:2">💾 Guardar Cambios</button>
+          </div>
+        </form>
+      `);
+
+      on('btn-cancel-edit-cl', 'click', () => {
+        modal.classList.add('hidden');
+      });
+
+      on('btn-save-edit-cl', 'click', async () => {
+        const nom = $('edit-cl-nombres')?.value.trim();
+        const ap  = $('edit-cl-apat')?.value.trim();
+        const curp= $('edit-cl-curp')?.value.trim().toUpperCase();
+        const dir = $('edit-cl-direccion')?.value.trim();
+
+        if (!nom || !ap) { toast('Nombre y Apellido paterno son obligatorios.', 'warning'); return; }
+        if (!curp || curp.length !== 18) { toast('CURP debe tener exactamente 18 caracteres.', 'warning'); return; }
+        if (!dir) { toast('Dirección es obligatoria.', 'warning'); return; }
+
+        showLoading(true);
+        try {
+          const updatePayload = {
+            IDCliente:        cl['IDCliente'],
+            Nombre_s:         nom,
+            Apellido_paterno: ap,
+            Apellido_materno: $('edit-cl-amat')?.value.trim() || '',
+            IDMEX:            $('edit-cl-idmex')?.value.trim() || '',
+            CURP:             curp,
+            Direccion:        dir,
+            A_que_se_dedica:  $('edit-cl-ocup')?.value.trim() || '',
+            Ingreso_semanal:  parseFloat($('edit-cl-ingreso')?.value) || 0,
+            Gastos_semanales: parseFloat($('edit-cl-gastos')?.value) || 0,
+          };
+
+          const upRes = await API.clientUpdate(updatePayload);
+          if (upRes.ok) {
+            toast('✔ Datos del cliente actualizados.', 'success');
+            modal.classList.add('hidden');
+            if (typeof onSavedCallback === 'function') {
+              onSavedCallback(upRes.data || updatePayload);
+            }
+          } else {
+            toast(upRes.message || 'Error al actualizar cliente.', 'error');
+          }
+        } catch(_) {
+          toast('Error de conexión al guardar cambios del cliente.', 'error');
+        } finally {
+          showLoading(false);
+        }
+      });
+
+    }).catch(err => {
+      setHTML('modal-edit-cl-body', `<div class="alert alert-danger">Error: ${err.message}</div>`);
+    });
+  }
+
+  return { render, init, _verCalendario, modalEditarCliente };
 })();
