@@ -1,5 +1,5 @@
-// CredyFast — Service Worker para modo PWA / App Móvil
-const CACHE_NAME = 'credyfast-v1';
+// SIGOC — Service Worker para modo PWA / App Móvil
+const CACHE_NAME = 'sigoc-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
