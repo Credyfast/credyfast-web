@@ -22,6 +22,16 @@ const fmt = {
   semana(n) { return `Semana ${n}`; },
   phone(s)  { return s || '—'; },
   id(s)     { return s || '—'; },
+  isValidPhone(val) {
+    if (!val) return false;
+    const clean = String(val).replace(/\D/g, '');
+    if (clean.length !== 10) return false;
+    const num = parseInt(clean, 10);
+    return num >= 1111111111 && num <= 9999999999;
+  },
+  cleanPhone(val) {
+    return String(val || '').replace(/\D/g, '').substring(0, 10);
+  }
 };
 
 // ── Toast ─────────────────────────────────────────────────
@@ -156,3 +166,20 @@ document.addEventListener('input', (e) => {
     try { el.setSelectionRange(start, end); } catch(_) {}
   }
 });
+
+// ── Máscara y filtro estricto de teléfonos a 10 dígitos numéricos ─
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!el || el.tagName !== 'INPUT') return;
+  if (el.type === 'tel' || el.classList.contains('input-tel') || el.dataset.phone !== undefined) {
+    const start = el.selectionStart;
+    const origLen = el.value.length;
+    const clean = el.value.replace(/\D/g, '').substring(0, 10);
+    if (el.value !== clean) {
+      el.value = clean;
+      const diff = origLen - clean.length;
+      try { el.setSelectionRange(Math.max(0, start - diff), Math.max(0, start - diff)); } catch(_) {}
+    }
+  }
+});
+
