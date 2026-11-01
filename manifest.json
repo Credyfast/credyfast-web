@@ -1,7 +1,7 @@
 {
-  "name": "CredyFast — Sistema de Créditos",
-  "short_name": "CredyFast",
-  "description": "Sistema de gestión de créditos, caja y cobranza CredyFast.",
+  "name": "SIGOC",
+  "short_name": "SIGOC",
+  "description": "SIGOC — Sistema de Gestión Operativa y Créditos",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,13 +11,13 @@
   "categories": ["business", "finance", "productivity"],
   "icons": [
     {
-      "src": "assets/CFMONO.png",
+      "src": "assets/SIGOC1.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/CFMONO.png",
+      "src": "assets/SIGOC1.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
