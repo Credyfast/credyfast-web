@@ -106,6 +106,19 @@ const Creditos = (() => {
           <div class="card-body" id="entrega-body"></div>
         </div>
       </div>
+
+      <!-- Modal: Corregir Solicitud Rechazada (Límite 2 horas) -->
+      <div id="modal-editar-solicitud" class="hidden" style="
+        position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:220;
+        display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)">
+        <div class="card" style="width:100%;max-width:600px;max-height:92vh;overflow-y:auto">
+          <div class="card-header">
+            <h3 id="modal-edit-sol-title">✏️ Corregir Solicitud de Crédito</h3>
+            <button class="btn btn-ghost btn-sm" id="modal-edit-sol-close">✕</button>
+          </div>
+          <div class="card-body" id="modal-edit-sol-body"></div>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -121,6 +134,7 @@ const Creditos = (() => {
     on('modal-cr-review-close', 'click', () => $('modal-cr-review').classList.add('hidden'));
     on('modal-cr-action-close', 'click', () => $('modal-cr-action').classList.add('hidden'));
     on('modal-entrega-close', 'click', () => $('modal-entrega').classList.add('hidden'));
+    on('modal-edit-sol-close', 'click', () => $('modal-editar-solicitud').classList.add('hidden'));
 
     if (esSup) _loadPendientesCount();
     if (esCaj) _loadEntregasPendientes();
@@ -197,6 +211,25 @@ const Creditos = (() => {
             }
             if (esSup) {
               btns.push(`<button class="btn btn-outline btn-sm" style="color:var(--cf-danger);border-color:var(--cf-danger);margin-left:4px" onclick="Creditos._cancelarCredito('${r['IDCredito']}','${(r['Nombre_cliente'] || '').replace(/'/g, "\\'")}')">✖ Cancelar</button>`);
+            }
+          } else if (r['ESTATUS'] === 'RECHAZADO') {
+            // Verificar si está dentro de la ventana de 2 horas
+            let dentroVentana = true;
+            let minutosRestantes = 120;
+            if (r['Fecha_Rechazo']) {
+              const dRechazo = new Date(String(r['Fecha_Rechazo']).replace(' ', 'T'));
+              const ahora = new Date();
+              const diffMin = Math.floor((ahora.getTime() - dRechazo.getTime()) / (1000 * 60));
+              if (diffMin > 120) {
+                dentroVentana = false;
+              } else {
+                minutosRestantes = 120 - diffMin;
+              }
+            }
+            if (dentroVentana) {
+              btns.push(`<button class="btn btn-primary btn-sm" onclick="Creditos._abrirEditarSolicitud('${r['IDCredito']}')" title="Corregir y reenviar solicitud (${minutosRestantes} min restantes)">✏️ Corregir (${minutosRestantes}m)</button>`);
+            } else {
+              btns.push(`<span class="text-muted" style="font-size:0.75rem" title="Límite de 2 horas expirado">⏳ Tiempo expirado</span>`);
             }
           }
           return btns.join('') || '—';
@@ -1193,10 +1226,25 @@ const Creditos = (() => {
       if (res.ok && res.data) {
         const cl = res.data;
         const fotosOk = cl['INE_Frente_ID'] && cl['INE_Reverso_ID'] && cl['Comprobante_ID'];
-        setHTML('cr-cliente-info',
-          `<span style="color:var(--cf-accent)">✔ ${cl['Nombre_completo']}</span>` +
-          (fotosOk ? '' : ' &nbsp;<span style="color:var(--cf-danger)">⚠ Sin documentos completos</span>')
-        );
+        setHTML('cr-cliente-info', `
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+            <span style="color:var(--cf-accent);font-weight:600">✔ ${cl['Nombre_completo']}</span>
+            ${fotosOk ? '' : '<span style="color:var(--cf-danger);font-size:0.75rem">⚠ Sin documentos completos</span>'}
+            <button type="button" class="btn btn-outline btn-sm" id="btn-edit-current-cl" style="padding:2px 8px;font-size:0.75rem;line-height:1.2" title="Editar datos del cliente">
+              ✏️ Modificar Cliente
+            </button>
+          </div>
+        `);
+        const btnEdit = $('btn-edit-current-cl');
+        if (btnEdit) {
+          btnEdit.addEventListener('click', () => {
+            if (window.Clientes && typeof Clientes.modalEditarCliente === 'function') {
+              Clientes.modalEditarCliente(cl['IDCliente'], (updatedCl) => {
+                _verificarCliente();
+              });
+            }
+          });
+        }
       } else {
         setHTML('cr-cliente-info', '<span style="color:var(--cf-danger)">✖ Cliente no encontrado.</span>');
       }
@@ -1217,9 +1265,19 @@ const Creditos = (() => {
     if (!IDCliente || !IDProd) { toast('Cliente y producto son obligatorios.', 'warning'); return; }
     if (!_periodoSel) { toast('Selecciona un periodo.', 'warning'); return; }
     if (!Celular) { toast('Celular del cliente es obligatorio.', 'warning'); return; }
+    if (!fmt.isValidPhone(Celular)) {
+      toast('El celular del cliente debe tener exactamente 10 dígitos válidos.', 'warning'); return;
+    }
     const ref1n = $('cr-ref1n')?.value.trim();
     const ref1t = $('cr-ref1t')?.value.trim();
     if (!ref1n || !ref1t) { toast('Referencia 1 (nombre y teléfono) es obligatoria.', 'warning'); return; }
+    if (!fmt.isValidPhone(ref1t)) {
+      toast('El teléfono de la Referencia 1 debe tener exactamente 10 dígitos válidos.', 'warning'); return;
+    }
+    const ref2t = $('cr-ref2t')?.value.trim();
+    if (ref2t && !fmt.isValidPhone(ref2t)) {
+      toast('El teléfono de la Referencia 2 debe tener exactamente 10 dígitos válidos.', 'warning'); return;
+    }
 
     const codigoDescuento = _creditoDescuentoActivo ? _creditoDescuentoActivo.codigo : '';
     const pagoInicial = isContado1Mes ? (parseFloat($('cr-c1m-pago-inicial')?.value) || 0) : 0;
@@ -1280,10 +1338,199 @@ const Creditos = (() => {
       }
     } catch (_) {
       toast('Error de conexión al cancelar crédito.', 'error');
-    } finally {
-      showLoading(false);
+  // ── Corregir / Editar Solicitud Rechazada (Límite 2 horas) ─
+  async function _abrirEditarSolicitud(IDCredito) {
+    const cr = _creditosActuales.find(c => c['IDCredito'] === IDCredito);
+    if (!cr) return;
+
+    // Validar ventana de 2 horas
+    if (cr['Fecha_Rechazo']) {
+      const dRechazo = new Date(String(cr['Fecha_Rechazo']).replace(' ', 'T'));
+      const ahora = new Date();
+      const diffMin = Math.floor((ahora.getTime() - dRechazo.getTime()) / (1000 * 60));
+      if (diffMin > 120) {
+        toast(`El límite de 2 horas para corregir esta solicitud ya expiró (${Math.floor(diffMin / 60)}h transcurridas). Debes crear una nueva solicitud.`, 'warning', 6000);
+        return;
+      }
     }
+
+    const modal = $('modal-editar-solicitud');
+    const body  = $('modal-edit-sol-body');
+    if (!modal || !body) return;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    // Asegurar productos cargados
+    if (!_productos.length) {
+      try {
+        const resP = await API.productList();
+        if (resP.ok) _productos = resP.data || [];
+      } catch(_) {}
+    }
+
+    const prodActual = _productos.find(p => p['IDProd'] === cr['IDProd']);
+    const motivoRechazo = String(cr['NOTAS'] || '').includes('RECHAZADO:')
+      ? String(cr['NOTAS']).split('RECHAZADO:').pop().trim()
+      : 'Sin motivo especificado';
+
+    body.innerHTML = `
+      <form id="form-edit-sol" autocomplete="off" onsubmit="return false;">
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:var(--radius-sm);padding:10px;margin-bottom:14px;font-size:0.83rem">
+          <div style="font-weight:700;color:var(--cf-danger);margin-bottom:3px">Motivo de Rechazo:</div>
+          <div><em>${motivoRechazo}</em></div>
+          <div style="font-size:0.75rem;color:var(--cf-muted);margin-top:4px">Crédito ${cr['IDCredito']} · Cliente: <strong>${cr['Nombre_cliente']}</strong></div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Producto *</label>
+            <select id="edit-sol-producto">
+              ${_productos.map(p => `
+                <option value="${p['IDProd']}" ${p['IDProd'] === cr['IDProd'] ? 'selected' : ''}>
+                  ${p['IDProd']} - ${p['MOD_COMERCIAL'] || p['MODELO']} (${p['MARCA'] || ''})
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Periodo (Semanas) *</label>
+            <select id="edit-sol-periodo">
+              <option value="13" ${String(cr['Periodo']) === '13' ? 'selected' : ''}>13 semanas</option>
+              <option value="26" ${String(cr['Periodo']) === '26' ? 'selected' : ''}>26 semanas</option>
+              <option value="39" ${String(cr['Periodo']) === '39' ? 'selected' : ''}>39 semanas</option>
+              <option value="52" ${String(cr['Periodo']) === '52' ? 'selected' : ''}>52 semanas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Celular del cliente * (10 dígitos)</label>
+            <input type="tel" id="edit-sol-celular" value="${fmt.cleanPhone(cr['Celular'])}" placeholder="10 dígitos" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Referencia 1 — Nombre *</label>
+            <input type="text" id="edit-sol-ref1n" value="${cr['Nombre_referencia_1'] || ''}" required>
+          </div>
+          <div class="form-group">
+            <label>Referencia 1 — Teléfono * (10 dígitos)</label>
+            <input type="tel" id="edit-sol-ref1t" value="${fmt.cleanPhone(cr['Numero_referencia_1'])}" placeholder="10 dígitos" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Referencia 2 — Nombre</label>
+            <input type="text" id="edit-sol-ref2n" value="${cr['Nombre_referencia_2'] || ''}">
+          </div>
+          <div class="form-group">
+            <label>Referencia 2 — Teléfono (10 dígitos)</label>
+            <input type="tel" id="edit-sol-ref2t" value="${fmt.cleanPhone(cr['Numero_referencia_2'])}" placeholder="10 dígitos">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Referencias de domicilio</label>
+          <input type="text" id="edit-sol-ref-dom" value="${cr['Referencias_domicilio'] || ''}">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dependientes económicos</label>
+            <select id="edit-sol-dependientes">
+              ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `
+                <option value="${n}" ${String(cr['Dependientes_economicos']) === String(n) ? 'selected' : ''}>${n}</option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tipo de vivienda</label>
+            <select id="edit-sol-vivienda">
+              <option value="Propia" ${cr['Tipo_vivienda'] === 'Propia' ? 'selected' : ''}>Propia</option>
+              <option value="Rentada" ${cr['Tipo_vivienda'] === 'Rentada' ? 'selected' : ''}>Rentada</option>
+              <option value="Familiar" ${cr['Tipo_vivienda'] === 'Familiar' ? 'selected' : ''}>Familiar</option>
+              <option value="Otro" ${cr['Tipo_vivienda'] === 'Otro' ? 'selected' : ''}>Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nota sobre la corrección realizada</label>
+          <input type="text" id="edit-sol-nota" placeholder="Ej: Se corrigió el teléfono de la referencia 1…">
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-edit-sol" style="flex:1">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btn-save-edit-sol" style="flex:2">✔ Reenviar a Revisión</button>
+        </div>
+      </form>
+    `;
+
+    on('btn-cancel-edit-sol', 'click', () => {
+      modal.classList.add('hidden');
+    });
+
+    on('btn-save-edit-sol', 'click', async () => {
+      const cel   = $('edit-sol-celular')?.value.trim();
+      const ref1n = $('edit-sol-ref1n')?.value.trim();
+      const ref1t = $('edit-sol-ref1t')?.value.trim();
+      const ref2t = $('edit-sol-ref2t')?.value.trim();
+      const prodId= $('edit-sol-producto')?.value;
+      const per   = $('edit-sol-periodo')?.value;
+
+      if (!cel || !fmt.isValidPhone(cel)) {
+        toast('El celular del cliente debe tener exactamente 10 dígitos válidos.', 'warning');
+        return;
+      }
+      if (!ref1n || !ref1t) {
+        toast('Referencia 1 (nombre y teléfono) es obligatoria.', 'warning');
+        return;
+      }
+      if (!fmt.isValidPhone(ref1t)) {
+        toast('El teléfono de la Referencia 1 debe tener exactamente 10 dígitos válidos.', 'warning');
+        return;
+      }
+      if (ref2t && !fmt.isValidPhone(ref2t)) {
+        toast('El teléfono de la Referencia 2 debe tener exactamente 10 dígitos válidos.', 'warning');
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const res = await API.creditEditarSolicitud({
+          IDCredito,
+          IDProd:                 prodId,
+          Periodo:                per,
+          Celular:                cel,
+          Nombre_referencia_1:    ref1n,
+          Numero_referencia_1:    ref1t,
+          Nombre_referencia_2:    $('edit-sol-ref2n')?.value.trim() || '',
+          Numero_referencia_2:    ref2t || '',
+          Referencias_domicilio:  $('edit-sol-ref-dom')?.value.trim() || '',
+          Dependientes_economicos:$('edit-sol-dependientes')?.value || '0',
+          Tipo_vivienda:          $('edit-sol-vivienda')?.value || '',
+          NOTAS_EDICION:          $('edit-sol-nota')?.value.trim() || '',
+        });
+
+        if (res.ok) {
+          toast(res.message || 'Solicitud corregida y reenviada exitosamente.', 'success', 5000);
+          modal.classList.add('hidden');
+          _loadList();
+          if (typeof _loadPendientesCount === 'function') _loadPendientesCount();
+        } else {
+          toast(res.message || 'Error al corregir solicitud.', 'error');
+        }
+      } catch(_) {
+        toast('Error de conexión al guardar corrección.', 'error');
+      } finally {
+        showLoading(false);
+      }
+    });
   }
 
-  return { render, init, initRequestFor, _accion, _revisarInfo, _confirmarEntrega, _cancelarCredito, _verificarClientePublic };
+  return { render, init, initRequestFor, _accion, _revisarInfo, _confirmarEntrega, _cancelarCredito, _verificarClientePublic, _abrirEditarSolicitud };
 })();
