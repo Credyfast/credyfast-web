@@ -1338,6 +1338,11 @@ const Creditos = (() => {
       }
     } catch (_) {
       toast('Error de conexión al cancelar crédito.', 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
   // ── Corregir / Editar Solicitud Rechazada (Límite 2 horas) ─
   async function _abrirEditarSolicitud(IDCredito) {
     const cr = _creditosActuales.find(c => c['IDCredito'] === IDCredito);
