@@ -532,26 +532,40 @@ const Creditos = (() => {
       printWin.document.close();
 
       try {
-        // 1. Generar o regenerar el calendario con fecha de HOY
+        // Cargas en paralelo de contrato base, productos y cliente
+        const textPromise = fetch('assets/CONTRATO CASME.txt').then(r => r.text());
+        const prodPromise = (_productos && _productos.length > 0)
+          ? Promise.resolve({ ok: true, data: _productos })
+          : API.productList().then(res => {
+              if (res && res.ok && Array.isArray(res.data)) _productos = res.data;
+              return res;
+            });
+        const clientPromise = (cr && cr['IDCliente'])
+          ? API.clientGet({ id: cr['IDCliente'] })
+          : null;
+
+        // 1. Asegurar calendario en backend (candado evita duplicar si ya existe)
         const resCal = await API.creditGenerarCalendario({ IDCredito });
         if (!resCal.ok) throw new Error(resCal.message || 'No se pudo generar el calendario');
 
-        const resTxt = await fetch('assets/CONTRATO CASME.txt');
-        let text = await resTxt.text();
-
+        // 2. Cargar calendario y resolver recursos en paralelo
         const resSched = await API.pagoSchedule({ IDCredito });
         if (!resSched.ok) throw new Error('No se pudo cargar el crédito');
-        const cr = resSched.credito;
-        const pagos = resSched.pagos;
+        const crData = resSched.credito || cr || {};
+        const pagos = resSched.pagos || [];
 
-        const resCl = await API.clientGet({ id: cr['IDCliente'] });
-        const cl = resCl.ok ? resCl.data : {};
+        const [resCl, resProd, textTemplate] = await Promise.all([
+          clientPromise || API.clientGet({ id: crData['IDCliente'] }),
+          prodPromise,
+          textPromise
+        ]);
 
-        const resProd = await API.productList();
-        const prod = (resProd.ok ? resProd.data : []).find(p => p.IDProd === cr.IDProd) || {};
+        const cl = (resCl && resCl.ok) ? resCl.data : {};
+        const prod = ((resProd && resProd.ok ? resProd.data : [])).find(p => p.IDProd === crData.IDProd) || {};
 
-        text = text.replace(/\[\[NOMBRE_COMPLETO_CLIENTE\]\]/g, cl.Nombre_completo || cr.Nombre_cliente || '');
-        text = text.replace(/\[\[TELEFONO_CLIENTE\]\]/g, cr.Celular || '');
+        let text = textTemplate;
+        text = text.replace(/\[\[NOMBRE_COMPLETO_CLIENTE\]\]/g, cl.Nombre_completo || crData.Nombre_cliente || '');
+        text = text.replace(/\[\[TELEFONO_CLIENTE\]\]/g, crData.Celular || cl.Telefono || '');
         text = text.replace(/\[\[CURP_CLIENTE\]\]/g, cl.CURP || '');
         text = text.replace(/\[\[INE_CLIENTE\]\]/g, cl.IDMEX || ''); 
         text = text.replace(/\[\[TIPO_PRODUCTO\]\]/g, prod.Tipo || '');
@@ -561,7 +575,7 @@ const Creditos = (() => {
 
         let calHtml = `
           <h2 style="text-align:center; font-size:14pt; margin-bottom:10px;">ANEXO B — CALENDARIO DE PAGOS</h2>
-          <p style="font-size:10pt; margin-top:0;"><strong>Crédito:</strong> ${IDCredito} <br> <strong>Cliente:</strong> ${cl.Nombre_completo || cr.Nombre_cliente}</p>
+          <p style="font-size:10pt; margin-top:0;"><strong>Crédito:</strong> ${IDCredito} <br> <strong>Cliente:</strong> ${cl.Nombre_completo || crData.Nombre_cliente}</p>
           <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:9pt;" border="1" cellpadding="2">
             <thead>
               <tr style="background:#eee">
@@ -602,7 +616,7 @@ const Creditos = (() => {
             ${calHtml}
             <div style="margin-top: 40px;">
               <p>Firma de conformidad:</p><br><br>
-              <p>_____________________________________<br>${cl.Nombre_completo || cr.Nombre_cliente}</p>
+              <p>_____________________________________<br>${cl.Nombre_completo || crData.Nombre_cliente}</p>
             </div>
           </body></html>
         `);
