@@ -1,5 +1,5 @@
 // SIGOC — Service Worker para modo PWA / App Móvil
-const CACHE_NAME = 'sigoc-v5';
+const CACHE_NAME = 'sigoc-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',
