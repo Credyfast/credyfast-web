@@ -10,6 +10,19 @@ const POS = (() => {
   let _pagosData = [];
   let _lastTicketPrintUrl = null;
 
+  function _calcDiasRestantesLocal(fechaLim, fallback) {
+    if (fallback != null && !isNaN(fallback)) return fallback;
+    if (!fechaLim) return 0;
+    const raw = String(fechaLim).substring(0, 10);
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const target = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 23, 59, 59);
+      const diff = target.getTime() - Date.now();
+      if (!isNaN(diff)) return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }
+    return 0;
+  }
+
   function render() {
     return `
     <div class="pos-layout">
@@ -309,8 +322,9 @@ const POS = (() => {
           ? `<span class="badge badge-danger" style="margin-left:6px">${atrasadas} atrasada${atrasadas > 1 ? 's' : ''}</span>`
           : `<span class="badge badge-success" style="margin-left:6px">Al corriente</span>`);
       const proxFecha = cr['proximoPago'] ? cr['proximoPago']['Fecha_programada'] || '' : '';
+      const diasRest = _calcDiasRestantesLocal(cr['infoContado1Mes']?.fechaLimite, cr['infoContado1Mes']?.diasRestantes);
       const subInfo = esC1M && cr['infoContado1Mes']
-        ? `Saldo contado: ${fmt.currency(cr['infoContado1Mes'].saldoPendiente)} · Quedan ${cr['infoContado1Mes'].diasRestantes} días`
+        ? `Saldo contado: ${fmt.currency(cr['infoContado1Mes'].saldoPendiente)} · Quedan ${diasRest} días`
         : `Progreso: ${completos}/${total} pagos${proxFecha ? ' · Próximo: ' + proxFecha : ''}`;
       return `
         <div class="list-item" style="cursor:pointer"
@@ -419,7 +433,7 @@ const POS = (() => {
               🌟 PROMOCIÓN: VENTA CONTADO 1 MES
             </span>
             <span class="badge" style="background:#059669; color:#fff; font-size:0.75rem; font-weight:700; padding:3px 8px;">
-              ⏳ Quedan ${info.diasRestantes} días (Vence: ${fmt.date(info.fechaLimite)})
+              ⏳ Quedan ${_calcDiasRestantesLocal(info.fechaLimite, info.diasRestantes)} días (Vence: ${fmt.date(info.fechaLimite)})
             </span>
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; font-size:0.85rem; margin-top:8px; border-top:1px dashed rgba(16,185,129,0.3); padding-top:8px;">
@@ -506,8 +520,9 @@ const POS = (() => {
     if (info && info.esContado1Mes) {
       if (opcAdic) opcAdic.classList.add('hidden');
       const saldo = info.saldoPendiente;
+      const diasRest = _calcDiasRestantesLocal(info.fechaLimite, info.diasRestantes);
       setHTML('cobro-monto-sugerido', fmt.currency(saldo) + ' (Liquidación 100%)');
-      setHTML('cobro-semana-info', `🌟 <strong>Abono libre a precio de contado</strong> (Quedan ${info.diasRestantes} días)`);
+      setHTML('cobro-semana-info', `🌟 <strong>Abono libre a precio de contado</strong> (Quedan ${diasRest} días)`);
       const input = $('cobro-monto-input');
       if (input) { input.value = saldo > 0 ? saldo.toFixed(2) : ''; setTimeout(() => input.focus(), 50); }
       return;
@@ -599,7 +614,12 @@ const POS = (() => {
         btn.disabled = false; btn.textContent = '✔ Registrar Pago'; // Solo re-habilitar en error
         return;
       }
-      _showTicket(res, monto);
+      _showTicket({
+        ...res,
+        IDCredito: res.IDCredito || _creditoData?.['IDCredito'],
+        tipoOperacion: res.esContado1Mes ? 'CONTADO_1MES' : 'PAGO',
+        montoRecibido: monto,
+      }, monto);
       const metodoLabel = tipoPago === 'Transferencia_o_deposito' ? '🏦 Transferencia/Depósito' : '💵 Efectivo';
       toast('✔ Pago registrado — ' + metodoLabel, 'success');
       // Botón permanece deshabilitado: el cobro-form-area se oculta
@@ -812,7 +832,12 @@ const POS = (() => {
 
     // Generar Ticket (Respaldo Drive + HTML Térmico)
     try {
-      const tktRes = await API.ticketGenerate(res);
+      const ticketPayload = {
+        ...res,
+        IDCredito: res.IDCredito || _creditoData?.['IDCredito'],
+        tipoOperacion: res.esContado1Mes ? 'CONTADO_1MES' : (res.tipoOperacion || 'PAGO'),
+      };
+      const tktRes = await API.ticketGenerate(ticketPayload);
       if (tktRes.ok) {
         // Guardar printUrl para posible reimpresión
         _lastTicketPrintUrl = tktRes.printUrl || null;
