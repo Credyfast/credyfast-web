@@ -121,15 +121,49 @@ const Caja = (() => {
 
       <!-- Modal: Venta de Contado -->
       <div id="modal-contado" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px">
-        <div class="card" style="width:100%;max-width:440px">
+        <div class="card" style="width:100%;max-width:540px">
           <div class="card-header">
             <h3>Venta de Contado</h3>
             <button class="btn btn-ghost btn-sm" id="modal-contado-close">✕</button>
           </div>
           <div class="card-body" id="contado-form-body">
+            <!-- Barra de Filtros de Producto -->
+            <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span style="font-size:0.75rem;font-weight:700;color:var(--cf-text-secondary);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:5px">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filtros de Búsqueda
+                </span>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-contado-limpiar-filtros" style="font-size:0.72rem;padding:2px 8px;height:auto">
+                  ✕ Limpiar filtros
+                </button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div>
+                  <label style="font-size:0.72rem;font-weight:600;color:var(--cf-muted);margin-bottom:2px;display:block">ID Producto</label>
+                  <input type="text" id="contado-filtro-id" placeholder="Ej: IDP00038..." class="input-sm" style="width:100%;font-size:0.8rem">
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;font-weight:600;color:var(--cf-muted);margin-bottom:2px;display:block">Tipo</label>
+                  <select id="contado-filtro-tipo" class="input-sm" style="width:100%;font-size:0.8rem;padding:4px 8px">
+                    <option value="">-- Todos los tipos --</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;font-weight:600;color:var(--cf-muted);margin-bottom:2px;display:block">Marca</label>
+                  <input type="text" id="contado-filtro-marca" placeholder="Ej: Samsung..." class="input-sm" style="width:100%;font-size:0.8rem">
+                </div>
+                <div>
+                  <label style="font-size:0.72rem;font-weight:600;color:var(--cf-muted);margin-bottom:2px;display:block">Modelo Comercial</label>
+                  <input type="text" id="contado-filtro-modelo" placeholder="Ej: Galaxy A54..." class="input-sm" style="width:100%;font-size:0.8rem">
+                </div>
+              </div>
+              <div id="contado-filtro-conteo" style="font-size:0.72rem;color:var(--cf-muted);margin-top:6px;text-align:right"></div>
+            </div>
+
             <div class="form-group">
               <label>Producto *</label>
-              <select id="contado-producto"><option value="">-- Selecciona un producto --</option></select>
+              <select id="contado-producto" style="font-size:0.85rem"><option value="">-- Selecciona un producto --</option></select>
             </div>
             <div id="contado-precio-info" class="hidden" style="background:var(--cf-bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:.87rem"></div>
 
@@ -322,6 +356,60 @@ const Caja = (() => {
   let _contadoEventsBound = false;
   let _contadoDescuentoActivo = null;
 
+  function _renderContadoProductosSelect(lista = null) {
+    const items = lista !== null ? lista : _productos;
+    const sel = $('contado-producto');
+    const conteo = $('contado-filtro-conteo');
+    if (!sel) return;
+
+    const valorPrevio = sel.value;
+
+    let html = `<option value="">-- Selecciona un producto (${items.length} disponible${items.length === 1 ? '' : 's'}) --</option>`;
+    items.forEach(p => {
+      const id = p['IDProd'] || '—';
+      const tipo = p['Tipo'] || p['TIPO'] || '—';
+      const marca = p['MARCA'] || '—';
+      const modCom = p['MOD_COMERCIAL'] || p['MODELO'] || '—';
+      const precio = fmt.currency(p['Precio_de_contado']);
+      html += `<option value="${p['IDProd']}">${id} - ${tipo} - ${marca} - ${modCom} · ${precio}</option>`;
+    });
+
+    sel.innerHTML = html;
+
+    if (conteo) {
+      conteo.textContent = `Mostrando ${items.length} de ${_productos.length} productos`;
+    }
+
+    if (valorPrevio && items.some(p => p['IDProd'] === valorPrevio)) {
+      sel.value = valorPrevio;
+    } else if (items.length === 1) {
+      sel.value = items[0]['IDProd'];
+    } else {
+      sel.value = '';
+    }
+
+    _actualizarPrecioContadoDisplay();
+  }
+
+  function _aplicarFiltrosContado() {
+    const fId = ($('contado-filtro-id')?.value || '').trim().toLowerCase();
+    const fTipo = ($('contado-filtro-tipo')?.value || '').trim().toLowerCase();
+    const fMarca = ($('contado-filtro-marca')?.value || '').trim().toLowerCase();
+    const fModelo = ($('contado-filtro-modelo')?.value || '').trim().toLowerCase();
+
+    const filtrados = _productos.filter(p => {
+      if (fId && !String(p['IDProd'] || '').toLowerCase().includes(fId)) return false;
+      if (fTipo && String(p['Tipo'] || p['TIPO'] || '').trim().toLowerCase() !== fTipo) return false;
+      if (fMarca && !String(p['MARCA'] || '').toLowerCase().includes(fMarca)) return false;
+      const modCom = String(p['MOD_COMERCIAL'] || '').toLowerCase();
+      const modelo = String(p['MODELO'] || '').toLowerCase();
+      if (fModelo && !modCom.includes(fModelo) && !modelo.includes(fModelo)) return false;
+      return true;
+    });
+
+    _renderContadoProductosSelect(filtrados);
+  }
+
   function _actualizarPrecioContadoDisplay() {
     const IDProd = $('contado-producto')?.value;
     const prod = _productos.find(p => p['IDProd'] === IDProd);
@@ -386,6 +474,23 @@ const Caja = (() => {
   function _initContadoEvents() {
     if (_contadoEventsBound) return;
     _contadoEventsBound = true;
+
+    // Filtros de búsqueda para venta de contado
+    ['contado-filtro-id', 'contado-filtro-marca', 'contado-filtro-modelo'].forEach(id => {
+      on(id, 'input', _aplicarFiltrosContado);
+    });
+    on('contado-filtro-tipo', 'change', _aplicarFiltrosContado);
+    on('btn-contado-limpiar-filtros', 'click', () => {
+      const fId = $('contado-filtro-id');
+      const fTipo = $('contado-filtro-tipo');
+      const fMarca = $('contado-filtro-marca');
+      const fModelo = $('contado-filtro-modelo');
+      if (fId) fId.value = '';
+      if (fTipo) fTipo.value = '';
+      if (fMarca) fMarca.value = '';
+      if (fModelo) fModelo.value = '';
+      _renderContadoProductosSelect(_productos);
+    });
 
     // Cambio de selección de producto
     on('contado-producto', 'change', () => {
@@ -659,6 +764,16 @@ const Caja = (() => {
       }
     }
 
+    // Resetear filtros de búsqueda
+    const fId = $('contado-filtro-id');
+    const fTipo = $('contado-filtro-tipo');
+    const fMarca = $('contado-filtro-marca');
+    const fModelo = $('contado-filtro-modelo');
+    if (fId) fId.value = '';
+    if (fTipo) fTipo.value = '';
+    if (fMarca) fMarca.value = '';
+    if (fModelo) fModelo.value = '';
+
     // Cargar productos disponibles
     if (!_productos.length) {
       try {
@@ -666,11 +781,15 @@ const Caja = (() => {
         if (res.ok) _productos = (res.data||[]).filter(p => p['Estatus']==='DISPONIBLE');
       } catch(_) {}
     }
-    const sel = $('contado-producto');
-    if (sel) {
-      sel.innerHTML = '<option value="">-- Selecciona un producto --</option>' +
-        _productos.map(p => `<option value="${p['IDProd']}">${p['MARCA']} ${p['MODELO']} ${p['COLOR'] ? '('+p['COLOR']+')' : ''} - ${fmt.currency(p['Precio_de_contado'])}</option>`).join('');
+
+    // Poblar combo de Tipos con los tipos únicos de productos disponibles
+    if (fTipo) {
+      const tiposUnicos = [...new Set(_productos.map(p => (p['Tipo'] || p['TIPO'] || '').trim()).filter(Boolean))].sort();
+      fTipo.innerHTML = '<option value="">Todos los tipos</option>' +
+        tiposUnicos.map(t => `<option value="${t.toLowerCase()}">${t}</option>`).join('');
     }
+
+    _renderContadoProductosSelect(_productos);
   }
 
   // ── Vaciar Cartera ────────────────────────────────────────
