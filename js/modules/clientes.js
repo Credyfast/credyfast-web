@@ -253,6 +253,7 @@ const Clientes = (() => {
       <div class="grid-2" style="gap:10px;font-size:.85rem;margin-bottom:14px">
         <div><div class="text-muted text-sm">CURP</div><div class="fw-600 td-mono" style="word-break:break-all">${cl['CURP'] || '—'}</div></div>
         <div><div class="text-muted text-sm">INE (IDMEX)</div><div>${cl['IDMEX'] || '—'}</div></div>
+        <div id="cl-detail-tel-box"><div class="text-muted text-sm">Teléfono / Celular</div><div class="fw-600 td-mono" style="color:var(--cf-primary)">${cl['Celular'] || cl['Telefono'] || '—'}</div></div>
         <div><div class="text-muted text-sm">Fecha de nacimiento</div><div>${_fmtNac(cl['Fecha_de_nacimiento'])}</div></div>
         <div><div class="text-muted text-sm">Edad</div><div>${cl['Edad'] || '—'} años</div></div>
         <div style="grid-column:1/-1"><div class="text-muted text-sm">Dirección</div><div>${cl['Direccion'] || '—'}</div></div>
@@ -295,10 +296,10 @@ const Clientes = (() => {
     });
 
     // Cargar créditos del cliente
-    _loadCreditosCliente(cl['IDCliente']);
+    _loadCreditosCliente(cl['IDCliente'], cl);
   }
 
-  async function _loadCreditosCliente(IDCliente) {
+  async function _loadCreditosCliente(IDCliente, cl = null) {
     const panel = $('cl-creditos-panel');
     if (!panel) return;
     try {
@@ -308,6 +309,16 @@ const Clientes = (() => {
         return;
       }
       const creditos = res.data;
+
+      // Si el cliente no tenía teléfono mostrado arriba, tomarlo del crédito más reciente
+      const telBox = $('cl-detail-tel-box');
+      if (telBox && (!cl || (!cl['Celular'] && !cl['Telefono']))) {
+        const celCr = creditos.find(c => c['Celular'])?.['Celular'];
+        if (celCr) {
+          telBox.innerHTML = `<div class="text-muted text-sm">Teléfono / Celular</div><div class="fw-600 td-mono" style="color:var(--cf-primary)">${celCr}</div>`;
+        }
+      }
+
       const estatusBadge = e => {
         const map = {
           'PENDIENTE':          'badge-warning',
@@ -321,12 +332,17 @@ const Clientes = (() => {
       };
       panel.innerHTML = creditos.map(cr => {
         const conCalendario = ['APROVADO','FINALIZADO'].includes(cr['ESTATUS']);
+        const tieneRef1 = cr['Nombre_referencia_1'] || cr['Numero_referencia_1'];
+        const tieneRef2 = cr['Nombre_referencia_2'] || cr['Numero_referencia_2'];
+        const sucursalBadge = cr['Sucursal'] ? `<span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:0.7rem;padding:2px 6px">🏢 ${cr['Sucursal']}</span>` : '';
+        const telCred = cr['Celular'] ? `<span>📱 Tel: <strong class="td-mono">${cr['Celular']}</strong></span>` : '';
+
         return `
-        <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
+        <div style="background:var(--cf-bg);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-            <div>
-              <span class="td-mono" style="font-size:.8rem;font-weight:700">${cr['IDCredito']}</span>
-              <span style="margin:0 6px;opacity:.4">·</span>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span class="td-mono" style="font-size:.82rem;font-weight:700">${cr['IDCredito']}</span>
+              ${sucursalBadge}
               ${estatusBadge(cr['ESTATUS'])}
               <span id="estado-pago-${cr['IDCredito']}"></span>
             </div>
@@ -335,6 +351,38 @@ const Clientes = (() => {
               · Enganche: <strong>${fmt.currency(cr['Enganche'])}</strong>
             </div>
           </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--cf-border);font-size:0.78rem;color:var(--cf-muted)">
+            <div>
+              ${telCred}
+              ${cr['Fecha_de_inicio'] ? `<span style="margin-left:8px">Inicio: ${fmt.date(cr['Fecha_de_inicio'])}</span>` : ''}
+            </div>
+            <div>
+              ${cr['IDProd'] ? `Producto: <span class="td-mono" style="font-weight:600;color:var(--cf-text-primary)">${cr['IDProd']}</span>` : ''}
+            </div>
+          </div>
+
+          <!-- Referencias del crédito -->
+          ${(tieneRef1 || tieneRef2) ? `
+            <div style="margin-top:6px;background:rgba(0,0,0,0.02);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:6px 10px;font-size:0.78rem">
+              <div style="font-weight:700;color:var(--cf-text-secondary);margin-bottom:4px;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">
+                👥 Referencias registradas
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                ${tieneRef1 ? `
+                  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+                    <span>1. <strong>${cr['Nombre_referencia_1'] || '—'}</strong></span>
+                    <span class="td-mono" style="color:var(--cf-primary)">📞 ${cr['Numero_referencia_1'] || '—'}</span>
+                  </div>` : ''}
+                ${tieneRef2 ? `
+                  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+                    <span>2. <strong>${cr['Nombre_referencia_2'] || '—'}</strong></span>
+                    <span class="td-mono" style="color:var(--cf-primary)">📞 ${cr['Numero_referencia_2'] || '—'}</span>
+                  </div>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
           ${conCalendario
             ? `<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <button class="btn btn-outline btn-sm" style="font-size:.75rem"
@@ -906,9 +954,15 @@ const Clientes = (() => {
             </div>
           </div>
 
-          <div class="form-group">
-            <label>CURP * (18 caracteres)</label>
-            <input type="text" id="edit-cl-curp" value="${cl['CURP'] || ''}" maxlength="18" style="text-transform:uppercase" required>
+          <div class="form-row">
+            <div class="form-group">
+              <label>CURP * (18 caracteres)</label>
+              <input type="text" id="edit-cl-curp" value="${cl['CURP'] || ''}" maxlength="18" style="text-transform:uppercase" required>
+            </div>
+            <div class="form-group">
+              <label>Teléfono / Celular</label>
+              <input type="tel" id="edit-cl-celular" value="${cl['Celular'] || cl['Telefono'] || ''}" placeholder="10 dígitos">
+            </div>
           </div>
 
           <div class="form-group">
@@ -962,6 +1016,7 @@ const Clientes = (() => {
             Apellido_materno: $('edit-cl-amat')?.value.trim() || '',
             IDMEX:            $('edit-cl-idmex')?.value.trim() || '',
             CURP:             curp,
+            Celular:          $('edit-cl-celular')?.value.trim() || '',
             Direccion:        dir,
             A_que_se_dedica:  $('edit-cl-ocup')?.value.trim() || '',
             Ingreso_semanal:  parseFloat($('edit-cl-ingreso')?.value) || 0,
