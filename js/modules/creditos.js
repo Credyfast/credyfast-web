@@ -1013,24 +1013,33 @@ const Creditos = (() => {
   }
 
 
+  let _productosDisponibles = [];
+
   async function _loadProductos() {
-    if (_productos.length) { _fillProductSelect(); return; }
     try {
       const res = await API.productList();
-      if (res.ok) _productos = (res.data || []).filter(p => p['Estatus'] === 'DISPONIBLE');
+      if (res.ok && res.data) {
+        _productos = res.data;
+        _productosDisponibles = (res.data || []).filter(p => p['Estatus'] === 'DISPONIBLE');
+      } else {
+        _productosDisponibles = (_productos || []).filter(p => p['Estatus'] === 'DISPONIBLE');
+      }
       _fillProductSelect();
-    } catch (_) { }
+    } catch (_) {
+      _productosDisponibles = (_productos || []).filter(p => p['Estatus'] === 'DISPONIBLE');
+      _fillProductSelect();
+    }
   }
 
   function _fillProductSelect() {
     const sel = $('cr-producto'); if (!sel) return;
     sel.innerHTML = '<option value="">-- Selecciona producto --</option>' +
-      _productos.map(p => `<option value="${p['IDProd']}">${p['IDProd']} - ${p['MOD_COMERCIAL']}</option>`).join('');
+      _productosDisponibles.map(p => `<option value="${p['IDProd']}">${p['IDProd']} - ${p['MOD_COMERCIAL'] || p['MODELO'] || ''}</option>`).join('');
   }
 
   function _onProductoChange() {
     const IDProd = $('cr-producto')?.value;
-    _prodSel = _productos.find(p => p['IDProd'] === IDProd) || null;
+    _prodSel = (_productosDisponibles.length ? _productosDisponibles : _productos).find(p => p['IDProd'] === IDProd) || null;
     _periodoSel = null;
     const periodoArea = $('cr-periodo-area');
     const cotiz = $('cr-cotizador');
