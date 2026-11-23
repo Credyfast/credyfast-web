@@ -537,15 +537,9 @@ const POS = (() => {
 
     const rows = _pagosData.map(p => {
       const estatus = p['Estatus_de_pago'];
-      let rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(estatus) ? 'cuota-row-puntual' :
+      const rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(estatus) ? 'cuota-row-puntual' :
         estatus === 'PARCIAL' ? 'cuota-row-parcial' :
           estatus === 'ATRASADO' ? 'cuota-row-atrasada' : '';
-
-      // Si está dentro de las semanas seleccionadas para cobro sugerido
-      const idxPend = cuotasPendientes.findIndex(cp => cp['IDPago'] === p['IDPago']);
-      if (idxPend !== -1 && idxPend < _numSemanasSeleccionadas) {
-        rowClass += ' cuota-row-cobro-seleccionada';
-      }
 
       const tds = headers.map(h => `<td class="${h.class || ''}">${h.render ? h.render(p) : (p[h.key] ?? '—')}</td>`).join('');
       return `<tr class="${rowClass}">${tds}</tr>`;
