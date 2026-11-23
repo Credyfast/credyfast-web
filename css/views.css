@@ -293,6 +293,51 @@
   color: #92400E;
 }
 
+/* Fila seleccionada para cobro sugerido */
+.cuota-row-cobro-seleccionada {
+  position: relative;
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  box-shadow: inset 3px 0 0 var(--cf-primary);
+}
+
+/* Botones + y - para ajuste consecutivo de semanas en cobro */
+.btn-pos-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  padding: 0;
+}
+.btn-pos-step.btn-pos-add {
+  background: #ECFDF5;
+  color: #047857;
+  border-color: #10B981;
+}
+.btn-pos-step.btn-pos-add:hover {
+  background: #10B981;
+  color: #FFFFFF;
+  transform: scale(1.1);
+}
+.btn-pos-step.btn-pos-sub {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border-color: #EF4444;
+}
+.btn-pos-step.btn-pos-sub:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  transform: scale(1.1);
+}
+
 /* Panel de cobro (Terminal de Cajero Flotante) */
 .cobro-panel {
   background: var(--cf-surface);
