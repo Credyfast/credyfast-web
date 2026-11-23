@@ -293,13 +293,6 @@
   color: #92400E;
 }
 
-/* Fila seleccionada para cobro sugerido */
-.cuota-row-cobro-seleccionada {
-  position: relative;
-  background-color: rgba(16, 185, 129, 0.12) !important;
-  box-shadow: inset 3px 0 0 var(--cf-primary);
-}
-
 /* Botones + y - para ajuste consecutivo de semanas en cobro */
 .btn-pos-step {
   display: inline-flex;
