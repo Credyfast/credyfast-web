@@ -4,6 +4,9 @@
 
 const Dashboard = (() => {
 
+  let _retirosData = [];
+  let _retirosVisibles = 5;
+
   function render() {
     return `
     <div class="dashboard-view">
@@ -27,6 +30,25 @@ const Dashboard = (() => {
         <div class="card">
           <div class="card-header"><h3>Créditos Recientes</h3></div>
           <div id="dash-creditos"><div class="table-empty">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- Tabla exclusiva: Retiros de Supervisor -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h3>Retiros de Supervisor</h3>
+            <span style="font-size:.78rem;color:var(--cf-text-secondary)">Historial de retiros de caja autorizados</span>
+          </div>
+          <span id="dash-retiros-badge" class="badge badge-info">0 retiros</span>
+        </div>
+        <div id="dash-retiros-container">
+          <div id="dash-retiros-table"><div class="table-empty">Cargando...</div></div>
+          <div id="dash-retiros-actions" class="hidden" style="padding:12px;text-align:center;border-top:1px solid var(--cf-border);background:var(--cf-surface-2)">
+            <button class="btn btn-outline btn-sm" id="dash-retiros-more" type="button">
+              ⬇ Cargar 5 más (<span id="dash-retiros-count"></span>)
+            </button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -68,6 +90,7 @@ const Dashboard = (() => {
 
   async function init() {
     on('dash-refresh', 'click', _load);
+    on('dash-retiros-more', 'click', _cargarMasRetiros);
     await _load();
   }
 
@@ -84,6 +107,9 @@ const Dashboard = (() => {
       _renderStats(d);
       _renderPagos(d.pagos || []);
       _renderCreditos(d.creditos || []);
+      _retirosData = d.retirosSupervisor || [];
+      _retirosVisibles = 5;
+      _renderRetiros();
     } catch(err) { toast('Error de conexión: ' + err.message, 'error'); }
     finally { showLoading(false); }
   }
@@ -123,6 +149,51 @@ const Dashboard = (() => {
       { key: 'Estado_Operativo', label: 'Operativo', render: r => badgeEstado(r['Estado_Operativo']) },
       { key: 'Fecha_Aprobacion', label: 'Aprobado', render: r => fmt.date(r['Fecha_Aprobacion']) },
     ], creditos, 'Sin créditos recientes.'));
+  }
+
+  function _renderRetiros() {
+    const total = _retirosData.length;
+    setHTML('dash-retiros-badge', `${total} retiro${total !== 1 ? 's' : ''}`);
+
+    if (total === 0) {
+      setHTML('dash-retiros-table', '<div class="table-empty">Sin retiros de supervisor registrados.</div>');
+      const actions = $('dash-retiros-actions');
+      if (actions) actions.classList.add('hidden');
+      return;
+    }
+
+    const mostrados = _retirosData.slice(0, _retirosVisibles);
+    setHTML('dash-retiros-table', `
+      <div class="dash-retiros-scroll-wrap">
+        ${renderTable([
+          { key: 'Fecha',          label: 'Fecha y Hora', render: r => fmt.dateTime(r['Fecha']) },
+          { key: 'Monto',          label: 'Monto',        class: 'td-amount td-right', render: r => `<strong style="color:var(--cf-danger)">-${fmt.currency(r['Monto'])}</strong>` },
+          { key: 'Tipo',           label: 'Método',       render: r => `<span class="badge badge-info">${r['Tipo']}</span>` },
+          { key: 'Comentarios',    label: 'Motivo / Comentarios', render: r => r['Comentarios'] ? `<span>${r['Comentarios']}</span>` : '<span style="color:var(--cf-muted)">—</span>' },
+          { key: 'Registrado_por', label: 'Cajero',       class: 'td-mono', render: r => r['Registrado_por'] || '—' },
+          { key: 'Sucursal',       label: 'Sucursal',     render: r => `<span class="badge">${r['Sucursal'] || '—'}</span>` },
+        ], mostrados, 'Sin retiros de supervisor registrados.')}
+      </div>
+    `);
+
+    const actions = $('dash-retiros-actions');
+    if (actions) {
+      if (_retirosVisibles < total) {
+        actions.classList.remove('hidden');
+        const restantes = total - _retirosVisibles;
+        const prox = Math.min(5, restantes);
+        setHTML('dash-retiros-count', `mostrando ${mostrados.length} de ${total}`);
+        const btnMore = $('dash-retiros-more');
+        if (btnMore) btnMore.textContent = `⬇ Cargar ${prox} más (mostrando ${mostrados.length} de ${total})`;
+      } else {
+        actions.classList.add('hidden');
+      }
+    }
+  }
+
+  function _cargarMasRetiros() {
+    _retirosVisibles += 5;
+    _renderRetiros();
   }
 
   return { render, init };
