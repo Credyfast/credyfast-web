@@ -9,6 +9,7 @@ const POS = (() => {
   let _clienteData = null;
   let _pagosData = [];
   let _lastTicketPrintUrl = null;
+  let _numSemanasSeleccionadas = 0; // Cantidad de semanas pendientes incluidas en cobro sugerido
 
   function _calcDiasRestantesLocal(fechaLim, fallback) {
     if (fallback != null && !isNaN(fallback)) return fallback;
@@ -479,7 +480,18 @@ const POS = (() => {
     _enableCobroPanel();
   }
 
+  function _getCuotasPendientes() {
+    return _pagosData.filter(p =>
+      ['POR COBRAR', 'ATRASADO', 'PARCIAL', 'CAPITAL PARCIAL'].includes(p['Estatus_de_pago']) &&
+      p['Estatus_de_pago'] !== 'CANCELADO'
+    );
+  }
+
   function _renderSchedule() {
+    const info = _creditoData ? _creditoData['infoContado1Mes'] : null;
+    const esC1M = Boolean(info && info.esContado1Mes);
+    const cuotasPendientes = _getCuotasPendientes();
+
     const headers = [
       { key: 'Semana_num', label: '#', render: r => `<strong>${r['Semana_num'] == 0 ? 'Eng.' : r['Semana_num']}</strong>` },
       { key: 'Fecha_programada', label: 'Vence', render: r => fmt.date(r['Fecha_programada']) },
@@ -491,22 +503,119 @@ const POS = (() => {
         : '—'
       },
     ];
+
+    if (!esC1M && cuotasPendientes.length > 0) {
+      headers.push({
+        key: 'Cobro_Step',
+        label: '+ / −',
+        class: 'td-center',
+        render: (p) => {
+          const idx = cuotasPendientes.findIndex(cp => cp['IDPago'] === p['IDPago']);
+          if (idx === -1) return '—';
+
+          // Si es la última semana actualmente seleccionada: muestra botón "-" para quitarla
+          if (idx === _numSemanasSeleccionadas - 1) {
+            return `<button type="button" class="btn-pos-step btn-pos-sub" data-pos-sub title="Quitar esta semana del cobro sugerido">−</button>`;
+          }
+          // Si es la semana inmediatamente siguiente a las seleccionadas: muestra botón "+" para agregarla
+          if (idx === _numSemanasSeleccionadas) {
+            return `<button type="button" class="btn-pos-step btn-pos-add" data-pos-add title="Agregar esta semana al cobro sugerido">+</button>`;
+          }
+          // Si está seleccionada pero es una semana intermedia
+          if (idx < _numSemanasSeleccionadas - 1) {
+            return `<span style="color:#059669;font-weight:700;font-size:.85rem">✓</span>`;
+          }
+          return `<span style="color:var(--cf-border);font-size:.85rem">•</span>`;
+        }
+      });
+    }
+
     if (!_pagosData.length) {
       setHTML('pos-schedule-table', '<div class="table-empty">Sin cuotas registradas.</div>');
       return;
     }
+
     const rows = _pagosData.map(p => {
       const estatus = p['Estatus_de_pago'];
-      const rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(estatus) ? 'cuota-row-puntual' :
+      let rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(estatus) ? 'cuota-row-puntual' :
         estatus === 'PARCIAL' ? 'cuota-row-parcial' :
           estatus === 'ATRASADO' ? 'cuota-row-atrasada' : '';
+
+      // Si está dentro de las semanas seleccionadas para cobro sugerido
+      const idxPend = cuotasPendientes.findIndex(cp => cp['IDPago'] === p['IDPago']);
+      if (idxPend !== -1 && idxPend < _numSemanasSeleccionadas) {
+        rowClass += ' cuota-row-cobro-seleccionada';
+      }
+
       const tds = headers.map(h => `<td class="${h.class || ''}">${h.render ? h.render(p) : (p[h.key] ?? '—')}</td>`).join('');
       return `<tr class="${rowClass}">${tds}</tr>`;
     }).join('');
-    const ths = headers.map(h => `<th>${h.label}</th>`).join('');
+
+    const ths = headers.map(h => `<th class="${h.class || ''}">${h.label}</th>`).join('');
     setHTML('pos-schedule-table',
       `<div class="table-wrap"><table><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table></div>`
     );
+
+    // Event delegation para botones + y -
+    const tbl = $('pos-schedule-table');
+    if (tbl) {
+      const btnAdd = tbl.querySelector('[data-pos-add]');
+      if (btnAdd) {
+        btnAdd.onclick = (e) => {
+          e.preventDefault();
+          _ajustarSemanas(1);
+        };
+      }
+      const btnSub = tbl.querySelector('[data-pos-sub]');
+      if (btnSub) {
+        btnSub.onclick = (e) => {
+          e.preventDefault();
+          _ajustarSemanas(-1);
+        };
+      }
+    }
+  }
+
+  function _ajustarSemanas(delta) {
+    const cuotasPendientes = _getCuotasPendientes();
+    const max = cuotasPendientes.length;
+    const nuevo = Math.max(0, Math.min(max, _numSemanasSeleccionadas + delta));
+    _numSemanasSeleccionadas = nuevo;
+    _renderSchedule();
+    _recalcularMontoSugerido();
+  }
+
+  function _recalcularMontoSugerido() {
+    const info = _creditoData ? _creditoData['infoContado1Mes'] : null;
+    if (info && info.esContado1Mes) return;
+
+    const cuotasPendientes = _getCuotasPendientes();
+    const total = parseInt(_creditoData['Periodo']) || _pagosData.length - 1;
+
+    let montoSug = 0;
+    const seleccionadas = cuotasPendientes.slice(0, _numSemanasSeleccionadas);
+    seleccionadas.forEach(p => {
+      montoSug += Math.max(0,
+        parseFloat(p['Monto_esperado'] || 0) - parseFloat(p['Monto_pagado'] || 0)
+      );
+    });
+
+    let infoText = '';
+    if (_numSemanasSeleccionadas === 0) {
+      infoText = `<span style="color:var(--cf-text-secondary)">0 semanas seleccionadas (abono libre)</span>`;
+    } else {
+      const nums = seleccionadas.map(p => parseInt(p['Semana_num']) === 0 ? 'Eng.' : `Sem. ${p['Semana_num']}`).join(', ');
+      infoText = `Cobro de: <strong>${nums}</strong> (${_numSemanasSeleccionadas} de ${cuotasPendientes.length} pend.)`;
+    }
+
+    setHTML('cobro-monto-sugerido', fmt.currency(montoSug));
+    setHTML('cobro-semana-info', infoText);
+
+    const input = $('cobro-monto-input');
+    if (input) {
+      input.value = montoSug > 0 ? montoSug.toFixed(2) : '';
+      setTimeout(() => input.focus(), 50);
+    }
   }
 
   function _enableCobroPanel() {
@@ -530,63 +639,35 @@ const POS = (() => {
 
     if (opcAdic) opcAdic.classList.remove('hidden');
 
-    const total = parseInt(_creditoData['Periodo']) || _pagosData.length - 1;
-
-    // Separar atrasados y próximo por cobrar
-    const atrasados = _pagosData.filter(p =>
+    // Inicializar la cantidad sugerida por defecto
+    const cuotasPendientes = _getCuotasPendientes();
+    const atrasados = cuotasPendientes.filter(p =>
       p['Estatus_de_pago'] === 'ATRASADO' || p['Estatus_de_pago'] === 'PARCIAL'
     );
-    const siguientePorCobrar = _pagosData.find(p =>
+    const siguientePorCobrar = cuotasPendientes.find(p =>
       p['Estatus_de_pago'] === 'POR COBRAR'
     );
 
-    let montoSug = 0;
-    let infoText = '';
-
-    if (atrasados.length === 0 && !siguientePorCobrar) {
-      // Todo pagado
-      infoText = 'Sin pagos pendientes';
-
-    } else if (atrasados.length === 0) {
-      // Cliente al corriente → solo la siguiente semana
-      const faltante = Math.max(0,
-        parseFloat(siguientePorCobrar['Monto_esperado']) -
-        parseFloat(siguientePorCobrar['Monto_pagado'] || 0)
-      );
-      montoSug = faltante;
-      const semNum = parseInt(siguientePorCobrar['Semana_num']);
-      infoText = semNum === 0
-        ? 'Cobro: <strong>Enganche</strong>'
-        : `Semana <strong>${semNum}</strong> de ${total}`;
-
-    } else {
-      // Cliente con atrasos → suma todos los atrasados + siguiente por cobrar
-      let sumaAtrasados = 0;
-      atrasados.forEach(p => {
-        sumaAtrasados += Math.max(0,
-          parseFloat(p['Monto_esperado']) - parseFloat(p['Monto_pagado'] || 0)
-        );
-      });
-
-      const montoSiguiente = siguientePorCobrar
-        ? Math.max(0,
-          parseFloat(siguientePorCobrar['Monto_esperado']) -
-          parseFloat(siguientePorCobrar['Monto_pagado'] || 0)
-        )
-        : 0;
-
-      montoSug = sumaAtrasados + montoSiguiente;
-
-      const semsAtrasadas = atrasados.length;
-      infoText = `<span style="color:var(--cf-danger)">${semsAtrasadas} sem. atrasada${semsAtrasadas > 1 ? 's' : ''}</span>` +
-        (siguientePorCobrar ? ' + siguiente' : '');
+    if (cuotasPendientes.length === 0) {
+      _numSemanasSeleccionadas = 0;
+      setHTML('cobro-monto-sugerido', fmt.currency(0));
+      setHTML('cobro-semana-info', 'Sin pagos pendientes');
+      const input = $('cobro-monto-input');
+      if (input) input.value = '';
+      return;
     }
 
-    setHTML('cobro-monto-sugerido', fmt.currency(montoSug));
-    setHTML('cobro-semana-info', infoText);
+    if (atrasados.length === 0) {
+      // Cliente al corriente: 1 semana sugerida
+      _numSemanasSeleccionadas = 1;
+    } else {
+      // Cliente con atrasos/parciales: atrasados + 1 siguiente si existe
+      _numSemanasSeleccionadas = siguientePorCobrar ? (atrasados.length + 1) : atrasados.length;
+    }
 
-    const input = $('cobro-monto-input');
-    if (input) { input.value = montoSug > 0 ? montoSug.toFixed(2) : ''; setTimeout(() => input.focus(), 50); }
+    // Renderizar tabla con los botones calculados para este estado inicial
+    _renderSchedule();
+    _recalcularMontoSugerido();
   }
 
   // ── Registrar pago ─────────────────────────────────────────
