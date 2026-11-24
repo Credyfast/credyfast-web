@@ -117,6 +117,32 @@ const Cobranza = (() => {
           </button>
         </div>
       </div>
+
+      <!-- Modal: Calendario de Pagos -->
+      <div id="modal-cob-calendario" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:210;display:flex;align-items:center;justify-content:center;padding:16px">
+        <div class="card" style="width:100%;max-width:650px;max-height:90vh;overflow-y:auto;padding:20px;border-radius:var(--radius-lg)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--cf-border);padding-bottom:8px">
+            <h3 id="cob-cal-title" style="font-size:1.05rem;font-weight:700">Calendario de Pagos</h3>
+            <button class="btn btn-ghost btn-sm" id="modal-cob-cal-close">✕</button>
+          </div>
+          <div id="cob-cal-body">
+            <div class="table-empty">Cargando cuotas…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Foto de Entrega -->
+      <div id="modal-cob-foto" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:210;display:flex;align-items:center;justify-content:center;padding:16px">
+        <div class="card" style="width:100%;max-width:480px;padding:20px;text-align:center;border-radius:var(--radius-lg)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--cf-border);padding-bottom:8px">
+            <h3 id="cob-foto-title" style="font-size:1.05rem;font-weight:700">Foto de Entrega</h3>
+            <button class="btn btn-ghost btn-sm" id="modal-cob-foto-close">✕</button>
+          </div>
+          <div id="cob-foto-body" style="min-height:220px;display:flex;align-items:center;justify-content:center">
+            <!-- Imagen inyectada dinámicamente -->
+          </div>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -133,6 +159,8 @@ const Cobranza = (() => {
 
     on('cob-refresh', 'click', _loadAll);
     on('modal-campo-close', 'click', () => $('modal-cobro-campo').classList.add('hidden'));
+    on('modal-cob-cal-close', 'click', () => $('modal-cob-calendario').classList.add('hidden'));
+    on('modal-cob-foto-close', 'click', () => $('modal-cob-foto').classList.add('hidden'));
     on('visita-buscar', 'click', _verificarCreditoVisita);
     on('visita-id-credito', 'keydown', e => { if (e.key==='Enter') _verificarCreditoVisita(); });
     on('btn-guardar-visita', 'click', _guardarVisita);
@@ -237,15 +265,38 @@ const Cobranza = (() => {
 
             <!-- Deuda total -->
             ${atrasadas > 0 ? `
-            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:7px 12px;display:flex;justify-content:space-between;align-items:center">
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:7px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <span style="font-size:.8rem;font-weight:700;color:#991b1b">Deuda total estimada:</span>
               <span style="font-size:1.05rem;font-weight:900;color:#dc2626">${fmt.currency(deudaTotal)}</span>
             </div>` : ''}
+
+            <!-- Referencias del Crédito -->
+            <div style="background:var(--cf-surface-2);border:1px solid var(--cf-border);border-radius:var(--radius-sm);padding:8px 10px;font-size:.78rem;margin-top:6px">
+              <div style="font-weight:700;color:var(--cf-text);margin-bottom:4px">👥 Referencias:</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <div style="background:var(--cf-surface);padding:5px 8px;border-radius:4px;border:1px solid var(--cf-border)">
+                  <div style="color:var(--cf-text-secondary);font-size:.7rem">Ref 1:</div>
+                  <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r['Nombre_referencia_1'] || '—'}</strong>
+                  ${r['Numero_referencia_1'] ? `<a href="tel:${r['Numero_referencia_1']}" style="color:var(--cf-primary);text-decoration:none;font-weight:600">📞 ${r['Numero_referencia_1']}</a>` : '<span style="color:var(--cf-muted)">Sin teléfono</span>'}
+                </div>
+                <div style="background:var(--cf-surface);padding:5px 8px;border-radius:4px;border:1px solid var(--cf-border)">
+                  <div style="color:var(--cf-text-secondary);font-size:.7rem">Ref 2:</div>
+                  <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r['Nombre_referencia_2'] || '—'}</strong>
+                  ${r['Numero_referencia_2'] ? `<a href="tel:${r['Numero_referencia_2']}" style="color:var(--cf-primary);text-decoration:none;font-weight:600">📞 ${r['Numero_referencia_2']}</a>` : '<span style="color:var(--cf-muted)">Sin teléfono</span>'}
+                </div>
+              </div>
+            </div>
           </div>
           <div class="cobranza-card-actions">
             ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">📍 Maps</a>` : ''}
             <button class="btn btn-success btn-sm" onclick="Cobranza._openCobroCampo(${JSON.stringify(r).replace(/"/g,'&quot;')})">
               💰 Cobrar
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="Cobranza._verCalendario('${r['IDCredito']}','${(r['Nombre_completo'] || '').replace(/'/g, "\\'")}')">
+              📅 Calendario
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="Cobranza._verFotoEntrega('${r['Foto_Entrega_ID'] || ''}','${(r['Nombre_completo'] || '').replace(/'/g, "\\'")}')">
+              📷 Foto Entrega
             </button>
             ${r['Celular'] ? `<a href="tel:${r['Celular']}" class="btn btn-ghost btn-sm">📞 Llamar</a>` : ''}
           </div>
@@ -435,5 +486,98 @@ const Cobranza = (() => {
     $('btn-guardar-visita').disabled = false;
   }
 
-  return { render, init, _openCobroCampo };
+  // ── Ver Calendario de Pagos ───────────────────────────────
+  async function _verCalendario(IDCredito, nombreCliente) {
+    const modal = $('modal-cob-calendario');
+    if (!modal) return;
+    setHTML('cob-cal-title', `Calendario — ${nombreCliente || IDCredito} (${IDCredito})`);
+    setHTML('cob-cal-body', '<div class="table-empty">Cargando cuotas…</div>');
+    modal.classList.remove('hidden');
+
+    try {
+      const res = await API.pagoSchedule({ IDCredito });
+      if (!res.ok) {
+        setHTML('cob-cal-body', `<div class="alert alert-danger">${res.message || 'Error al cargar calendario.'}</div>`);
+        return;
+      }
+      const pagos = res.pagos || [];
+      if (!pagos.length) {
+        setHTML('cob-cal-body', '<div class="table-empty">Sin cuotas registradas.</div>');
+        return;
+      }
+
+      const rows = pagos.map(p => {
+        const estatus = p['Estatus_de_pago'];
+        const rowClass = ['PUNTUAL', 'NORMAL', 'MOROSO', 'CAPITAL'].includes(estatus) ? 'cuota-row-puntual' :
+          estatus === 'PARCIAL' ? 'cuota-row-parcial' :
+            estatus === 'ATRASADO' ? 'cuota-row-atrasada' : '';
+        const ticketLink = p['Ticket_URL']
+          ? `<a href="${p['Ticket_URL']}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:.7rem;padding:2px 8px;text-decoration:none">🖨 Ticket</a>`
+          : '—';
+
+        return `<tr class="${rowClass}">
+          <td><strong>${p['Semana_num'] == 0 ? 'Eng.' : p['Semana_num']}</strong></td>
+          <td>${fmt.date(p['Fecha_programada'])}</td>
+          <td class="td-right td-amount">${fmt.currency(p['Monto_esperado'])}</td>
+          <td class="td-right td-amount">${fmt.currency(p['Monto_pagado'])}</td>
+          <td>${badgeEstado(p['Estatus_de_pago'])}</td>
+          <td class="td-center">${ticketLink}</td>
+        </tr>`;
+      }).join('');
+
+      setHTML('cob-cal-body', `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vence</th>
+                <th class="td-right">Esperado</th>
+                <th class="td-right">Pagado</th>
+                <th>Estado</th>
+                <th class="td-center">Ticket</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `);
+    } catch (_) {
+      setHTML('cob-cal-body', '<div class="alert alert-danger">Error de conexión al obtener calendario.</div>');
+    }
+  }
+
+  // ── Ver Foto de Entrega ───────────────────────────────────
+  function _verFotoEntrega(fotoId, nombreCliente) {
+    const modal = $('modal-cob-foto');
+    if (!modal) return;
+    setHTML('cob-foto-title', `Foto de Entrega — ${nombreCliente || 'Cliente'}`);
+    modal.classList.remove('hidden');
+
+    if (!fotoId) {
+      setHTML('cob-foto-body', `
+        <div style="padding:24px;color:var(--cf-muted)">
+          <div style="font-size:2.5rem;margin-bottom:8px">📷</div>
+          <p>No se adjuntó foto de entrega para este crédito.</p>
+        </div>
+      `);
+      return;
+    }
+
+    const driveDirectUrl = `https://drive.google.com/uc?id=${fotoId}`;
+    const driveViewUrl   = `https://drive.google.com/file/d/${fotoId}/view?usp=sharing`;
+
+    setHTML('cob-foto-body', `
+      <div style="width:100%;text-align:center">
+        <div style="max-height:360px;overflow:hidden;border-radius:var(--radius-sm);margin-bottom:12px;background:#000;display:flex;align-items:center;justify-content:center">
+          <img src="${driveDirectUrl}" alt="Foto Entrega" style="max-width:100%;max-height:360px;object-fit:contain" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'padding:20px;color:#fff;font-size:0.85rem\\'>No se pudo previsualizar la imagen directamente.<br><a href=\\'${driveViewUrl}\\' target=\\'_blank\\' rel=\\'noopener\\' style=\\'color:#34d399;font-weight:700;display:inline-block;margin-top:10px\\'>🔗 Abrir en Google Drive</a></div>'">
+        </div>
+        <a href="${driveViewUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-full btn-sm">
+          🔍 Abrir foto en tamaño completo
+        </a>
+      </div>
+    `);
+  }
+
+  return { render, init, _openCobroCampo, _verCalendario, _verFotoEntrega };
 })();
