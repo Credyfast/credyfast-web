@@ -183,6 +183,28 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Colores de filas por resultado de Arqueo */
+.arqueo-row-correcto {
+  background-color: #F0FDF4 !important; /* Verde tenue */
+}
+.arqueo-row-correcto td {
+  color: #065F46;
+}
+
+.arqueo-row-faltante {
+  background-color: #FEF2F2 !important; /* Rojo tenue */
+}
+.arqueo-row-faltante td {
+  color: #991B1B;
+}
+
+.arqueo-row-sobrante {
+  background-color: #FFFBEB !important; /* Amarillito tenue */
+}
+.arqueo-row-sobrante td {
+  color: #92400E;
+}
+
 @media (max-width: 960px) {
   .dashboard-tables {
     grid-template-columns: 1fr;
