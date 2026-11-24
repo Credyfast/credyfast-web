@@ -172,19 +172,22 @@ const Creditos = (() => {
 
     setHTML('cr-list', renderTable([
       { key: 'IDCredito', label: 'ID', class: 'td-mono' },
-      { key: 'Nombre_cliente', label: 'Cliente', render: r => `
+      {
+        key: 'Nombre_cliente', label: 'Cliente', render: r => `
         <div>${r['Nombre_cliente'] || r['IDCredito']}</div>
         ${r['Tipo_Credito'] === 'RENOVACION' ? `<span class="badge" style="background:#0284c7;color:#fff;font-size:0.68rem;padding:2px 6px">🔄 Renovación (de ${r['ID_Credito_Origen'] || '—'})</span> ` : ''}
         ${r['Modalidad'] === 'CONTADO_1MES' ? '<span class="badge" style="background:#059669;color:#fff;font-size:0.68rem;padding:2px 6px">🌟 Contado 1 Mes</span>' : (r['Modalidad'] === '13_SEMANAS_CONVERTIDO' ? '<span class="badge badge-warning" style="font-size:0.68rem;padding:2px 6px">⚠ Conv. 13s</span>' : '')}
       ` },
-      { key: 'IDProd', label: 'Producto', render: r => {
-        const p = (_productos || []).find(x => x['IDProd'] === r['IDProd']);
-        if (p) {
-          return `<div><strong>${p['MOD_COMERCIAL'] || p['MODELO'] || r['IDProd']}</strong></div>
+      {
+        key: 'IDProd', label: 'Producto', render: r => {
+          const p = (_productos || []).find(x => x['IDProd'] === r['IDProd']);
+          if (p) {
+            return `<div><strong>${p['MOD_COMERCIAL'] || p['MODELO'] || r['IDProd']}</strong></div>
                   <div style="font-size:0.75rem;color:var(--cf-muted)">${p['MARCA'] || ''} · ${r['IDProd']}</div>`;
+          }
+          return `<div><strong>${r['IDProd'] || '—'}</strong></div>`;
         }
-        return `<div><strong>${r['IDProd'] || '—'}</strong></div>`;
-      }},
+      },
       { key: 'ESTATUS', label: 'Estado', render: r => badgeEstado(r['ESTATUS']) },
       { key: 'Periodo', label: 'Periodo', render: r => r['Modalidad'] === 'CONTADO_1MES' ? '30 días' : `${r['Periodo']} sem.` },
       { key: 'Pago_puntual', label: 'Cuota / P.Contado', class: 'td-right td-amount', render: r => r['Modalidad'] === 'CONTADO_1MES' ? fmt.currency(r['Precio_de_contado'] || 0) : fmt.currency(r['Pago_puntual']) },
@@ -197,7 +200,7 @@ const Creditos = (() => {
           // Extraer solo la parte después de "RECHAZADO:"
           const motivo = notas.includes('RECHAZADO:') ? notas.split('RECHAZADO:').pop().trim() : notas;
           return `<span style="color:var(--cf-danger);font-size:.82rem;font-weight:500" title="${motivo}">` +
-                 `⚠ ${motivo.length > 50 ? motivo.substring(0,50) + '…' : motivo}</span>`;
+            `⚠ ${motivo.length > 50 ? motivo.substring(0, 50) + '…' : motivo}</span>`;
         }
       },
       {
@@ -277,8 +280,8 @@ const Creditos = (() => {
           </div>
           <div style="font-size:.82rem;color:var(--cf-text-secondary);margin-bottom:10px">
             Crédito ${cr['IDCredito']} · 📱 <strong>${prodDesc}</strong> · ${cr['Modalidad'] === 'CONTADO_1MES'
-              ? `Pago Inicial en Caja: <strong>${fmt.currency(cr['Pago_Inicial_Contado'] || 0)}</strong> (Precio Contado: ${fmt.currency(cr['Precio_de_contado'] || 0)})`
-              : `Enganche en Caja: <strong>${fmt.currency(cr['Enganche'])}</strong>`}
+            ? `Liquidación Contado: <strong>${fmt.currency(cr['Precio_de_contado'] || 0)}</strong> (30 días)`
+            : `Enganche en Caja: <strong>${fmt.currency(cr['Enganche'])}</strong>`}
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-warning btn-sm" onclick="Creditos._confirmarEntrega('${cr['IDCredito']}','${(cr['Nombre_cliente'] || '').replace(/'/g, "\\'")}')">
@@ -289,7 +292,8 @@ const Creditos = (() => {
             </button>` : ''}
           </div>
         </div>
-      `;}).join('');
+      `;
+      }).join('');
     } catch (_) { }
   }
 
@@ -301,9 +305,9 @@ const Creditos = (() => {
     const modal = $('modal-cr-review');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
-    
+
     setHTML('cr-review-body', '<div class="table-empty">Cargando información de la solicitud…</div>');
-    
+
     try {
       // Obtener detalles del cliente, su historial de créditos y catálogo de productos
       const [resClient, resCredits, resProds] = await Promise.all([
@@ -321,7 +325,7 @@ const Creditos = (() => {
       let clientHtml = '';
       if (resClient.ok && resClient.data) {
         const cl = resClient.data;
-        const docBtn = (label, id) => id 
+        const docBtn = (label, id) => id
           ? `<a href="https://drive.google.com/uc?id=${id}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">📄 ${label}</a>`
           : `<span class="btn btn-outline btn-sm" disabled style="opacity:.5">📄 ${label} (No subido)</span>`;
 
@@ -415,7 +419,7 @@ const Creditos = (() => {
             <div><div class="text-muted text-sm">Dependientes económicos</div><div>${cr['Dependientes_economicos'] || '—'}</div></div>
             <div><div class="text-muted text-sm">Estado civil</div><div>${cr['Estado_civil'] || '—'}</div></div>
             <div><div class="text-muted text-sm">Tipo vivienda</div><div>${cr['Tipo_vivienda'] || '—'}</div></div>
-            <div><div class="text-muted text-sm">Antigüedad domicilio</div><div>${cr['Antiguedad_domicilio'] ? cr['Antiguedad_domicilio']+' años' : '—'}</div></div>
+            <div><div class="text-muted text-sm">Antigüedad domicilio</div><div>${cr['Antiguedad_domicilio'] ? cr['Antiguedad_domicilio'] + ' años' : '—'}</div></div>
             <div style="grid-column:1/-1"><div class="text-muted text-sm">Referencias de domicilio</div><div>${cr['Referencias_domicilio'] || '—'}</div></div>
             
             <div style="grid-column:1/-1"><div class="text-muted text-sm">Notas del promotor</div><div>${cr['NOTAS'] || '—'}</div></div>
@@ -427,8 +431,8 @@ const Creditos = (() => {
           <button class="btn btn-success" style="flex:1" onclick="Creditos._accion('${cr['IDCredito']}','aprobar'); document.getElementById('modal-cr-review').classList.add('hidden')">✔ Aprobar Solicitud</button>
         </div>
       `);
-      
-    } catch(err) {
+
+    } catch (err) {
       setHTML('cr-review-body', '<div class="alert alert-danger">Error al cargar la información del cliente o producto.</div>');
     }
   }
@@ -481,7 +485,7 @@ const Creditos = (() => {
       ${esC1M ? `
         <div style="background:rgba(16,185,129,0.1);border:1.5px solid #10b981;border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:0.83rem">
           <strong style="color:#047857">🌟 Modalidad: Venta Contado 1 Mes (30 días)</strong><br>
-          <span style="color:var(--cf-text-secondary)">Precio Contado a liquidar: <strong>${fmt.currency(cr['Precio_de_contado'] || 0)}</strong> · Pago inicial a cobrar en caja hoy: <strong>${fmt.currency(cr['Pago_Inicial_Contado'] || 0)}</strong></span>
+          <span style="color:var(--cf-text-secondary)">Precio Contado a liquidar: <strong>${fmt.currency(cr['Precio_de_contado'] || 0)}</strong> · Los abonos se reciben en Caja (POS) con su respectivo ticket.</span>
         </div>
       ` : ''}
       
@@ -520,7 +524,7 @@ const Creditos = (() => {
     on('btn-imprimir-contrato', 'click', async () => {
       const btn = $('btn-imprimir-contrato');
       btn.disabled = true; btn.textContent = '⏳ Generando...';
-      
+
       // Abrir ventana de manera síncrona para evitar el bloqueador de pop-ups
       const printWin = window.open('', '_blank');
       if (!printWin) {
@@ -537,9 +541,9 @@ const Creditos = (() => {
         const prodPromise = (_productos && _productos.length > 0)
           ? Promise.resolve({ ok: true, data: _productos })
           : API.productList().then(res => {
-              if (res && res.ok && Array.isArray(res.data)) _productos = res.data;
-              return res;
-            });
+            if (res && res.ok && Array.isArray(res.data)) _productos = res.data;
+            return res;
+          });
         const clientPromise = (cr && cr['IDCliente'])
           ? API.clientGet({ id: cr['IDCliente'] })
           : null;
@@ -567,7 +571,7 @@ const Creditos = (() => {
         text = text.replace(/\[\[NOMBRE_COMPLETO_CLIENTE\]\]/g, cl.Nombre_completo || crData.Nombre_cliente || '');
         text = text.replace(/\[\[TELEFONO_CLIENTE\]\]/g, crData.Celular || cl.Telefono || '');
         text = text.replace(/\[\[CURP_CLIENTE\]\]/g, cl.CURP || '');
-        text = text.replace(/\[\[INE_CLIENTE\]\]/g, cl.IDMEX || ''); 
+        text = text.replace(/\[\[INE_CLIENTE\]\]/g, cl.IDMEX || '');
         text = text.replace(/\[\[TIPO_PRODUCTO\]\]/g, prod.Tipo || '');
         text = text.replace(/\[\[MARCA\]\]/g, prod.MARCA || '');
         text = text.replace(/\[\[MODELO_COMERCIAL\]\]/g, prod.MOD_COMERCIAL || prod.MODELO || '');
@@ -588,7 +592,7 @@ const Creditos = (() => {
             <tbody>
         `;
         pagos.forEach(p => {
-           calHtml += `
+          calHtml += `
              <tr>
                <td style="text-align:center; padding:2px">${p.Semana_num === '0' || p.Semana_num === 0 ? 'Enganche' : p.Semana_num}</td>
                <td style="text-align:center; padding:2px">${fmt.date(p.Fecha_programada)}</td>
@@ -626,7 +630,7 @@ const Creditos = (() => {
 
         $('paso-2-area').style.opacity = '1';
         $('foto-entrega-input').disabled = false;
-        
+
       } catch (e) {
         console.error('Error al generar contrato:', e);
         if (printWin && !printWin.closed) printWin.close();
@@ -728,14 +732,10 @@ const Creditos = (() => {
           <span>🌟 Promoción: Venta Contado 1 Mes (30 días)</span>
         </label>
         <div id="cr-c1m-detalle-area" class="hidden" style="margin-top:10px; font-size:0.8rem; color:var(--cf-text-secondary); line-height:1.45; border-top:1px dashed rgba(16,185,129,0.3); padding-top:10px">
-          <div style="margin-bottom:8px">
-            El cliente tiene <strong>30 días naturales</strong> para liquidar a <strong>precio de contado</strong> con abonos libres sin intereses. Si no liquida en 30 días, se convertirá automáticamente al plan de respaldo de <strong>13 semanas</strong>.
+          <div>
+            El cliente tiene <strong>30 días naturales</strong> para liquidar a <strong>precio de contado</strong> con abonos libres sin intereses en mostrador (POS). Si no liquida en 30 días, se convertirá automáticamente al plan de respaldo de <strong>13 semanas</strong>.
           </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label style="font-size:0.8rem; font-weight:600; color:var(--cf-text-primary)">Pago Inicial Negociado ($)</label>
-            <input type="number" id="cr-c1m-pago-inicial" placeholder="0.00 (Libre u opcional)" min="0" step="any" style="font-size:0.9rem">
-            <small style="color:var(--cf-muted); display:block; margin-top:2px">Monto libre que deja el cliente hoy en caja al entregarse el producto.</small>
-          </div>
+          <input type="hidden" id="cr-c1m-pago-inicial" value="0">
         </div>
       </div>
 
@@ -780,7 +780,7 @@ const Creditos = (() => {
         <div class="form-group">
           <label>Dependientes económicos</label>
           <select id="cr-dependientes">
-            ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join('')}
+            ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}">${n}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -809,7 +809,7 @@ const Creditos = (() => {
         <div class="form-group">
           <label>Antigüedad de domicilio (años)</label>
           <select id="cr-antiguedad">
-            ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join('')}
+            ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option value="${n}">${n}</option>`).join('')}
             <option value="+10">+10</option>
           </select>
         </div>
@@ -826,10 +826,10 @@ const Creditos = (() => {
       <button class="btn btn-primary btn-full" id="cr-submit-btn">Enviar Solicitud</button>
     `);
     _loadProductos();
-    on('cr-buscar-cl',  'click',   _verificarCliente);
+    on('cr-buscar-cl', 'click', _verificarCliente);
     on('cr-id-cliente', 'keydown', e => { if (e.key === 'Enter') _verificarCliente(); });
-    on('cr-producto',   'change',  _onProductoChange);
-    on('cr-submit-btn', 'click',   _submitSolicitud);
+    on('cr-producto', 'change', _onProductoChange);
+    on('cr-submit-btn', 'click', _submitSolicitud);
     if (idClienteDefault) setTimeout(_verificarCliente, 100);
 
     // Toggle Modalidad Contado 1 Mes
@@ -972,9 +972,9 @@ const Creditos = (() => {
 
     // ── Búsqueda por nombre con autocomplete ─────────────────
     let _searchTimer = null;
-    const nombreInput    = $('cr-buscar-nombre');
-    const dropdown       = $('cr-nombre-dropdown');
-    const idInput        = $('cr-id-cliente');
+    const nombreInput = $('cr-buscar-nombre');
+    const dropdown = $('cr-nombre-dropdown');
+    const idInput = $('cr-id-cliente');
 
     if (nombreInput && dropdown) {
       nombreInput.addEventListener('input', () => {
@@ -995,7 +995,7 @@ const Creditos = (() => {
                 onmousedown="event.preventDefault()"
                 onclick="(function(){
                   document.getElementById('cr-id-cliente').value='${cl['IDCliente']}';
-                  document.getElementById('cr-buscar-nombre').value='${(cl['Nombre_completo']||'').replace(/'/g,'\\&apos;')}';
+                  document.getElementById('cr-buscar-nombre').value='${(cl['Nombre_completo'] || '').replace(/'/g, '\\&apos;')}';
                   document.getElementById('cr-nombre-dropdown').style.display='none';
                   Creditos._verificarClientePublic();
                 })()">
@@ -1003,7 +1003,7 @@ const Creditos = (() => {
                 <span style="opacity:.55;margin-left:6px">${cl['IDCliente']}</span>
               </div>`).join('');
             dropdown.style.display = 'block';
-          } catch(_) {}
+          } catch (_) { }
         }, 300);
       });
       nombreInput.addEventListener('blur', () => {
@@ -1279,8 +1279,8 @@ const Creditos = (() => {
 
   async function _submitSolicitud() {
     const IDCliente = $('cr-id-cliente')?.value.trim();
-    const IDProd    = $('cr-producto')?.value;
-    const Celular   = $('cr-celular')?.value.trim();
+    const IDProd = $('cr-producto')?.value;
+    const Celular = $('cr-celular')?.value.trim();
     const isContado1Mes = $('cr-toggle-contado1mes')?.checked || false;
     if (isContado1Mes) {
       _periodoSel = 13;
@@ -1312,16 +1312,16 @@ const Creditos = (() => {
         codigoDescuento,
         modalidad: isContado1Mes ? 'CONTADO_1MES' : 'TRADICIONAL',
         pagoInicial,
-        Nombre_referencia_1:   ref1n,
-        Numero_referencia_1:   ref1t,
-        Nombre_referencia_2:   $('cr-ref2n')?.value || '',
-        Numero_referencia_2:   $('cr-ref2t')?.value || '',
-        NOTAS:                 $('cr-notas')?.value || '',
+        Nombre_referencia_1: ref1n,
+        Numero_referencia_1: ref1t,
+        Nombre_referencia_2: $('cr-ref2n')?.value || '',
+        Numero_referencia_2: $('cr-ref2t')?.value || '',
+        NOTAS: $('cr-notas')?.value || '',
         Dependientes_economicos: $('cr-dependientes')?.value || '0',
-        Tipo_vivienda:           $('cr-tipo-vivienda')?.value || '',
-        Antiguedad_domicilio:    $('cr-antiguedad')?.value || '0',
-        Referencias_domicilio:   $('cr-ref-domicilio')?.value || '',
-        Estado_civil:            $('cr-estado-civil')?.value || '',
+        Tipo_vivienda: $('cr-tipo-vivienda')?.value || '',
+        Antiguedad_domicilio: $('cr-antiguedad')?.value || '0',
+        Referencias_domicilio: $('cr-ref-domicilio')?.value || '',
+        Estado_civil: $('cr-estado-civil')?.value || '',
       });
       if (res.ok) {
         toast(`✔ Solicitud ${res.id} enviada. Pendiente de aprobación.`, 'success', 5000);
@@ -1383,7 +1383,7 @@ const Creditos = (() => {
     }
 
     const modal = $('modal-editar-solicitud');
-    const body  = $('modal-edit-sol-body');
+    const body = $('modal-edit-sol-body');
     if (!modal || !body) return;
 
     modal.classList.remove('hidden');
@@ -1394,7 +1394,7 @@ const Creditos = (() => {
       try {
         const resP = await API.productList();
         if (resP.ok) _productos = resP.data || [];
-      } catch(_) {}
+      } catch (_) { }
     }
 
     const prodActual = _productos.find(p => p['IDProd'] === cr['IDProd']);
@@ -1470,7 +1470,7 @@ const Creditos = (() => {
           <div class="form-group">
             <label>Dependientes económicos</label>
             <select id="edit-sol-dependientes">
-              ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `
+              ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `
                 <option value="${n}" ${String(cr['Dependientes_economicos']) === String(n) ? 'selected' : ''}>${n}</option>
               `).join('')}
             </select>
@@ -1503,12 +1503,12 @@ const Creditos = (() => {
     });
 
     on('btn-save-edit-sol', 'click', async () => {
-      const cel   = $('edit-sol-celular')?.value.trim();
+      const cel = $('edit-sol-celular')?.value.trim();
       const ref1n = $('edit-sol-ref1n')?.value.trim();
       const ref1t = $('edit-sol-ref1t')?.value.trim();
       const ref2t = $('edit-sol-ref2t')?.value.trim();
-      const prodId= $('edit-sol-producto')?.value;
-      const per   = $('edit-sol-periodo')?.value;
+      const prodId = $('edit-sol-producto')?.value;
+      const per = $('edit-sol-periodo')?.value;
 
       if (!cel || !fmt.isValidPhone(cel)) {
         toast('El celular del cliente debe tener exactamente 10 dígitos válidos.', 'warning');
@@ -1531,17 +1531,17 @@ const Creditos = (() => {
       try {
         const res = await API.creditEditarSolicitud({
           IDCredito,
-          IDProd:                 prodId,
-          Periodo:                per,
-          Celular:                cel,
-          Nombre_referencia_1:    ref1n,
-          Numero_referencia_1:    ref1t,
-          Nombre_referencia_2:    $('edit-sol-ref2n')?.value.trim() || '',
-          Numero_referencia_2:    ref2t || '',
-          Referencias_domicilio:  $('edit-sol-ref-dom')?.value.trim() || '',
-          Dependientes_economicos:$('edit-sol-dependientes')?.value || '0',
-          Tipo_vivienda:          $('edit-sol-vivienda')?.value || '',
-          NOTAS_EDICION:          $('edit-sol-nota')?.value.trim() || '',
+          IDProd: prodId,
+          Periodo: per,
+          Celular: cel,
+          Nombre_referencia_1: ref1n,
+          Numero_referencia_1: ref1t,
+          Nombre_referencia_2: $('edit-sol-ref2n')?.value.trim() || '',
+          Numero_referencia_2: ref2t || '',
+          Referencias_domicilio: $('edit-sol-ref-dom')?.value.trim() || '',
+          Dependientes_economicos: $('edit-sol-dependientes')?.value || '0',
+          Tipo_vivienda: $('edit-sol-vivienda')?.value || '',
+          NOTAS_EDICION: $('edit-sol-nota')?.value.trim() || '',
         });
 
         if (res.ok) {
@@ -1552,7 +1552,7 @@ const Creditos = (() => {
         } else {
           toast(res.message || 'Error al corregir solicitud.', 'error');
         }
-      } catch(_) {
+      } catch (_) {
         toast('Error de conexión al guardar corrección.', 'error');
       } finally {
         showLoading(false);
