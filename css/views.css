@@ -174,8 +174,9 @@
   gap: 20px;
 }
 
-/* Contenedor deslizable / scrollable de retiros */
-.dash-retiros-scroll-wrap {
+/* Contenedor deslizable / scrollable de retiros y arqueos */
+.dash-retiros-scroll-wrap,
+.dash-scroll-wrap {
   max-height: 290px;
   overflow-y: auto;
   overflow-x: auto;
