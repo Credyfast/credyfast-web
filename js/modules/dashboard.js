@@ -233,16 +233,33 @@ const Dashboard = (() => {
     }
 
     const mostrados = _arqueosData.slice(0, _arqueosVisibles);
+    const headers = [
+      { key: 'Fecha',           label: 'Fecha y Hora', render: r => fmt.dateTime(r['Fecha']) },
+      { key: 'Cajero_Username', label: 'Cajero',       class: 'td-bold', render: r => `<strong>${r['Cajero_Username']}</strong>` },
+      { key: 'Total_Fisico',    label: 'Total Físico', class: 'td-amount td-right', render: r => fmt.currency(r['Total_Fisico']) },
+      { key: 'Resultado',       label: 'Resultado',    render: r => badgeEstado(r['Resultado']) },
+      { key: 'Supervisado_Por', label: 'Supervisó',    render: r => r['Supervisado_Por'] || '—' },
+      { key: 'Sucursal',        label: 'Sucursal',     render: r => `<span class="badge">${r['Sucursal'] || '—'}</span>` },
+    ];
+
+    const ths = headers.map(h => `<th>${h.label}</th>`).join('');
+    const trs = mostrados.map(row => {
+      const res = String(row['Resultado'] || '').toUpperCase();
+      const rowClass = res === 'CORRECTO' ? 'arqueo-row-correcto' :
+        res === 'FALTANTE' ? 'arqueo-row-faltante' :
+        res === 'SOBRANTE' ? 'arqueo-row-sobrante' : '';
+      const tds = headers.map(h => `<td class="${h.class || ''}">${h.render ? h.render(row) : (row[h.key] ?? '—')}</td>`).join('');
+      return `<tr class="${rowClass}">${tds}</tr>`;
+    }).join('');
+
     setHTML('dash-arqueos-table', `
       <div class="dash-scroll-wrap">
-        ${renderTable([
-          { key: 'Fecha',           label: 'Fecha y Hora', render: r => fmt.dateTime(r['Fecha']) },
-          { key: 'Cajero_Username', label: 'Cajero',       class: 'td-bold', render: r => `<strong>${r['Cajero_Username']}</strong>` },
-          { key: 'Total_Fisico',    label: 'Total Físico', class: 'td-amount td-right', render: r => fmt.currency(r['Total_Fisico']) },
-          { key: 'Resultado',       label: 'Resultado',    render: r => badgeEstado(r['Resultado']) },
-          { key: 'Supervisado_Por', label: 'Supervisó',    render: r => r['Supervisado_Por'] || '—' },
-          { key: 'Sucursal',        label: 'Sucursal',     render: r => `<span class="badge">${r['Sucursal'] || '—'}</span>` },
-        ], mostrados, 'Sin arqueos de caja registrados.')}
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${ths}</tr></thead>
+            <tbody>${trs}</tbody>
+          </table>
+        </div>
       </div>
     `);
 
