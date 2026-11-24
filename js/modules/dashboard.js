@@ -6,6 +6,8 @@ const Dashboard = (() => {
 
   let _retirosData = [];
   let _retirosVisibles = 5;
+  let _arqueosData = [];
+  let _arqueosVisibles = 5;
 
   function render() {
     return `
@@ -51,6 +53,25 @@ const Dashboard = (() => {
           </div>
         </div>
       </div>
+
+      <!-- Tabla exclusiva: Arqueos de Caja -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h3>Arqueos de Caja</h3>
+            <span style="font-size:.78rem;color:var(--cf-text-secondary)">Historial de cortes físicos y arqueos realizados</span>
+          </div>
+          <span id="dash-arqueos-badge" class="badge badge-info">0 arqueos</span>
+        </div>
+        <div id="dash-arqueos-container">
+          <div id="dash-arqueos-table"><div class="table-empty">Cargando...</div></div>
+          <div id="dash-arqueos-actions" class="hidden" style="padding:12px;text-align:center;border-top:1px solid var(--cf-border);background:var(--cf-surface-2)">
+            <button class="btn btn-outline btn-sm" id="dash-arqueos-more" type="button">
+              ⬇ Cargar 5 más (<span id="dash-arqueos-count"></span>)
+            </button>
+          </div>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -91,6 +112,7 @@ const Dashboard = (() => {
   async function init() {
     on('dash-refresh', 'click', _load);
     on('dash-retiros-more', 'click', _cargarMasRetiros);
+    on('dash-arqueos-more', 'click', _cargarMasArqueos);
     await _load();
   }
 
@@ -110,6 +132,9 @@ const Dashboard = (() => {
       _retirosData = d.retirosSupervisor || [];
       _retirosVisibles = 5;
       _renderRetiros();
+      _arqueosData = d.arqueos || [];
+      _arqueosVisibles = 5;
+      _renderArqueos();
     } catch(err) { toast('Error de conexión: ' + err.message, 'error'); }
     finally { showLoading(false); }
   }
@@ -194,6 +219,50 @@ const Dashboard = (() => {
   function _cargarMasRetiros() {
     _retirosVisibles += 5;
     _renderRetiros();
+  }
+
+  function _renderArqueos() {
+    const total = _arqueosData.length;
+    setHTML('dash-arqueos-badge', `${total} arqueo${total !== 1 ? 's' : ''}`);
+
+    if (total === 0) {
+      setHTML('dash-arqueos-table', '<div class="table-empty">Sin arqueos de caja registrados.</div>');
+      const actions = $('dash-arqueos-actions');
+      if (actions) actions.classList.add('hidden');
+      return;
+    }
+
+    const mostrados = _arqueosData.slice(0, _arqueosVisibles);
+    setHTML('dash-arqueos-table', `
+      <div class="dash-scroll-wrap">
+        ${renderTable([
+          { key: 'Fecha',           label: 'Fecha y Hora', render: r => fmt.dateTime(r['Fecha']) },
+          { key: 'Cajero_Username', label: 'Cajero',       class: 'td-bold', render: r => `<strong>${r['Cajero_Username']}</strong>` },
+          { key: 'Total_Fisico',    label: 'Total Físico', class: 'td-amount td-right', render: r => fmt.currency(r['Total_Fisico']) },
+          { key: 'Resultado',       label: 'Resultado',    render: r => badgeEstado(r['Resultado']) },
+          { key: 'Supervisado_Por', label: 'Supervisó',    render: r => r['Supervisado_Por'] || '—' },
+          { key: 'Sucursal',        label: 'Sucursal',     render: r => `<span class="badge">${r['Sucursal'] || '—'}</span>` },
+        ], mostrados, 'Sin arqueos de caja registrados.')}
+      </div>
+    `);
+
+    const actions = $('dash-arqueos-actions');
+    if (actions) {
+      if (_arqueosVisibles < total) {
+        actions.classList.remove('hidden');
+        const restantes = total - _arqueosVisibles;
+        const prox = Math.min(5, restantes);
+        const btnMore = $('dash-arqueos-more');
+        if (btnMore) btnMore.textContent = `⬇ Cargar ${prox} más (mostrando ${mostrados.length} de ${total})`;
+      } else {
+        actions.classList.add('hidden');
+      }
+    }
+  }
+
+  function _cargarMasArqueos() {
+    _arqueosVisibles += 5;
+    _renderArqueos();
   }
 
   return { render, init };
